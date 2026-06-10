@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="400" height="120" role="img" aria-labelledby="title desc">
+  <title id="title">轉角遇到貓</title>
+  <desc id="desc">記錄每一次街角與貓相遇</desc>
+  <defs>
+    <style>
+      .brand-text { font-family: 'Noto Sans TC', 'M PLUS Rounded 1c', 'PingFang TC', sans-serif; }
+    </style>
+  </defs>
+  <g transform="translate(24 13)">
+    <path d="M19 38 8 7l30 20 30-20-11 31c8 7 12 17 12 29 0 24-17 39-38 39S-7 91-7 67c0-12 5-22 12-29Z" fill="#fffdf2" stroke="#221915" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M19 38 8 7l30 20 30-20-11 31" fill="none" stroke="#2f5fb3" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="25" cy="58" r="4.5" fill="#221915"/>
+    <circle cx="51" cy="58" r="4.5" fill="#221915"/>
+    <path d="M38 65 32 70h12Z" fill="#2f5fb3"/>
+    <path d="M14 74h48" stroke="#221915" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <text x="122" y="52" class="brand-text" font-size="40" font-weight="900" fill="#221915">轉角遇到貓</text>
+  <text x="124" y="82" class="brand-text" font-size="13" font-weight="700" letter-spacing="4" fill="#2f5fb3">FOUND CAT JOURNAL</text>
+</svg>

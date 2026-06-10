@@ -1,0 +1,137 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { PNG } from 'pngjs';
+import { translations } from '../translations';
+
+const repoRoot = process.cwd();
+
+describe('cat app brand copy', () => {
+  const expectPng = (png: Buffer) => {
+    expect(png.subarray(1, 4).toString('ascii')).toBe('PNG');
+  };
+
+  const expectPngWithAlpha = (png: Buffer) => {
+    expectPng(png);
+    expect(png.readUInt8(25)).toBe(6);
+  };
+
+  const expectTransparentCorners = (png: Buffer) => {
+    const decoded = PNG.sync.read(png);
+    const corners = [
+      [0, 0],
+      [decoded.width - 1, 0],
+      [0, decoded.height - 1],
+      [decoded.width - 1, decoded.height - 1],
+    ];
+
+    corners.forEach(([x, y]) => {
+      const alphaOffset = ((decoded.width * y + x) << 2) + 3;
+      expect(decoded.data[alphaOffset]).toBe(0);
+    });
+  };
+
+  it('uses one product name across supported languages', () => {
+    expect(translations.zh.appName).toBe('轉角遇到貓');
+    expect(translations.en.appName).toBe('轉角遇到貓');
+  });
+
+  it('does not expose old product names in user-facing brand surfaces', () => {
+    const fileText = [
+      'public/cat-logo-universal.svg',
+      'public/cat-logo.svg',
+      'public/design-logo-options.html',
+      'index.html',
+      'vite.config.ts',
+      'src/components/PWAPrompt.tsx',
+      'src/hooks/useShareSticker.ts',
+      'src/components/ReelModal.tsx',
+      'src/lib/catdexDeck.ts',
+    ]
+      .map((filePath) => readFileSync(join(repoRoot, filePath), 'utf8'))
+      .join('\n');
+
+    const userFacingText = `${JSON.stringify(translations)}\n${fileText}`;
+
+    expect(translations.zh.appSubtitle).toBe('FOUND CAT');
+    expect(translations.en.appSubtitle).toBe('FOUND CAT');
+    expect(userFacingText).not.toMatch(/Daily Scrapbook/i);
+    expect(userFacingText).not.toMatch(/Cat Scrapbook/i);
+    expect(userFacingText).not.toMatch(/Corner Cat Stickerbook/i);
+    expect(userFacingText).not.toMatch(/Corner Cat/i);
+    expect(userFacingText).not.toMatch(/貓遇/);
+    expect(userFacingText).not.toMatch(/maoyu/i);
+    expect(userFacingText).toMatch(/轉角遇到貓/);
+    expect(userFacingText).toMatch(/FOUND CAT/);
+  });
+
+  it('does not use the old universal SVG logo in page headers', () => {
+    const pageText = [
+      'src/pages/Home.tsx',
+      'src/pages/Create.tsx',
+      'src/pages/Catdex.tsx',
+      'src/pages/ShareCatdex.tsx',
+      'src/pages/Detail.tsx',
+      'src/pages/Map.tsx',
+    ]
+      .map((filePath) => readFileSync(join(repoRoot, filePath), 'utf8'))
+      .join('\n');
+
+    expect(pageText).not.toContain('/cat-logo-universal.svg');
+    expect(pageText).not.toContain('/cat-logo.svg');
+    expect(pageText).toContain('CatBrandHeader');
+  });
+
+  it('uses cropped AI Moodboard V1 PNG assets for the selected brand system', () => {
+    const icon192 = readFileSync(join(repoRoot, 'public/cat-icon-192.png'));
+    const icon512 = readFileSync(join(repoRoot, 'public/cat-icon-512.png'));
+    const l1Logo = readFileSync(join(repoRoot, 'public/brand/moodboard-l1-logo.png'));
+    const l4Map = readFileSync(join(repoRoot, 'public/brand/moodboard-l4-map.png'));
+
+    expectPng(icon192);
+    expect(icon192.readUInt32BE(16)).toBe(192);
+    expect(icon192.readUInt32BE(20)).toBe(192);
+    expectPngWithAlpha(icon192);
+    expectTransparentCorners(icon192);
+    expectPng(icon512);
+    expect(icon512.readUInt32BE(16)).toBe(512);
+    expect(icon512.readUInt32BE(20)).toBe(512);
+    expectPngWithAlpha(icon512);
+    expectTransparentCorners(icon512);
+    expectPng(l1Logo);
+    expectPng(l4Map);
+  });
+
+  it('declares maskable PWA icons and preloads the first-screen brand art', () => {
+    const viteConfig = readFileSync(join(repoRoot, 'vite.config.ts'), 'utf8');
+    const indexHtml = readFileSync(join(repoRoot, 'index.html'), 'utf8');
+
+    expect(viteConfig).toContain("src: 'cat-icon-192.png'");
+    expect(viteConfig).toContain("src: 'cat-icon-512.png'");
+    expect(viteConfig).toContain("src: 'cat-icon-maskable-192.png'");
+    expect(viteConfig).toContain("src: 'cat-icon-maskable-512.png'");
+    expect(viteConfig).toContain("purpose: 'any'");
+    expect(viteConfig).toContain("purpose: 'maskable'");
+    expect(viteConfig).not.toContain("purpose: 'any maskable'");
+    expect(indexHtml).toContain('rel="preload" as="image" href="/brand/moodboard-l1-logo-transparent.png"');
+    expect(indexHtml).toContain('rel="prefetch" as="image" href="/cat-icon-maskable-512.png"');
+  });
+
+  it('uses transparent AI Moodboard V1 brand marks in app headers', () => {
+    const l1Logo = readFileSync(join(repoRoot, 'public/brand/moodboard-l1-logo-transparent.png'));
+    const l4Map = readFileSync(join(repoRoot, 'public/brand/moodboard-l4-map-transparent.png'));
+    const brandSurfaces = [
+      'src/components/brand/BrandMarks.tsx',
+    ]
+      .map((filePath) => readFileSync(join(repoRoot, filePath), 'utf8'))
+      .join('\n');
+
+    expectPngWithAlpha(l1Logo);
+    expectPngWithAlpha(l4Map);
+    expect(brandSurfaces).toContain('/brand/moodboard-l1-logo-transparent.png');
+    expect(brandSurfaces).toContain('/brand/moodboard-l4-map-transparent.png');
+    expect(brandSurfaces).toContain('FOUND CAT');
+    expect(brandSurfaces).not.toContain('/brand/moodboard-l1-logo.png');
+    expect(brandSurfaces).not.toContain('/brand/moodboard-l4-map.png');
+  });
+});

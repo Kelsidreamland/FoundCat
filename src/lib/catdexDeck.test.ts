@@ -1,0 +1,67 @@
+import { describe, expect, it } from 'vitest';
+import type { ScrapbookItem } from '../store/useScrapbookStore';
+import {
+  buildSingleCatShareText,
+  getDeckNeighbors,
+  sortCatCards,
+} from './catdexDeck';
+
+const makeItem = (overrides: Partial<ScrapbookItem>): ScrapbookItem => ({
+  id: overrides.id ?? 'cat-1',
+  type: 'sticker',
+  imageData: 'data:image/png;base64,cat',
+  catdexNumber: overrides.catdexNumber,
+  date: overrides.date ?? '2026-05-11T08:00:00.000Z',
+  x: 0,
+  y: 0,
+  rotation: 0,
+  scale: 1,
+  zIndex: 1,
+  location: overrides.location,
+});
+
+describe('catdex deck helpers', () => {
+  it('sorts cat cards by stable catdex number, newest unnumbered cards last', () => {
+    const cards = sortCatCards([
+      makeItem({ id: 'cat-10', catdexNumber: 10 }),
+      makeItem({ id: 'cat-2', catdexNumber: 2 }),
+      makeItem({ id: 'cat-new', catdexNumber: undefined, date: '2026-05-12T08:00:00.000Z' }),
+    ]);
+
+    expect(cards.map((card) => card.id)).toEqual(['cat-2', 'cat-10', 'cat-new']);
+  });
+
+  it('returns circular previous and next deck neighbors', () => {
+    const cards = [
+      makeItem({ id: 'cat-1', catdexNumber: 1 }),
+      makeItem({ id: 'cat-2', catdexNumber: 2 }),
+      makeItem({ id: 'cat-3', catdexNumber: 3 }),
+    ];
+
+    expect(getDeckNeighbors(cards, 0)).toEqual({
+      previous: cards[2],
+      active: cards[0],
+      next: cards[1],
+    });
+  });
+
+  it('builds Traditional Chinese single-card share text with address', () => {
+    const text = buildSingleCatShareText(
+      makeItem({
+        catdexNumber: 29,
+        location: {
+          lat: 25.033,
+          lng: 121.565,
+          name: '巷口咖啡店',
+          address: '台北市信義區',
+        },
+      }),
+      'zh'
+    );
+
+    expect(text).toContain('轉角遇到貓');
+    expect(text).toContain('No.029');
+    expect(text).toContain('巷口咖啡店');
+    expect(text).toContain('台北市信義區');
+  });
+});

@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>轉角遇到貓 Logo Options</title>
+    <style>
+      :root {
+        --ink: #221915;
+        --paper: #fff7e8;
+        --milk: #fffdf2;
+        --blue: #2f5fb3;
+        --blue-ring: rgba(59, 130, 246, 0.5);
+        --yellow: #f7c948;
+        --red: #d95438;
+        --muted: #76665a;
+        --line: rgba(34, 25, 21, 0.16);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          linear-gradient(var(--line) 1px, transparent 1px),
+          linear-gradient(90deg, var(--line) 1px, transparent 1px),
+          var(--paper);
+        background-size: 34px 34px;
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Noto Sans TC", "PingFang TC", sans-serif;
+      }
+
+      main {
+        width: min(1120px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 42px 0 72px;
+      }
+
+      header {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 26px;
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: clamp(34px, 5vw, 64px);
+        line-height: 0.98;
+        letter-spacing: 0;
+      }
+
+      header p {
+        max-width: 430px;
+        color: var(--muted);
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.6;
+      }
+
+      section {
+        margin-top: 34px;
+      }
+
+      h2 {
+        margin-bottom: 14px;
+        font-size: 18px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .selected-grid,
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .selected-grid {
+        grid-template-columns: 1.1fr 0.9fr;
+        align-items: stretch;
+      }
+
+      .card {
+        min-height: 280px;
+        border: 2px solid var(--ink);
+        border-radius: 14px;
+        background: var(--milk);
+        box-shadow: 9px 9px 0 rgba(47, 95, 179, 0.24);
+        overflow: hidden;
+      }
+
+      .selected-card {
+        min-height: 330px;
+        border: 2px solid var(--ink);
+        border-radius: 18px;
+        background: var(--milk);
+        box-shadow: 10px 10px 0 rgba(247, 201, 72, 0.5);
+        overflow: hidden;
+      }
+
+      .selected-card.primary {
+        grid-row: span 2;
+      }
+
+      .moodboard-card {
+        border: 2px solid var(--ink);
+        border-radius: 14px;
+        background: var(--milk);
+        box-shadow: 9px 9px 0 rgba(47, 95, 179, 0.24);
+        overflow: hidden;
+      }
+
+      .moodboard-card img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .card-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 2px solid var(--ink);
+        padding: 12px 14px;
+        background: white;
+        font-size: 13px;
+        font-weight: 950;
+      }
+
+      .selected-stage {
+        display: grid;
+        min-height: 278px;
+        place-items: center;
+        padding: 28px;
+      }
+
+      .selected-stage.compact {
+        min-height: 190px;
+      }
+
+      .stage {
+        display: grid;
+        min-height: 220px;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .mark-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+      }
+
+      .brand-text strong {
+        display: block;
+        font-size: clamp(25px, 3.2vw, 40px);
+        line-height: 1.02;
+      }
+
+      .brand-text span {
+        display: block;
+        margin-top: 5px;
+        color: var(--blue);
+        font-size: 12px;
+        font-weight: 950;
+        letter-spacing: 0.13em;
+      }
+
+      .usage-label {
+        display: inline-flex;
+        align-items: center;
+        border: 2px solid var(--ink);
+        border-radius: 999px;
+        background: var(--yellow);
+        padding: 5px 10px;
+        font-size: 12px;
+        font-weight: 950;
+      }
+
+      .selected-note {
+        max-width: 560px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.7;
+      }
+
+      .note {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .icon-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .icon-card {
+        border: 2px solid var(--ink);
+        border-radius: 18px;
+        background: var(--milk);
+        padding: 14px;
+        box-shadow: 7px 7px 0 rgba(34, 25, 21, 0.12);
+      }
+
+      .icon-card .stage {
+        min-height: 150px;
+        padding: 8px;
+      }
+
+      .icon-label {
+        margin-top: 10px;
+        font-size: 13px;
+        font-weight: 950;
+      }
+
+      svg {
+        display: block;
+        max-width: 100%;
+      }
+
+      @media (max-width: 760px) {
+        header {
+          align-items: start;
+          flex-direction: column;
+        }
+
+        .selected-grid,
+        .grid,
+        .icon-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .selected-card.primary {
+          grid-row: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>轉角遇到貓<br />Brand System</h1>
+        </div>
+        <p>正式資產只使用 AI Moodboard V1 的原圖裁切，不再使用下方手畫 SVG 仿稿。L1 放 App 上方，L6 放桌面下載 icon，L4 放地圖頁。</p>
+      </header>
+
+      <section>
+        <h2>Selected From AI Moodboard V1</h2>
+        <div class="selected-grid">
+          <article class="selected-card primary">
+            <div class="card-head"><span>L1</span><span class="usage-label">App 上方品牌</span></div>
+            <div class="selected-stage">
+              <img src="/brand/moodboard-l1-logo.png" width="320" height="285" alt="AI Moodboard V1 L1 logo" />
+            </div>
+            <div style="padding: 0 20px 22px">
+              <p class="selected-note">這張是直接從 AI Moodboard V1 的 L1 裁切出來，保留原本的路牌、藍色線條、貓耳與英文字排版。</p>
+            </div>
+          </article>
+
+          <article class="selected-card">
+            <div class="card-head"><span>L6</span><span class="usage-label">桌面下載</span></div>
+            <div class="selected-stage compact">
+              <img src="/cat-icon-512.png" width="160" height="160" alt="AI Moodboard V1 L6 app icon" />
+            </div>
+          </article>
+
+          <article class="selected-card">
+            <div class="card-head"><span>L4</span><span class="usage-label">地圖頁</span></div>
+            <div class="selected-stage compact">
+              <img src="/brand/moodboard-l4-map.png" width="300" height="280" alt="AI Moodboard V1 L4 map logo" />
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <h2>AI Moodboard V1</h2>
+        <article class="moodboard-card">
+          <img src="/logo-moodboard-v1.png" alt="轉角遇到貓 Logo moodboard v1" />
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
