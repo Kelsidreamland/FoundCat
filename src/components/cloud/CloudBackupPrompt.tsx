@@ -33,6 +33,7 @@ const copy = {
     retryBackup: '再試一次',
     backingUp: '備份中',
     backedUp: (count: number) => `已備份 ${count} 隻貓`,
+    openMapToPublish: '去我的地圖公開貓點',
     backupFailed: '備份失敗，請稍後再試。',
     signOut: '登出',
     close: '關閉備份視窗',
@@ -58,6 +59,7 @@ const copy = {
     retryBackup: 'Try Again',
     backingUp: 'Backing Up',
     backedUp: (count: number) => `Backed up ${count} cat${count === 1 ? '' : 's'}`,
+    openMapToPublish: 'Open My Map to Publish Cats',
     backupFailed: 'Backup failed. Please try again later.',
     signOut: 'Sign Out',
     close: 'Close backup panel',
@@ -195,7 +197,15 @@ export default function CloudBackupPrompt({ language, items }: CloudBackupPrompt
                   </button>
                 </div>
                 {backupStatus === 'success' ? (
-                  <p className="mt-3 text-xs font-black text-[#2f5fb3]">{t.backedUp(backedUpCount)}</p>
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs font-black text-[#2f5fb3]">{t.backedUp(backedUpCount)}</p>
+                    <a
+                      href="/map"
+                      className="inline-flex h-9 items-center justify-center rounded-full border-2 border-[#1d1714] bg-[#fff2cf] px-4 text-[11px] font-black text-[#1d1714] shadow-[3px_3px_0_rgba(47,95,179,0.22)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+                    >
+                      {t.openMapToPublish}
+                    </a>
+                  </div>
                 ) : null}
                 {backupStatus === 'error' ? (
                   <p className="mt-3 text-xs font-black text-[#9f3a2f]">{t.backupFailed}</p>

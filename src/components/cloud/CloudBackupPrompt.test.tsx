@@ -134,6 +134,7 @@ describe('CloudBackupPrompt', () => {
       });
     });
     expect(screen.getByText('已備份 1 隻貓')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '去我的地圖公開貓點' })).toHaveAttribute('href', '/map');
   });
 
   it('shows a retryable message when backup fails', async () => {
