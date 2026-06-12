@@ -69,4 +69,71 @@ describe('useScrapbookStore catdex display name', () => {
       ])
     );
   });
+
+  it('merges restored cloud cats without overwriting cats already on this device', async () => {
+    useScrapbookStore.setState({
+      items: [
+        {
+          id: 'cat-1',
+          type: 'sticker',
+          imageData: 'data:image/png;base64,local-cat',
+          catName: '本機小橘',
+          date: '2026-05-15T08:00:00.000Z',
+          x: 0,
+          y: 0,
+          rotation: 0,
+          scale: 1,
+          zIndex: 3,
+        },
+      ],
+    });
+
+    await useScrapbookStore.getState().mergeRestoredItems([
+      {
+        id: 'cat-1',
+        type: 'sticker',
+        imageData: 'data:image/png;base64,cloud-cat',
+        catName: '雲端小橘',
+        date: '2026-05-15T08:00:00.000Z',
+        x: 0,
+        y: 0,
+        rotation: 0,
+        scale: 1,
+        zIndex: 1,
+      },
+      {
+        id: 'cat-2',
+        type: 'sticker',
+        imageData: 'data:image/png;base64,remote-cat',
+        catName: '曼谷小橘',
+        date: '2026-06-02T08:00:00.000Z',
+        x: 0,
+        y: 0,
+        rotation: 0,
+        scale: 1,
+        zIndex: 1,
+      },
+    ]);
+
+    expect(useScrapbookStore.getState().items).toEqual([
+      expect.objectContaining({
+        id: 'cat-1',
+        imageData: 'data:image/png;base64,local-cat',
+        catName: '本機小橘',
+        zIndex: 3,
+      }),
+      expect.objectContaining({
+        id: 'cat-2',
+        catName: '曼谷小橘',
+        zIndex: 4,
+      }),
+    ]);
+    expect(set).toHaveBeenCalledWith(
+      'scrapbook_items',
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'cat-1', catName: '本機小橘' }),
+        expect.objectContaining({ id: 'cat-2', catName: '曼谷小橘', zIndex: 4 }),
+      ])
+    );
+  });
 });

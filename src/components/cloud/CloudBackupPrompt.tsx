@@ -1,8 +1,9 @@
 import { FormEvent, useState } from 'react';
-import { AlertCircle, CheckCircle2, Cloud, LogOut, Mail, UploadCloud, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Cloud, DownloadCloud, LogOut, Mail, UploadCloud, X } from 'lucide-react';
 import { backupLocalCatCards } from '../../lib/cloudBackup';
+import { restoreCloudCatCards } from '../../lib/cloudRestore';
 import { useAuthStore } from '../../store/useAuthStore';
-import type { ScrapbookItem } from '../../store/useScrapbookStore';
+import { useScrapbookStore, type ScrapbookItem } from '../../store/useScrapbookStore';
 
 type CloudBackupPromptProps = {
   language: 'zh' | 'en';
@@ -10,6 +11,7 @@ type CloudBackupPromptProps = {
 };
 
 type BackupStatus = 'idle' | 'backing_up' | 'success' | 'error';
+type RestoreStatus = 'idle' | 'restoring' | 'success' | 'error';
 
 const copy = {
   zh: {
@@ -35,6 +37,10 @@ const copy = {
     backedUp: (count: number) => `已備份 ${count} 隻貓`,
     openMapToPublish: '去我的地圖公開貓點',
     backupFailed: '備份失敗，請稍後再試。',
+    restoreNow: '恢復雲端貓咪',
+    restoring: '恢復中',
+    restored: (count: number) => `已恢復 ${count} 隻貓`,
+    restoreFailed: '恢復失敗，請稍後再試。',
     signOut: '登出',
     close: '關閉備份視窗',
   },
@@ -61,6 +67,10 @@ const copy = {
     backedUp: (count: number) => `Backed up ${count} cat${count === 1 ? '' : 's'}`,
     openMapToPublish: 'Open My Map to Publish Cats',
     backupFailed: 'Backup failed. Please try again later.',
+    restoreNow: 'Restore Cloud Cats',
+    restoring: 'Restoring',
+    restored: (count: number) => `Restored ${count} cat${count === 1 ? '' : 's'}`,
+    restoreFailed: 'Restore failed. Please try again later.',
     signOut: 'Sign Out',
     close: 'Close backup panel',
   },
@@ -74,11 +84,14 @@ export default function CloudBackupPrompt({ language, items }: CloudBackupPrompt
   const error = useAuthStore((state) => state.error);
   const signInWithEmail = useAuthStore((state) => state.signInWithEmail);
   const signOut = useAuthStore((state) => state.signOut);
+  const mergeRestoredItems = useScrapbookStore((state) => state.mergeRestoredItems);
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [isSent, setIsSent] = useState(false);
   const [backupStatus, setBackupStatus] = useState<BackupStatus>('idle');
   const [backedUpCount, setBackedUpCount] = useState(0);
+  const [restoreStatus, setRestoreStatus] = useState<RestoreStatus>('idle');
+  const [restoredCount, setRestoredCount] = useState(0);
 
   const isSignedIn = Boolean(user);
   const userEmail = user?.email;
@@ -113,6 +126,24 @@ export default function CloudBackupPrompt({ language, items }: CloudBackupPrompt
     }
 
     setBackupStatus('error');
+  };
+
+  const handleRestore = async () => {
+    if (restoreStatus === 'restoring') return;
+
+    setRestoreStatus('restoring');
+    const result = await restoreCloudCatCards({
+      ownerId: user?.id ?? null,
+    });
+
+    if (!result.ok) {
+      setRestoreStatus('error');
+      return;
+    }
+
+    const addedCount = await mergeRestoredItems(result.items);
+    setRestoredCount(addedCount);
+    setRestoreStatus('success');
   };
 
   return (
@@ -173,7 +204,7 @@ export default function CloudBackupPrompt({ language, items }: CloudBackupPrompt
                     {userEmail ? <p className="text-xs font-bold text-[#6d5f52]">{userEmail}</p> : null}
                   </div>
                 </div>
-                <div className="mt-4 grid grid-cols-[1fr_auto] gap-2">
+                <div className="mt-4 grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => void handleBackup()}
@@ -189,13 +220,30 @@ export default function CloudBackupPrompt({ language, items }: CloudBackupPrompt
                   </button>
                   <button
                     type="button"
+                    onClick={() => void handleRestore()}
+                    disabled={restoreStatus === 'restoring'}
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-full border-2 border-[#1d1714] bg-[#fff2cf] px-4 text-xs font-black text-[#1d1714] shadow-[3px_3px_0_rgba(29,23,20,0.72)] disabled:cursor-wait disabled:bg-[#d7d1c3] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+                  >
+                    <DownloadCloud size={14} strokeWidth={2.7} aria-hidden="true" />
+                    {restoreStatus === 'restoring' ? t.restoring : t.restoreNow}
+                  </button>
+                </div>
+                <div className="mt-2 flex justify-end">
+                  <button
+                    type="button"
                     onClick={() => void signOut()}
-                    className="inline-flex h-10 items-center gap-2 rounded-full border-2 border-[#1d1714] bg-[#fff2cf] px-4 text-xs font-black shadow-[3px_3px_0_rgba(29,23,20,0.72)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+                    className="inline-flex h-9 items-center gap-2 rounded-full border border-[#1d1714]/35 bg-[#fffdf2] px-3 text-[11px] font-black shadow-[2px_2px_0_rgba(29,23,20,0.22)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
                   >
                     <LogOut size={14} strokeWidth={2.7} aria-hidden="true" />
                     {t.signOut}
                   </button>
                 </div>
+                {restoreStatus === 'success' ? (
+                  <p className="mt-3 text-xs font-black text-[#2f5fb3]">{t.restored(restoredCount)}</p>
+                ) : null}
+                {restoreStatus === 'error' ? (
+                  <p className="mt-3 text-xs font-black text-[#9f3a2f]">{t.restoreFailed}</p>
+                ) : null}
                 {backupStatus === 'success' ? (
                   <div className="mt-3 space-y-2">
                     <p className="text-xs font-black text-[#2f5fb3]">{t.backedUp(backedUpCount)}</p>

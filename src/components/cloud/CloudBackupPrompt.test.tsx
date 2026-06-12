@@ -2,12 +2,22 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { backupLocalCatCards } from '../../lib/cloudBackup';
+import { restoreCloudCatCards } from '../../lib/cloudRestore';
 import { useAuthStore } from '../../store/useAuthStore';
-import type { ScrapbookItem } from '../../store/useScrapbookStore';
+import { useScrapbookStore, type ScrapbookItem } from '../../store/useScrapbookStore';
 import CloudBackupPrompt from './CloudBackupPrompt';
+
+vi.mock('idb-keyval', () => ({
+  get: vi.fn(),
+  set: vi.fn(async () => undefined),
+}));
 
 vi.mock('../../lib/cloudBackup', () => ({
   backupLocalCatCards: vi.fn(async () => ({ ok: true, backedUpCount: 1 })),
+}));
+
+vi.mock('../../lib/cloudRestore', () => ({
+  restoreCloudCatCards: vi.fn(async () => ({ ok: true, items: [] })),
 }));
 
 const localCat: ScrapbookItem = {
@@ -26,6 +36,13 @@ describe('CloudBackupPrompt', () => {
   beforeEach(() => {
     vi.mocked(backupLocalCatCards).mockClear();
     vi.mocked(backupLocalCatCards).mockResolvedValue({ ok: true, backedUpCount: 1 });
+    vi.mocked(restoreCloudCatCards).mockClear();
+    vi.mocked(restoreCloudCatCards).mockResolvedValue({ ok: true, items: [] });
+    useScrapbookStore.setState({
+      items: [],
+      isLoading: false,
+      language: 'zh',
+    });
     useAuthStore.setState({
       session: null,
       user: null,
@@ -135,6 +152,45 @@ describe('CloudBackupPrompt', () => {
     });
     expect(screen.getByText('已備份 1 隻貓')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '去我的地圖公開貓點' })).toHaveAttribute('href', '/map');
+  });
+
+  it('restores cloud cats into the local device when signed in', async () => {
+    const user = userEvent.setup();
+    const remoteCat: ScrapbookItem = {
+      ...localCat,
+      id: 'remote-cat-1',
+      catName: '曼谷小橘',
+      location: {
+        lat: 13.7563,
+        lng: 100.5018,
+        name: '曼谷街角咖啡',
+      },
+    };
+    vi.mocked(restoreCloudCatCards).mockResolvedValue({ ok: true, items: [remoteCat] });
+    useAuthStore.setState({
+      isConfigured: true,
+      user: {
+        id: 'user-1',
+        email: 'cat@example.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: '2026-06-02T00:00:00.000Z',
+      },
+    });
+
+    render(<CloudBackupPrompt language="zh" items={[]} />);
+
+    await user.click(screen.getByRole('button', { name: '查看備份狀態' }));
+    await user.click(screen.getByRole('button', { name: '恢復雲端貓咪' }));
+
+    await waitFor(() => {
+      expect(restoreCloudCatCards).toHaveBeenCalledWith({ ownerId: 'user-1' });
+    });
+    await waitFor(() => {
+      expect(useScrapbookStore.getState().items).toEqual([remoteCat]);
+    });
+    expect(screen.getByText('已恢復 1 隻貓')).toBeInTheDocument();
   });
 
   it('shows a retryable message when backup fails', async () => {

@@ -44,6 +44,7 @@ interface ScrapbookState {
   loadItems: () => Promise<void>;
   addItem: (item: Omit<ScrapbookItem, 'id' | 'zIndex'>) => Promise<ScrapbookItem>;
   updateItem: (id: string, updates: Partial<ScrapbookItem>) => Promise<void>;
+  mergeRestoredItems: (items: ScrapbookItem[]) => Promise<number>;
   removeItem: (id: string) => Promise<void>;
   bringToFront: (id: string) => Promise<void>;
   setLanguage: (lang: 'zh' | 'en') => Promise<void>;
@@ -112,6 +113,23 @@ export const useScrapbookStore = create<ScrapbookState>((setStore, getStore) => 
     );
     setStore({ items: newItems });
     await set(STORAGE_KEY, newItems);
+  },
+
+  mergeRestoredItems: async (restoredItems) => {
+    const currentItems = getStore().items;
+    const existingIds = new Set(currentItems.map((item) => item.id));
+    const maxZIndex = currentItems.reduce((max, item) => Math.max(max, item.zIndex), 0);
+    const newRestoredItems = restoredItems
+      .filter((item) => !existingIds.has(item.id))
+      .map((item, index) => ({
+        ...item,
+        zIndex: maxZIndex + index + 1,
+      }));
+    const newItems = [...currentItems, ...newRestoredItems];
+
+    setStore({ items: newItems });
+    await set(STORAGE_KEY, newItems);
+    return newRestoredItems.length;
   },
 
   removeItem: async (id) => {
