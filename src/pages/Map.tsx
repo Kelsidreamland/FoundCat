@@ -603,6 +603,7 @@ export default function Map() {
     unpublish: language === 'zh' ? '從大家的地圖移除' : 'Remove from Shared Map',
     saving: language === 'zh' ? '同步中...' : 'Syncing...',
     published: language === 'zh' ? '已公開在大家的地圖' : 'Published to the shared map',
+    viewPublicMap: language === 'zh' ? '去大家的地圖查看' : 'View on Shared Map',
     unpublished: language === 'zh' ? '已從大家的地圖移除' : 'Removed from the shared map',
     error: language === 'zh' ? '同步失敗，請稍後再試。' : 'Sync failed. Please try again later.',
     hint: language === 'zh'
@@ -908,7 +909,16 @@ export default function Map() {
                     </span>
                   </button>
                   {publishStatus === 'published' ? (
-                    <p className="mt-2 text-xs font-black text-[#2f5fb3]">{publishCopy.published}</p>
+                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-xs font-black text-[#2f5fb3]">{publishCopy.published}</p>
+                      <button
+                        type="button"
+                        onClick={() => handleMapModeChange('public')}
+                        className="inline-flex min-h-8 items-center justify-center rounded-full border border-[#221915]/15 bg-[#fff2cf] px-3 py-1.5 text-[11px] font-black text-[#221915] shadow-[2px_2px_0_rgba(47,95,179,0.12)] transition-transform active:translate-x-[1px] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
+                      >
+                        {publishCopy.viewPublicMap}
+                      </button>
+                    </div>
                   ) : null}
                   {publishStatus === 'unpublished' ? (
                     <p className="mt-2 text-xs font-black text-[#6d5f52]">{publishCopy.unpublished}</p>

@@ -526,6 +526,16 @@ describe('Map page', () => {
       expect(useScrapbookStore.getState().items[0].isPublic).toBe(true);
     });
     expect(await screen.findByText('已公開在大家的地圖')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '去大家的地圖查看' }));
+
+    await waitFor(() => {
+      expect(loadPublicCatCards).toHaveBeenCalledTimes(1);
+    });
+    expect(screen.getByRole('button', { name: '大家的地圖' })).toHaveAttribute('aria-pressed', 'true');
+    expect(await screen.findByRole('button', { name: '曼谷街角咖啡' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '我的地圖' }));
+    await user.click(await screen.findByRole('button', { name: '巷口咖啡店' }));
 
     vi.mocked(setCloudCatCardVisibility).mockResolvedValue({ ok: true, isPublic: false });
     await user.click(await screen.findByRole('button', { name: '從大家的地圖移除' }));
