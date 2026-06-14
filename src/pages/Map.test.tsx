@@ -538,6 +538,7 @@ describe('Map page', () => {
       expect(useScrapbookStore.getState().items[0].isPublic).toBe(true);
     });
     expect(await screen.findByText('已公開在大家的地圖')).toBeInTheDocument();
+    expect(screen.getByText('已同步到大家的地圖，現在可以去看看公開貓點。')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '去大家的地圖查看' }));
 
     await waitFor(() => {
@@ -650,7 +651,69 @@ describe('Map page', () => {
     await user.click(await screen.findByRole('button', { name: '大家的地圖' }));
 
     expect(await screen.findByText('大家的地圖暫時載入失敗')).toBeInTheDocument();
-    expect(screen.getByText('可以先回到我的地圖，或稍後再試。')).toBeInTheDocument();
+    expect(screen.getByText('可能是網路或雲端暫時不穩，可以重新載入或先回到我的地圖。')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '重新載入大家的地圖' })).toBeInTheDocument();
+  });
+
+  it('retries the shared map after a public loading failure', async () => {
+    const user = userEvent.setup();
+    vi.mocked(loadPublicCatCards)
+      .mockResolvedValueOnce({
+        ok: false,
+        reason: 'public_load_failed',
+        message: 'network failed',
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        items: [
+          makeItem({
+            id: 'public-cat-retry',
+            imageData: 'data:image/png;base64,public-cat-retry',
+            catdexNumber: 89,
+            catName: '重試後的小貓',
+            location: {
+              lat: 13.7563,
+              lng: 100.5018,
+              name: '重試後咖啡店',
+            },
+            isPublic: true,
+          }),
+        ],
+      });
+
+    render(
+      <MemoryRouter initialEntries={['/map?mode=public']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    await user.click(await screen.findByRole('button', { name: '重新載入大家的地圖' }));
+
+    await waitFor(() => {
+      expect(loadPublicCatCards).toHaveBeenCalledTimes(2);
+    });
+    expect(await screen.findByRole('button', { name: '重試後咖啡店' })).toBeInTheDocument();
+  });
+
+  it('guides users to publish the first shared cat when the shared map is empty', async () => {
+    const user = userEvent.setup();
+    vi.mocked(loadPublicCatCards).mockResolvedValue({
+      ok: true,
+      items: [],
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/map?mode=public']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('大家的地圖還沒有貓貓')).toBeInTheDocument();
+    expect(screen.getByText('現在還沒有公開貓點。先回到我的地圖，把你遇到的第一隻貓公開出來。')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '回我的地圖公開第一隻貓' }));
+
+    expect(screen.getByRole('button', { name: '我的地圖' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('explains that the shared map is preparing when cloud is not configured yet', async () => {
@@ -669,7 +732,7 @@ describe('Map page', () => {
     await user.click(await screen.findByRole('button', { name: '大家的地圖' }));
 
     expect(await screen.findByText('大家的地圖準備中')).toBeInTheDocument();
-    expect(screen.getByText('先把你遇到的貓貓存在我的地圖，雲端地圖開放後就能一起看見大家的貓點。')).toBeInTheDocument();
+    expect(screen.getByText('雲端地圖還在準備。你仍然可以先把遇到的貓存在我的地圖，之後再公開到大家的地圖。')).toBeInTheDocument();
     expect(screen.queryByText('大家的地圖暫時載入失敗')).not.toBeInTheDocument();
   });
 

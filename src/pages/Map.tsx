@@ -125,6 +125,7 @@ export default function Map() {
   const [mapMode, setMapMode] = useState<MapMode>(initialMapMode);
   const [publicItems, setPublicItems] = useState<ScrapbookItem[]>([]);
   const [publicLoadStatus, setPublicLoadStatus] = useState<PublicLoadStatus>('idle');
+  const [publicReloadKey, setPublicReloadKey] = useState(0);
 
   const activeItems = mapMode === 'public' ? publicItems : items;
   const isPublicMapMode = mapMode === 'public';
@@ -298,6 +299,10 @@ export default function Map() {
     setIsEncounterDetailsOpen(false);
   }, [navigate, searchParams]);
 
+  const handleRetryPublicMap = useCallback(() => {
+    setPublicReloadKey((current) => current + 1);
+  }, []);
+
   const selectSiblingInLocationGroup = useCallback((direction: 'previous' | 'next') => {
     if (!selectedItem || !selectedLocationGroup || selectedLocationGroup.items.length < 2) return;
 
@@ -357,7 +362,7 @@ export default function Map() {
     return () => {
       cancelled = true;
     };
-  }, [mapMode]);
+  }, [mapMode, publicReloadKey]);
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -598,12 +603,18 @@ export default function Map() {
     publicEmptyTitle: language === 'zh' ? '大家的地圖暫時載入失敗' : 'Shared map is unavailable',
     publicPreparingTitle: language === 'zh' ? '大家的地圖準備中' : 'Shared map is preparing',
     publicNoCatsTitle: language === 'zh' ? '大家的地圖還沒有貓貓' : 'No public cats yet',
-    publicEmptyBody: language === 'zh' ? '可以先回到我的地圖，或稍後再試。' : 'Return to My Map or try again later.',
+    publicEmptyBody: language === 'zh'
+      ? '可能是網路或雲端暫時不穩，可以重新載入或先回到我的地圖。'
+      : 'The network or cloud may be unstable. Try reloading or return to My Map.',
     publicPreparingBody: language === 'zh'
-      ? '先把你遇到的貓貓存在我的地圖，雲端地圖開放後就能一起看見大家的貓點。'
-      : 'Save the cats you meet in My Map first. Once cloud maps open, everyone can see shared cat spots together.',
-    publicNoCatsBody: language === 'zh' ? '等大家公開貓咪後，這裡就會出現新的貓點。' : 'Published cats will appear here.',
+      ? '雲端地圖還在準備。你仍然可以先把遇到的貓存在我的地圖，之後再公開到大家的地圖。'
+      : 'The cloud map is still preparing. You can save cats in My Map now and publish them later.',
+    publicNoCatsBody: language === 'zh'
+      ? '現在還沒有公開貓點。先回到我的地圖，把你遇到的第一隻貓公開出來。'
+      : 'No public cat spots yet. Return to My Map and publish the first cat you found.',
     publicLoading: language === 'zh' ? '正在載入大家的貓咪地圖...' : 'Loading the shared cat map...',
+    publicRetry: language === 'zh' ? '重新載入大家的地圖' : 'Reload Shared Map',
+    publicPublishFirst: language === 'zh' ? '回我的地圖公開第一隻貓' : 'Return to My Map to Publish a Cat',
   };
   const mapCountLabel = isPublicMapMode
     ? (language === 'zh'
@@ -617,6 +628,9 @@ export default function Map() {
     unpublish: language === 'zh' ? '從大家的地圖移除' : 'Remove from Shared Map',
     saving: language === 'zh' ? '同步中...' : 'Syncing...',
     published: language === 'zh' ? '已公開在大家的地圖' : 'Published to the shared map',
+    publishedHint: language === 'zh'
+      ? '已同步到大家的地圖，現在可以去看看公開貓點。'
+      : 'Synced to the shared map. You can now view public cat spots.',
     viewPublicMap: language === 'zh' ? '去大家的地圖查看' : 'View on Shared Map',
     unpublished: language === 'zh' ? '已從大家的地圖移除' : 'Removed from the shared map',
     error: language === 'zh' ? '同步失敗，請稍後再試。' : 'Sync failed. Please try again later.',
@@ -743,14 +757,36 @@ export default function Map() {
                 {publicLoadStatus === 'unconfigured' ? (
                   <CloudBackupPrompt language={language} items={items} />
                 ) : null}
-                <button
-                  type="button"
-                  onClick={() => handleMapModeChange('mine')}
-                  className="mt-3 inline-flex items-center gap-2 rounded-[14px] border-2 border-[#221915] bg-[#2f5fb3] px-4 py-2 text-sm font-black text-[#fffdf2] shadow-[4px_4px_0_rgba(34,25,21,0.16)] transition-transform active:translate-x-[1px] active:translate-y-[1px]"
-                >
-                  <MapPin size={16} />
-                  <span>{mapModeCopy.mine}</span>
-                </button>
+                {publicLoadStatus === 'error' ? (
+                  <button
+                    type="button"
+                    onClick={handleRetryPublicMap}
+                    className="mt-3 inline-flex items-center gap-2 rounded-[14px] border-2 border-[#221915] bg-[#fff2cf] px-4 py-2 text-sm font-black text-[#221915] shadow-[4px_4px_0_rgba(47,95,179,0.18)] transition-transform active:translate-x-[1px] active:translate-y-[1px]"
+                  >
+                    <ArrowRight size={16} />
+                    <span>{mapModeCopy.publicRetry}</span>
+                  </button>
+                ) : null}
+                {publicLoadStatus === 'success' ? (
+                  <button
+                    type="button"
+                    onClick={() => handleMapModeChange('mine')}
+                    className="mt-3 inline-flex items-center gap-2 rounded-[14px] border-2 border-[#221915] bg-[#fff2cf] px-4 py-2 text-sm font-black text-[#221915] shadow-[4px_4px_0_rgba(47,95,179,0.18)] transition-transform active:translate-x-[1px] active:translate-y-[1px]"
+                  >
+                    <MapPin size={16} />
+                    <span>{mapModeCopy.publicPublishFirst}</span>
+                  </button>
+                ) : null}
+                {publicLoadStatus !== 'success' ? (
+                  <button
+                    type="button"
+                    onClick={() => handleMapModeChange('mine')}
+                    className="mt-3 inline-flex items-center gap-2 rounded-[14px] border-2 border-[#221915] bg-[#2f5fb3] px-4 py-2 text-sm font-black text-[#fffdf2] shadow-[4px_4px_0_rgba(34,25,21,0.16)] transition-transform active:translate-x-[1px] active:translate-y-[1px]"
+                  >
+                    <MapPin size={16} />
+                    <span>{mapModeCopy.mine}</span>
+                  </button>
+                ) : null}
               </>
             ) : (
               <>
@@ -924,7 +960,12 @@ export default function Map() {
                   </button>
                   {publishStatus === 'published' ? (
                     <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-xs font-black text-[#2f5fb3]">{publishCopy.published}</p>
+                      <div className="min-w-0">
+                        <p className="text-xs font-black text-[#2f5fb3]">{publishCopy.published}</p>
+                        <p className="mt-0.5 text-[11px] font-bold leading-snug text-[#5f5148]">
+                          {publishCopy.publishedHint}
+                        </p>
+                      </div>
                       <button
                         type="button"
                         onClick={() => handleMapModeChange('public')}
