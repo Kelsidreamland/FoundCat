@@ -121,7 +121,8 @@ export default function Map() {
   const [encounterDetailSavedMessage, setEncounterDetailSavedMessage] = useState<string | null>(null);
   const [isEncounterDetailsOpen, setIsEncounterDetailsOpen] = useState(false);
   const [publishStatus, setPublishStatus] = useState<PublishStatus>('idle');
-  const [mapMode, setMapMode] = useState<MapMode>('mine');
+  const initialMapMode: MapMode = searchParams.get('mode') === 'public' ? 'public' : 'mine';
+  const [mapMode, setMapMode] = useState<MapMode>(initialMapMode);
   const [publicItems, setPublicItems] = useState<ScrapbookItem[]>([]);
   const [publicLoadStatus, setPublicLoadStatus] = useState<PublicLoadStatus>('idle');
 
@@ -277,12 +278,25 @@ export default function Map() {
 
   const handleMapModeChange = useCallback((nextMode: MapMode) => {
     setMapMode(nextMode);
+    const nextSearchParams = new URLSearchParams(searchParams);
+    if (nextMode === 'public') {
+      nextSearchParams.set('mode', 'public');
+    } else {
+      nextSearchParams.delete('mode');
+    }
+    navigate(
+      {
+        pathname: '/map',
+        search: nextSearchParams.toString(),
+      },
+      { replace: true }
+    );
     setSelectedItemId(null);
     setExpandedImageItemId(null);
     setPosterPreviewItemId(null);
     setLocationEditItemId(null);
     setIsEncounterDetailsOpen(false);
-  }, []);
+  }, [navigate, searchParams]);
 
   const selectSiblingInLocationGroup = useCallback((direction: 'previous' | 'next') => {
     if (!selectedItem || !selectedLocationGroup || selectedLocationGroup.items.length < 2) return;

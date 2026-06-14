@@ -15,31 +15,32 @@ describe('CatActionNav', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByRole('link', { name: '分享我的貓咪地圖' })).toHaveAttribute('href', '/share');
+    expect(screen.getByRole('link', { name: '大家的地圖' })).toHaveAttribute('href', '/map?mode=public');
     expect(screen.getByRole('link', { name: '拍貓' })).toHaveAttribute('href', '/create');
     expect(screen.getByRole('link', { name: '貓咪地圖' })).toHaveAttribute('href', '/map');
   });
 
-  it('does not mark the share-map action as current on the home page', () => {
+  it('does not mark the shared-map action as current on the home page', () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <CatActionNav />
       </MemoryRouter>
     );
 
-    expect(screen.getByRole('link', { name: '分享我的貓咪地圖' })).not.toHaveAttribute('aria-current');
+    expect(screen.getByRole('link', { name: '大家的地圖' })).not.toHaveAttribute('aria-current');
     expect(screen.getByRole('link', { name: '拍貓' })).not.toHaveAttribute('aria-current');
     expect(screen.getByRole('link', { name: '貓咪地圖' })).not.toHaveAttribute('aria-current');
   });
 
-  it('marks the share-map action as current on the share page', () => {
+  it('marks the shared-map action as current on the public map route', () => {
     render(
-      <MemoryRouter initialEntries={['/share']}>
+      <MemoryRouter initialEntries={['/map?mode=public']}>
         <CatActionNav />
       </MemoryRouter>
     );
 
-    expect(screen.getByRole('link', { name: '分享我的貓咪地圖' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: '大家的地圖' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: '貓咪地圖' })).not.toHaveAttribute('aria-current');
   });
 
   it('moves the active tab state when the user is on the map', () => {
@@ -49,7 +50,7 @@ describe('CatActionNav', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByRole('link', { name: '分享我的貓咪地圖' })).not.toHaveAttribute('aria-current');
+    expect(screen.getByRole('link', { name: '大家的地圖' })).not.toHaveAttribute('aria-current');
     expect(screen.getByRole('link', { name: '貓咪地圖' })).toHaveAttribute('aria-current', 'page');
   });
 

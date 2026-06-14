@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { AlertCircle, CheckCircle2, Cloud, DownloadCloud, LogOut, Mail, UploadCloud, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Cloud, DownloadCloud, LogOut, Mail, MapPin, UploadCloud, X } from 'lucide-react';
 import { backupLocalCatCards } from '../../lib/cloudBackup';
 import { restoreCloudCatCards } from '../../lib/cloudRestore';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -43,6 +43,8 @@ const copy = {
     restoring: '恢復中',
     restored: (count: number) => `已恢復 ${count} 隻貓`,
     restoreFailed: '恢復失敗，請稍後再試。',
+    openSharedMap: '去大家的地圖',
+    openSharedMapHint: '看看大家公開的貓點，也可以從我的地圖公開你遇到的貓。',
     signOut: '登出',
     close: '關閉備份視窗',
   },
@@ -74,6 +76,8 @@ const copy = {
     restoring: 'Restoring',
     restored: (count: number) => `Restored ${count} cat${count === 1 ? '' : 's'}`,
     restoreFailed: 'Restore failed. Please try again later.',
+    openSharedMap: 'Open Shared Map',
+    openSharedMapHint: 'Explore public cat spots, or publish your own cats from My Map.',
     signOut: 'Sign Out',
     close: 'Close backup panel',
   },
@@ -253,6 +257,17 @@ export default function CloudBackupPrompt({ language, items, autoOpenOnSignedInE
                     {t.emptyDeviceRestoreHint}
                   </p>
                 ) : null}
+                <a
+                  href="/map?mode=public"
+                  aria-label={t.openSharedMap}
+                  className="mt-3 flex min-h-11 items-center justify-between gap-3 rounded-[16px] border border-[#1d1714]/18 bg-[#d9ecff]/70 px-3 py-2 text-left shadow-[2px_2px_0_rgba(47,95,179,0.18)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+                >
+                  <span className="min-w-0">
+                    <span className="block text-xs font-black text-[#1d1714]">{t.openSharedMap}</span>
+                    <span className="mt-0.5 block text-[11px] font-bold leading-4 text-[#6d5f52]">{t.openSharedMapHint}</span>
+                  </span>
+                  <MapPin size={16} strokeWidth={2.7} className="shrink-0 text-[#2f5fb3]" aria-hidden="true" />
+                </a>
                 <div className="mt-2 flex justify-end">
                   <button
                     type="button"

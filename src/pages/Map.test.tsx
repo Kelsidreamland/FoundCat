@@ -266,6 +266,18 @@ describe('Map page', () => {
     expect(screen.getByRole('button', { name: '備份我的貓咪地圖' })).toBeInTheDocument();
   });
 
+  it('opens the shared cat map directly from the public map query', async () => {
+    render(
+      <MemoryRouter initialEntries={['/map?mode=public']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('button', { name: '大家的地圖' })).toHaveAttribute('aria-pressed', 'true');
+    expect(loadPublicCatCards).toHaveBeenCalledTimes(1);
+    expect(await screen.findByRole('button', { name: '曼谷街角咖啡' })).toBeInTheDocument();
+  });
+
   it('pins the MapLibre container with inline geometry so library CSS cannot collapse it', async () => {
     render(
       <MemoryRouter>

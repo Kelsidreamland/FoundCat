@@ -119,6 +119,7 @@ describe('CloudBackupPrompt', () => {
     await user.click(screen.getByRole('button', { name: '查看備份狀態' }));
     expect(screen.getByText('已登入')).toBeInTheDocument();
     expect(screen.getByText('cat@example.com')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '去大家的地圖' })).toHaveAttribute('href', '/map?mode=public');
 
     await user.click(screen.getByRole('button', { name: '登出' }));
 
