@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { AlertCircle, CheckCircle2, Cloud, DownloadCloud, LogOut, Mail, UploadCloud, X } from 'lucide-react';
 import { backupLocalCatCards } from '../../lib/cloudBackup';
 import { restoreCloudCatCards } from '../../lib/cloudRestore';
@@ -8,6 +8,7 @@ import { useScrapbookStore, type ScrapbookItem } from '../../store/useScrapbookS
 type CloudBackupPromptProps = {
   language: 'zh' | 'en';
   items: ScrapbookItem[];
+  autoOpenOnSignedInEmptyDevice?: boolean;
 };
 
 type BackupStatus = 'idle' | 'backing_up' | 'success' | 'error';
@@ -31,6 +32,7 @@ const copy = {
     sentBody: '請到信箱點擊連結，回到 FOUND CAT 後就能繼續備份。',
     signInFailed: '登入信寄送失敗，請稍後再試。',
     signedInTitle: '已登入',
+    emptyDeviceRestoreHint: '這台裝置目前沒有貓咪；如果你之前備份過，可以先恢復雲端貓咪。',
     backupNow: '立即備份',
     retryBackup: '再試一次',
     backingUp: '備份中',
@@ -61,6 +63,7 @@ const copy = {
     sentBody: 'Open the email link, then return to FOUND CAT to continue backup.',
     signInFailed: 'Could not send the sign-in link. Please try again later.',
     signedInTitle: 'Signed in',
+    emptyDeviceRestoreHint: 'This device has no cats yet. If you backed up before, restore your cloud cats first.',
     backupNow: 'Back Up Now',
     retryBackup: 'Try Again',
     backingUp: 'Backing Up',
@@ -76,7 +79,7 @@ const copy = {
   },
 };
 
-export default function CloudBackupPrompt({ language, items }: CloudBackupPromptProps) {
+export default function CloudBackupPrompt({ language, items, autoOpenOnSignedInEmptyDevice = false }: CloudBackupPromptProps) {
   const t = copy[language];
   const user = useAuthStore((state) => state.user);
   const isConfigured = useAuthStore((state) => state.isConfigured);
@@ -92,10 +95,27 @@ export default function CloudBackupPrompt({ language, items }: CloudBackupPrompt
   const [backedUpCount, setBackedUpCount] = useState(0);
   const [restoreStatus, setRestoreStatus] = useState<RestoreStatus>('idle');
   const [restoredCount, setRestoredCount] = useState(0);
+  const hasAutoOpenedRef = useRef(false);
 
   const isSignedIn = Boolean(user);
   const userEmail = user?.email;
   const catCount = items.length;
+
+  useEffect(() => {
+    if (
+      !autoOpenOnSignedInEmptyDevice ||
+      hasAutoOpenedRef.current ||
+      !isConfigured ||
+      isLoading ||
+      !isSignedIn ||
+      catCount > 0
+    ) {
+      return;
+    }
+
+    hasAutoOpenedRef.current = true;
+    setIsOpen(true);
+  }, [autoOpenOnSignedInEmptyDevice, catCount, isConfigured, isLoading, isSignedIn]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -228,6 +248,11 @@ export default function CloudBackupPrompt({ language, items }: CloudBackupPrompt
                     {restoreStatus === 'restoring' ? t.restoring : t.restoreNow}
                   </button>
                 </div>
+                {catCount === 0 ? (
+                  <p className="mt-3 rounded-[14px] border border-[#2f5fb3]/30 bg-[#d9ecff]/65 px-3 py-2 text-xs font-black leading-5 text-[#2f5fb3]">
+                    {t.emptyDeviceRestoreHint}
+                  </p>
+                ) : null}
                 <div className="mt-2 flex justify-end">
                   <button
                     type="button"

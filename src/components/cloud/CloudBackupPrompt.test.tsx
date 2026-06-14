@@ -125,6 +125,45 @@ describe('CloudBackupPrompt', () => {
     expect(signOut).toHaveBeenCalledTimes(1);
   });
 
+  it('opens restore guidance automatically for signed-in users with no local cats', () => {
+    useAuthStore.setState({
+      isConfigured: true,
+      user: {
+        id: 'user-1',
+        email: 'cat@example.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: '2026-06-02T00:00:00.000Z',
+      },
+    });
+
+    render(<CloudBackupPrompt language="zh" items={[]} autoOpenOnSignedInEmptyDevice />);
+
+    expect(screen.getByRole('dialog', { name: '備份我的貓咪地圖' })).toBeInTheDocument();
+    expect(screen.getByText('這台裝置目前沒有貓咪；如果你之前備份過，可以先恢復雲端貓咪。')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '恢復雲端貓咪' })).toBeInTheDocument();
+    expect(screen.getByText('cat@example.com')).toBeInTheDocument();
+  });
+
+  it('does not auto-open restore guidance when signed-in users already have local cats', () => {
+    useAuthStore.setState({
+      isConfigured: true,
+      user: {
+        id: 'user-1',
+        email: 'cat@example.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: '2026-06-02T00:00:00.000Z',
+      },
+    });
+
+    render(<CloudBackupPrompt language="zh" items={[localCat]} autoOpenOnSignedInEmptyDevice />);
+
+    expect(screen.queryByRole('dialog', { name: '備份我的貓咪地圖' })).not.toBeInTheDocument();
+  });
+
   it('backs up local cats when signed in', async () => {
     const user = userEvent.setup();
     useAuthStore.setState({

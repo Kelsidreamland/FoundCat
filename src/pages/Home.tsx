@@ -74,7 +74,7 @@ export default function Home() {
             }}
             onShareCard={handleShareCard}
           />
-          <CloudBackupPrompt language={language} items={items} />
+          <CloudBackupPrompt language={language} items={items} autoOpenOnSignedInEmptyDevice />
         </section>
       </main>
 
