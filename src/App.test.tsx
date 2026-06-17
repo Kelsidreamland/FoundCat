@@ -94,4 +94,13 @@ describe('App viewport shell', () => {
       expect(mockInitAuth).toHaveBeenCalledTimes(1);
     });
   });
+
+  it('serves the my cat cards page at /catdex', async () => {
+    window.history.pushState({}, '', '/catdex');
+
+    render(<App />);
+
+    expect(await screen.findByRole('heading', { name: '我的貓卡' })).toBeInTheDocument();
+    expect(screen.getByText('FOUND CATS ARCHIVE')).toBeInTheDocument();
+  });
 });

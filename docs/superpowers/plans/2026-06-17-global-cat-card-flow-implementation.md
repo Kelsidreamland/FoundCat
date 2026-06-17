@@ -329,13 +329,25 @@ npm run build
 - Modify: `src/components/catdex/CatActionNav.tsx`
 - Tests: matching page/nav tests.
 
-- [ ] **Step 1: Change bottom-left nav to My Cat Cards**
+- [x] **Step 1: Change bottom-left nav to My Cat Cards**
 
 Left nav should no longer open the public map. It should open a page that groups saved cats.
 
-- [ ] **Step 2: Group local and collected cats by country/city when available**
+- [x] **Step 2: Group local and collected cats by country/city when available**
 
 Use existing `location` data first. If country is unavailable, group by city/place name or "Unknown place".
+
+Verified on 2026-06-17:
+
+```bash
+npm test -- src/components/catdex/CatActionNav.test.tsx src/pages/Home.test.tsx src/App.test.tsx src/pages/Catdex.test.tsx
+npm test -- src/components/catdex/CatActionNav.test.tsx src/pages/Home.test.tsx src/App.test.tsx src/pages/Catdex.test.tsx src/pages/ShareCatdex.test.tsx src/pages/Map.test.tsx src/pages/Create.test.tsx
+npm run lint
+npm run check
+npm run build
+```
+
+`npm run build` passed with the existing chunk-size warning.
 
 ---
 

@@ -83,7 +83,7 @@ describe('Home page', () => {
     expect(screen.getAllByText('FOUND CAT').length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText('Corner Cat Stickerbook')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Switch to English' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '大家的地圖' })).toHaveAttribute('href', '/map?mode=public');
+    expect(screen.getByRole('link', { name: '我的貓卡' })).toHaveAttribute('href', '/catdex');
     expect(screen.getByRole('link', { name: '捐贈' })).toHaveAttribute(
       'href',
       'https://api.payuni.com.tw/api/uop/receive_info/2/3/NPPA226028039/mgYrU0DqoPbb6vatwL86Z'

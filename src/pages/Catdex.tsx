@@ -15,6 +15,10 @@ const paperTexture = {
   backgroundSize: '28px 28px, 100% 18px, 100% 100%, 100% 100%',
 };
 
+const getPlaceGroupName = (locationName: string | undefined, language: 'zh' | 'en') => (
+  locationName?.trim() || (language === 'zh' ? '未記錄地點' : 'No location yet')
+);
+
 export default function Catdex() {
   const { items, language } = useScrapbookStore();
   const t = translations[language];
@@ -22,6 +26,28 @@ export default function Catdex() {
   const sortedItems = useMemo(
     () => [...items].sort((a, b) => (a.catdexNumber ?? 0) - (b.catdexNumber ?? 0)),
     [items]
+  );
+  const placeGroups = useMemo(() => {
+    const groups: Array<{ name: string; items: typeof sortedItems }> = [];
+
+    sortedItems.forEach((item) => {
+      const groupName = getPlaceGroupName(item.location?.name, language);
+      const existingGroup = groups.find((group) => group.name === groupName);
+      if (existingGroup) {
+        existingGroup.items.push(item);
+        return;
+      }
+
+      groups.push({ name: groupName, items: [item] });
+    });
+
+    return groups;
+  }, [language, sortedItems]);
+
+  const formatGroupCount = (count: number) => (
+    language === 'zh'
+      ? `${count} 張貓卡`
+      : `${count} cat ${count === 1 ? 'card' : 'cards'}`
   );
 
   return (
@@ -57,36 +83,63 @@ export default function Catdex() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 pb-2">
-            {sortedItems.map((item) => (
-              <Link
-                key={item.id}
-                to={`/detail/${item.id}`}
-                className="group block border-2 border-black bg-[#fffdf2] p-2 shadow-[6px_6px_0_rgba(0,0,0,0.88)] transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2f5fb3] focus-visible:ring-offset-2 focus-visible:ring-offset-cat-bg"
-              >
-                <div className="flex aspect-square items-center justify-center border-2 border-black bg-cat-card p-2">
-                  <img
-                    src={item.imageData}
-                    alt={`${t.catdex} ${item.catdexNumber ?? ''}`.trim()}
-                    className="max-h-full max-w-full object-contain drop-shadow-[0_8px_10px_rgba(0,0,0,0.16)]"
-                    draggable={false}
-                  />
-                </div>
-                <div className="mt-3 flex justify-center">
-                  <CatdexLabel catdexNumber={item.catdexNumber} label={t.catdexLabel} />
-                </div>
-                {item.catName?.trim() ? (
-                  <p className="mt-2 truncate text-center text-sm font-black text-[#221915]">
-                    {item.catName.trim()}
+          <div className="space-y-6 pb-2">
+            {placeGroups.map((group, index) => {
+              const groupHeadingId = `cat-place-${index}`;
+
+              return (
+              <section key={group.name} aria-labelledby={groupHeadingId}>
+                <div className="mb-3 flex items-end justify-between gap-3 border-b-2 border-[#221915] pb-2">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#2f5fb3]">
+                      FOUND CAT PLACE
+                    </p>
+                    <h2
+                      id={groupHeadingId}
+                      className="mt-1 truncate text-xl font-black leading-tight text-[#1d1714]"
+                    >
+                      {group.name}
+                    </h2>
+                  </div>
+                  <p className="shrink-0 rounded-full border border-[#221915]/20 bg-[#fffdf2] px-3 py-1 text-[11px] font-black text-[#221915] shadow-[2px_2px_0_rgba(47,95,179,0.12)]">
+                    {formatGroupCount(group.items.length)}
                   </p>
-                ) : null}
-                {item.location?.name ? (
-                  <p className="mt-1 truncate text-center text-[11px] font-bold text-[#76665a]">
-                    {item.location.name}
-                  </p>
-                ) : null}
-              </Link>
-            ))}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {group.items.map((item) => (
+                    <Link
+                      key={item.id}
+                      to={`/detail/${item.id}`}
+                      className="group block border-2 border-black bg-[#fffdf2] p-2 shadow-[6px_6px_0_rgba(0,0,0,0.88)] transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2f5fb3] focus-visible:ring-offset-2 focus-visible:ring-offset-cat-bg"
+                    >
+                      <div className="flex aspect-square items-center justify-center border-2 border-black bg-cat-card p-2">
+                        <img
+                          src={item.imageData}
+                          alt={`${t.catdex} ${item.catdexNumber ?? ''}`.trim()}
+                          className="max-h-full max-w-full object-contain drop-shadow-[0_8px_10px_rgba(0,0,0,0.16)]"
+                          draggable={false}
+                        />
+                      </div>
+                      <div className="mt-3 flex justify-center">
+                        <CatdexLabel catdexNumber={item.catdexNumber} label={t.catdexLabel} />
+                      </div>
+                      {item.catName?.trim() ? (
+                        <p className="mt-2 truncate text-center text-sm font-black text-[#221915]">
+                          {item.catName.trim()}
+                        </p>
+                      ) : null}
+                      {item.location?.name ? (
+                        <p className="mt-1 truncate text-center text-[11px] font-bold text-[#76665a]">
+                          {item.location.name}
+                        </p>
+                      ) : null}
+                    </Link>
+                  ))}
+                </div>
+              </section>
+              );
+            })}
           </div>
         )}
       </main>

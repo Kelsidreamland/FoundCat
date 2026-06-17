@@ -9,24 +9,22 @@ const iconProps = {
   strokeWidth: 3.2,
 };
 
-function ShareMapIcon() {
+function CatCardsIcon() {
   return (
     <svg
       aria-hidden="true"
-      data-brand-icon="share-map"
-      data-testid="brand-icon-share-map"
+      data-brand-icon="cat-cards"
+      data-testid="brand-icon-cat-cards"
       viewBox="0 0 64 64"
       className={iconClass}
       {...iconProps}
     >
-      <path d="M12 18h27c5 0 8 3 8 8v26H20c-5 0-8-3-8-8V18Z" fill="#FFFDF2" />
-      <path d="M18 23h28c4 0 6 2 6 6v20H24c-4 0-6-2-6-6V23Z" fill="#D9ECFF" />
-      <path d="M23 41 35 32l17 10M18 31l14-6 20 12" stroke="#8FA7D6" strokeWidth="2.2" />
-      <path d="M41 14h10v10" />
-      <path d="M51 14 37 28" />
-      <path d="M33 30c0 6.2-7 14-7 14s-7-7.8-7-14a7 7 0 1 1 14 0Z" fill="#2F5FB3" />
-      <path d="M26 28.3c2 0 3.4 1.4 4.1 2.7-.7 1.3-2.1 2.7-4.1 2.7s-3.4-1.4-4.1-2.7c.7-1.3 2.1-2.7 4.1-2.7Z" fill="#FFFDF2" strokeWidth="2" />
-      <path d="M42 49h10l-10-10v10Z" fill="#F7C948" />
+      <path d="M15 14h30c4 0 7 3 7 7v30H22c-4 0-7-3-7-7V14Z" fill="#FFFDF2" />
+      <path d="M9 20h30c4 0 7 3 7 7v27H16c-4 0-7-3-7-7V20Z" fill="#D9ECFF" />
+      <path d="M16 27h24v19H16z" fill="#FFFDF2" />
+      <path d="M21 33c3.2-3.6 9.8-3.6 13 0 1.8 2.1 1.8 5.1 0 7.2-3.2 3.6-9.8 3.6-13 0-1.8-2.1-1.8-5.1 0-7.2Z" fill="#2F5FB3" />
+      <path d="M27.5 34.1c2.7 0 4.8 1.9 5.8 3.7-1 1.8-3.1 3.7-5.8 3.7s-4.8-1.9-5.8-3.7c1-1.8 3.1-3.7 5.8-3.7Z" fill="#FFFDF2" strokeWidth="2.1" />
+      <path d="M40 54h12L40 42v12Z" fill="#F7C948" />
     </svg>
   );
 }
@@ -73,7 +71,7 @@ function CatMapIcon() {
 interface CatActionNavProps {
   labels?: {
     nav?: string;
-    shareMap?: string;
+    myCatCards?: string;
     capture?: string;
     map?: string;
   };
@@ -81,7 +79,7 @@ interface CatActionNavProps {
 
 const defaultLabels = {
   nav: '主要操作',
-  shareMap: '大家的地圖',
+  myCatCards: '我的貓卡',
   capture: '拍貓',
   map: '貓咪地圖',
 };
@@ -89,8 +87,8 @@ const defaultLabels = {
 export default function CatActionNav({ labels }: CatActionNavProps) {
   const location = useLocation();
   const navLabels = { ...defaultLabels, ...labels };
-  const isSharedMapActive = location.pathname === '/map' && new URLSearchParams(location.search).get('mode') === 'public';
-  const isMyMapActive = location.pathname === '/map' && !isSharedMapActive;
+  const isCatCardsActive = location.pathname === '/catdex';
+  const isMyMapActive = location.pathname === '/map';
   const isCaptureActive = location.pathname === '/create';
   const sideLinkClass = (isActive: boolean) => [
     'relative flex h-[52px] w-[52px] items-center justify-center rounded-[18px] border text-[#221915] transition-transform active:translate-y-[2px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]',
@@ -112,12 +110,12 @@ export default function CatActionNav({ labels }: CatActionNavProps) {
     >
       <div className="pointer-events-auto grid h-[76px] w-[246px] max-w-[calc(100%-24px)] grid-cols-[50px_66px_50px] items-center justify-center gap-4 rounded-[26px] border border-[#221915]/20 bg-[#fffaf0]/92 px-3 shadow-[0_18px_40px_rgba(34,25,21,0.18)] backdrop-blur-xl">
         <Link
-          to="/map?mode=public"
-          aria-label={navLabels.shareMap}
-          aria-current={isSharedMapActive ? 'page' : undefined}
-          className={sideLinkClass(isSharedMapActive)}
+          to="/catdex"
+          aria-label={navLabels.myCatCards}
+          aria-current={isCatCardsActive ? 'page' : undefined}
+          className={sideLinkClass(isCatCardsActive)}
         >
-          <ShareMapIcon />
+          <CatCardsIcon />
         </Link>
 
         <Link

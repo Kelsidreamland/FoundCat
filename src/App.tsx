@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { lazy, Suspense, useEffect } from 'react';
 import Home from './pages/Home';
 import { useAuthStore } from './store/useAuthStore';
@@ -7,6 +7,7 @@ import PWAPrompt from './components/PWAPrompt';
 import PWAUpdatePrompt from './components/PWAUpdatePrompt';
 
 const Create = lazy(() => import('./pages/Create'));
+const Catdex = lazy(() => import('./pages/Catdex'));
 const Detail = lazy(() => import('./pages/Detail'));
 const Map = lazy(() => import('./pages/Map'));
 const ShareCatdex = lazy(() => import('./pages/ShareCatdex'));
@@ -83,7 +84,7 @@ function App() {
                 <Route path="/create" element={<Create />} />
                 <Route path="/detail/:id" element={<Detail />} />
                 <Route path="/map" element={<Map />} />
-                <Route path="/catdex" element={<Navigate to="/" replace />} />
+                <Route path="/catdex" element={<Catdex />} />
                 <Route path="/share" element={<ShareCatdex />} />
                 <Route path="/s/c" element={<SingleCatShare />} />
                 <Route path="/s/map" element={<SharedCatMap />} />

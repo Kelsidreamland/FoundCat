@@ -133,7 +133,7 @@ export default function Home() {
       <CatActionNav
         labels={{
           nav: language === 'zh' ? '主要操作' : 'Primary actions',
-          shareMap: t.sharedCatMap,
+          myCatCards: t.myCatCards,
           capture: language === 'zh' ? '拍貓' : 'Capture cat',
           map: t.map,
         }}
