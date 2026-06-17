@@ -14,6 +14,7 @@ interface CatCardDeckProps {
     shareCard: string;
   };
   onShareCard: (item: ScrapbookItem) => void;
+  onCollectCard?: (item: ScrapbookItem) => void;
 }
 
 const dateFormatter = (language: 'zh' | 'en') => {
@@ -53,6 +54,7 @@ export default function CatCardDeck({
   language,
   labels,
   onShareCard,
+  onCollectCard,
 }: CatCardDeckProps) {
   const cards = useMemo(() => sortCatCards(items), [items]);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -70,8 +72,8 @@ export default function CatCardDeck({
     };
   }, []);
 
-  const completeMove = (direction: SwipeDirection) => {
-    setActiveIndex((current) => (current + direction + cards.length) % cards.length);
+  const completeMove = () => {
+    setActiveIndex((current) => (current + 1) % cards.length);
     setSwipeDirection(null);
     swipeTimerRef.current = null;
   };
@@ -84,18 +86,19 @@ export default function CatCardDeck({
   const move = (direction: SwipeDirection) => {
     if (cards.length <= 1 || swipeDirection) return;
     if (showSwipeHint) dismissSwipeHint();
+    if (direction === 1 && active) onCollectCard?.(active);
     setSwipeDirection(direction);
 
     if (swipeTimerRef.current) clearTimeout(swipeTimerRef.current);
-    swipeTimerRef.current = setTimeout(() => completeMove(direction), SWIPE_ANIMATION_MS);
+    swipeTimerRef.current = setTimeout(completeMove, SWIPE_ANIMATION_MS);
   };
 
   const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const shouldGoNext = info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -SWIPE_VELOCITY_THRESHOLD;
-    const shouldGoPrevious = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > SWIPE_VELOCITY_THRESHOLD;
+    const shouldCollect = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > SWIPE_VELOCITY_THRESHOLD;
 
-    if (shouldGoNext) move(1);
-    if (shouldGoPrevious) move(-1);
+    if (shouldGoNext) move(-1);
+    if (shouldCollect) move(1);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
@@ -130,7 +133,7 @@ export default function CatCardDeck({
       <div className="relative mt-2 h-[min(390px,calc(100dvh-240px))] min-h-[320px]">
         {showSwipeHint ? (
           <div className="absolute right-4 top-4 z-30 flex items-center gap-2 rounded-full border-2 border-[#1d1714] bg-[#fff2cf]/95 px-3 py-2 text-[11px] font-black text-[#1d1714] shadow-[3px_3px_0_rgba(29,23,20,0.72)] backdrop-blur-sm">
-            <span>{language === 'zh' ? '左右滑動看更多貓卡' : 'Swipe to see more cats'}</span>
+            <span>{language === 'zh' ? '右滑收藏，左滑看下一隻' : 'Swipe right to collect, left for next'}</span>
             <button
               type="button"
               onClick={dismissSwipeHint}
@@ -161,9 +164,9 @@ export default function CatCardDeck({
           data-swipe-ready={hasMultipleCards ? 'true' : 'false'}
           data-swipe-exit={
             swipeDirection === 1
-              ? 'left'
+              ? 'right'
               : swipeDirection === -1
-                ? 'right'
+                ? 'left'
                 : 'none'
           }
           className="absolute inset-x-[10px] bottom-0 top-0 z-10 flex touch-pan-y cursor-grab select-none flex-col overflow-hidden rounded-[24px] border-2 border-[#1d1714] bg-[#fffdf7] p-3 shadow-[7px_8px_0_#1d1714] active:cursor-grabbing"
@@ -176,8 +179,8 @@ export default function CatCardDeck({
           aria-label={language === 'zh' ? '貓咪卡片，可左右滑動或使用左右方向鍵' : 'Cat card, swipe or use left and right arrow keys'}
           initial={{ x: swipeDirection ? 50 * -swipeDirection : 0, rotate: -1.5, scale: 0.98, opacity: 0.72 }}
           animate={{
-            x: swipeDirection === 1 ? -460 : swipeDirection === -1 ? 460 : 0,
-            rotate: swipeDirection === 1 ? -16 : swipeDirection === -1 ? 16 : -1.5,
+            x: swipeDirection === 1 ? 460 : swipeDirection === -1 ? -460 : 0,
+            rotate: swipeDirection === 1 ? 16 : swipeDirection === -1 ? -16 : -1.5,
             scale: swipeDirection ? 0.94 : 1,
             opacity: swipeDirection ? 0 : 1,
           }}

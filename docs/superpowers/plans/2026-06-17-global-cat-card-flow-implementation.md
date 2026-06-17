@@ -293,17 +293,31 @@ npm run build
 - Modify: `src/components/catdex/CatCardDeck.tsx`
 - Test: `src/components/catdex/CatCardDeck.test.tsx` if present, otherwise create focused tests near existing deck tests.
 
-- [ ] **Step 1: Add tests for global public cats as the default home deck**
+- [x] **Step 1: Add tests for global public cats as the default home deck**
 
 Home should load public cat cards and feed them into the deck by default. If public loading fails or is unconfigured, it should fall back to local cats without blocking the page.
 
-- [ ] **Step 2: Add right-swipe save / left-swipe next behavior to the card deck**
+- [x] **Step 2: Add right-swipe save / left-swipe next behavior to the card deck**
 
 Right swipe saves the public cat to local collection or favorites. Left swipe only advances to the next cat. Do not render permanent "like/dislike" buttons.
 
-- [ ] **Step 3: Add first-use gesture education**
+- [x] **Step 3: Add first-use gesture education**
 
 Show a one-time overlay explaining left swipe next and right swipe collect. Store dismissal locally so it does not keep appearing.
+
+Verified on 2026-06-17:
+
+```bash
+npm test -- src/pages/Home.test.tsx
+npm test -- src/components/catdex/CatCardDeck.test.tsx
+npm test -- src/pages/Home.test.tsx src/components/catdex/CatCardDeck.test.tsx
+npm test -- src/pages/Home.test.tsx src/components/catdex/CatCardDeck.test.tsx src/components/catdex/CatActionNav.test.tsx src/pages/Map.test.tsx src/pages/Create.test.tsx src/App.test.tsx
+npm run lint
+npm run check
+npm run build
+```
+
+`npm run build` passed with the existing chunk-size warning.
 
 ---
 

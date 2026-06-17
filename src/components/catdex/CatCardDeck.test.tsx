@@ -122,10 +122,10 @@ describe('CatCardDeck', () => {
       />
     );
 
-    expect(screen.getByText('左右滑動看更多貓卡')).toBeInTheDocument();
+    expect(screen.getByText('右滑收藏，左滑看下一隻')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '關閉左右滑動提示' }));
 
-    expect(screen.queryByText('左右滑動看更多貓卡')).not.toBeInTheDocument();
+    expect(screen.queryByText('右滑收藏，左滑看下一隻')).not.toBeInTheDocument();
     expect(window.localStorage.getItem('corner-cat-swipe-hint-seen')).toBe('true');
   });
 
@@ -149,7 +149,7 @@ describe('CatCardDeck', () => {
     );
 
     expect(screen.getByText('No.001')).toBeInTheDocument();
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
 
     act(() => {
       vi.advanceTimersByTime(260);
@@ -179,8 +179,77 @@ describe('CatCardDeck', () => {
 
     fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
-    expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-swipe-exit', 'left');
+    expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-swipe-exit', 'right');
     expect(screen.getByText('No.001')).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(260);
+    });
+
+    expect(screen.getByText('No.002')).toBeInTheDocument();
+  });
+
+  it('collects the active card on a right swipe and then advances', () => {
+    vi.useFakeTimers();
+    const onCollectCard = vi.fn();
+
+    render(
+      <CatCardDeck
+        items={[
+          makeItem({ id: 'cat-1', catdexNumber: 1 }),
+          makeItem({ id: 'cat-2', catdexNumber: 2 }),
+        ]}
+        language="zh"
+        labels={{
+          empty: '還沒有貓卡',
+          previous: '上一張',
+          next: '下一張',
+          shareCard: '分享這張卡與地址',
+        }}
+        onShareCard={vi.fn()}
+        onCollectCard={onCollectCard}
+      />
+    );
+
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
+
+    expect(onCollectCard).toHaveBeenCalledWith(expect.objectContaining({ id: 'cat-1' }));
+    expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-swipe-exit', 'right');
+
+    act(() => {
+      vi.advanceTimersByTime(260);
+    });
+
+    expect(screen.getByText('No.002')).toBeInTheDocument();
+  });
+
+  it('skips without collecting on a left swipe and then advances', () => {
+    vi.useFakeTimers();
+    const onCollectCard = vi.fn();
+
+    render(
+      <CatCardDeck
+        items={[
+          makeItem({ id: 'cat-1', catdexNumber: 1 }),
+          makeItem({ id: 'cat-2', catdexNumber: 2 }),
+          makeItem({ id: 'cat-3', catdexNumber: 3 }),
+        ]}
+        language="zh"
+        labels={{
+          empty: '還沒有貓卡',
+          previous: '上一張',
+          next: '下一張',
+          shareCard: '分享這張卡與地址',
+        }}
+        onShareCard={vi.fn()}
+        onCollectCard={onCollectCard}
+      />
+    );
+
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+
+    expect(onCollectCard).not.toHaveBeenCalled();
+    expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-swipe-exit', 'left');
 
     act(() => {
       vi.advanceTimersByTime(260);

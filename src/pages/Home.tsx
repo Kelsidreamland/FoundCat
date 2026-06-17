@@ -1,7 +1,9 @@
+import { useCallback, useEffect, useState } from 'react';
 import CatActionNav from '../components/catdex/CatActionNav';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import CatCardDeck from '../components/catdex/CatCardDeck';
 import CloudBackupPrompt from '../components/cloud/CloudBackupPrompt';
+import { loadPublicCatCards } from '../lib/cloudPublicCats';
 import type { ScrapbookItem } from '../store/useScrapbookStore';
 import { useScrapbookStore } from '../store/useScrapbookStore';
 import { translations } from '../translations';
@@ -34,13 +36,62 @@ function LoadingStamp({ text }: { text: string }) {
 }
 
 export default function Home() {
-  const { items, isLoading, language, setLanguage } = useScrapbookStore();
+  const { items, isLoading, language, setLanguage, addItem } = useScrapbookStore();
   const t = translations[language];
+  const [publicItems, setPublicItems] = useState<ScrapbookItem[]>([]);
+  const [usePublicDeck, setUsePublicDeck] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void loadPublicCatCards().then((result) => {
+      if (cancelled) return;
+
+      if (result.ok && result.items.length > 0) {
+        setPublicItems(result.items);
+        setUsePublicDeck(true);
+        return;
+      }
+
+      setPublicItems([]);
+      setUsePublicDeck(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const deckItems = usePublicDeck ? publicItems : items;
 
   const handleShareCard = async (item: ScrapbookItem) => {
     const { shareCatCardPoster } = await import('../lib/sharePoster');
     await shareCatCardPoster(item, language);
   };
+
+  const handleCollectCard = useCallback(async (item: ScrapbookItem) => {
+    if (!item.isPublic || items.some((localItem) => localItem.id === item.id)) return;
+
+    await addItem({
+      type: item.type,
+      imageData: item.imageData,
+      heroImageData: item.heroImageData,
+      catdexNumber: item.catdexNumber,
+      date: item.date,
+      x: item.x,
+      y: item.y,
+      rotation: item.rotation,
+      scale: item.scale,
+      location: item.location,
+      catName: item.catName,
+      catBreed: item.catBreed,
+      catColor: item.catColor,
+      personalityTags: item.personalityTags,
+      spotNote: item.spotNote,
+      careStatusTags: item.careStatusTags,
+      isPublic: false,
+    });
+  }, [addItem, items]);
 
   if (isLoading) {
     return <LoadingStamp text={t.loading} />;
@@ -64,7 +115,7 @@ export default function Home() {
       <main className="relative z-10 mb-[calc(4.75rem+env(safe-area-inset-bottom))] min-h-0 flex-1 overflow-y-auto px-5 pb-4 pt-[clamp(2rem,9vh,5rem)]">
         <section className="relative mx-auto max-w-sm">
           <CatCardDeck
-            items={items}
+            items={deckItems}
             language={language}
             labels={{
               empty: language === 'zh' ? '還沒有貓卡' : 'No cat cards yet',
@@ -73,6 +124,7 @@ export default function Home() {
               shareCard: t.singleCardShare,
             }}
             onShareCard={handleShareCard}
+            onCollectCard={handleCollectCard}
           />
           <CloudBackupPrompt language={language} items={items} autoOpenOnSignedInEmptyDevice />
         </section>
