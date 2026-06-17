@@ -1,8 +1,8 @@
-import { Suspense, lazy, useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useScrapbookStore } from '../store/useScrapbookStore';
 import Cropper from 'react-easy-crop';
-import { Camera, Image as ImageIcon, Check, X, Undo2, Loader2, Crop, ZoomIn, ZoomOut, MapPin, Plus, Share2 } from 'lucide-react';
+import { Camera, Image as ImageIcon, Check, X, Undo2, Loader2, Crop, ZoomIn, ZoomOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { translations } from '../translations';
 import LocationPicker from '../components/LocationPicker';
@@ -11,8 +11,6 @@ import { imageBlobToHeroDataUrl } from '../lib/imageData';
 import { buildStickerDraft } from '../lib/createStickerDraft';
 
 type PixelCrop = { x: number; y: number; width: number; height: number };
-
-const SingleCatPosterPreviewModal = lazy(() => import('../components/share/SingleCatPosterPreviewModal'));
 
 const resizeBlobToMaxSize = async (blob: Blob, maxWidthOrHeight: number): Promise<Blob> => {
   if (maxWidthOrHeight <= 0) return blob;
@@ -105,7 +103,7 @@ const blobToDataUrl = async (blob: Blob): Promise<string> => new Promise((resolv
 
 export default function Create() {
   const navigate = useNavigate();
-  const { items, addItem, updateItem, language, targetDate, setTargetDate } = useScrapbookStore();
+  const { addItem, updateItem, language, targetDate, setTargetDate } = useScrapbookStore();
   const t = translations[language];
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -118,9 +116,6 @@ export default function Create() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [createdStickerId, setCreatedStickerId] = useState<string | null>(null);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
-  const [postCreateItemId, setPostCreateItemId] = useState<string | null>(null);
-  const [showPosterPreview, setShowPosterPreview] = useState(false);
-  const postCreateItem = postCreateItemId ? items.find((item) => item.id === postCreateItemId) ?? null : null;
 
   useEffect(() => {
     if (!toastMessage) return;
@@ -133,15 +128,11 @@ export default function Create() {
     setTargetDate(null);
     setCreatedStickerId(null);
     setShowLocationPicker(false);
-    setPostCreateItemId(null);
-    setShowPosterPreview(false);
     navigate(cameFromCalendar ? `/?showCalendar=1&selectedDate=${cameFromCalendar}` : '/');
   }, [navigate, setTargetDate, targetDate]);
 
   const beginPostCreateFlow = useCallback((stickerId: string) => {
     setCreatedStickerId(stickerId);
-    setPostCreateItemId(null);
-    setShowPosterPreview(false);
     setImageSrc(null);
     setPreviewImage(null);
     setPreviewHeroImageData(null);
@@ -162,35 +153,15 @@ export default function Create() {
       setTargetDate(null);
       setCreatedStickerId(null);
       setShowLocationPicker(false);
-      setPostCreateItemId(catId);
-      setShowPosterPreview(false);
+      navigate(`/map?cat=${encodeURIComponent(catId)}&publishHint=1`);
       return;
     }
     finishCreateFlow();
-  }, [createdStickerId, finishCreateFlow, setTargetDate, updateItem]);
+  }, [createdStickerId, finishCreateFlow, navigate, setTargetDate, updateItem]);
 
   const handleLocationSkipped = useCallback(() => {
     finishCreateFlow();
   }, [finishCreateFlow]);
-
-  const handleViewCreatedCatOnMap = useCallback(() => {
-    if (!postCreateItemId) return;
-    navigate(`/map?cat=${encodeURIComponent(postCreateItemId)}`);
-  }, [navigate, postCreateItemId]);
-
-  const handleCreateAnother = useCallback(() => {
-    setPostCreateItemId(null);
-    setShowPosterPreview(false);
-    setCreatedStickerId(null);
-    setShowLocationPicker(false);
-    setImageSrc(null);
-    setPreviewImage(null);
-    setPreviewHeroImageData(null);
-    setPreviewMode(false);
-    setCroppedAreaPixels(null);
-    setCrop({ x: 0, y: 0 });
-    setZoom(1);
-  }, []);
 
   const onCropComplete = useCallback((_croppedArea: PixelCrop, croppedAreaPixels: PixelCrop) => {
     setCroppedAreaPixels(croppedAreaPixels);
@@ -312,7 +283,7 @@ export default function Create() {
     </AnimatePresence>
   );
 
-  const isPostCreateFlow = showLocationPicker || Boolean(postCreateItemId);
+  const isPostCreateFlow = showLocationPicker;
 
   if (!imageSrc && !isPostCreateFlow) {
     return (
@@ -425,121 +396,6 @@ export default function Create() {
             </section>
           </div>
         </main>
-      </div>
-    );
-  }
-
-  if (!imageSrc && postCreateItemId) {
-    return (
-      <div className="absolute inset-0 flex flex-col overflow-hidden bg-[#F7F2E8]">
-        <div
-          className="absolute inset-0 opacity-95"
-          style={{
-            background:
-              'linear-gradient(90deg, rgba(34,25,21,0.05) 1px, transparent 1px), linear-gradient(0deg, rgba(34,25,21,0.04) 1px, transparent 1px), radial-gradient(circle at 82% 16%, rgba(47,95,179,0.24) 0%, transparent 27%), radial-gradient(circle at 14% 86%, rgba(247,201,72,0.32) 0%, transparent 25%), #F7F2E8',
-            backgroundSize: '30px 30px, 30px 30px, auto, auto, auto',
-          }}
-        />
-        <div className="absolute -right-10 top-28 h-28 w-24 rotate-6 border-2 border-[#2F5FB3]/35 bg-[#FFFDF2]/45" aria-hidden="true" />
-        <div className="absolute -left-12 bottom-28 h-28 w-32 -rotate-12 border-2 border-[#221915]/10 bg-[#FFFDF2]/35" aria-hidden="true" />
-        {toastOverlay}
-
-        <CatBrandHeader
-          title={t.appName}
-          subtitle={t.appSubtitle}
-          showLanguageToggle={false}
-          showClose
-          closeLabel="關閉回首頁"
-        />
-
-        <main className="relative z-10 flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-5 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-3">
-          <section
-            aria-live="polite"
-            className="w-full max-w-sm overflow-hidden rounded-[14px] border-2 border-[#221915] bg-[#FFFDF2] shadow-[12px_12px_0_rgba(47,95,179,0.22)]"
-          >
-            <div className="h-2 bg-[#2F5FB3]" aria-hidden="true" />
-            <div className="p-5">
-              <div className="mb-4 flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.26em] text-[#2F5FB3]">
-                    Found Cat Saved
-                  </p>
-                  <h1 className="text-[25px] font-black leading-tight text-[#221915]">
-                    {t.postCreateSavedToMapTitle}
-                  </h1>
-                  <p className="mt-3 text-[13px] font-bold leading-relaxed text-[#5C5148]">
-                    {t.postCreateSuccessSubtitle}
-                  </p>
-                </div>
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[8px] border-2 border-[#221915] bg-[#F7C948] text-[#221915] shadow-[4px_4px_0_rgba(47,95,179,0.2)]" aria-hidden="true">
-                  <Check size={24} strokeWidth={2.3} />
-                </div>
-              </div>
-
-              {postCreateItem ? (
-                <div className="mb-4 flex items-center gap-3 rounded-[12px] border-2 border-[#221915]/15 bg-[#F7F2E8] p-3">
-                  <img
-                    src={postCreateItem.imageData}
-                    alt=""
-                    className="h-16 w-16 shrink-0 rounded-[10px] border-2 border-[#221915] object-cover shadow-[3px_3px_0_rgba(34,25,21,0.12)]"
-                    draggable={false}
-                  />
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#2F5FB3]">
-                      {postCreateItem.location?.name || t.map}
-                    </p>
-                    <p className="mt-1 text-sm font-black leading-snug text-[#221915]">
-                      {postCreateItem.catName?.trim() || t.postCreateDefaultCatName}
-                    </p>
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={handleViewCreatedCatOnMap}
-                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] border-2 border-[#221915] bg-[#2F5FB3] px-4 py-3 text-sm font-black text-[#FFFDF2] shadow-[4px_4px_0_#221915] transition-all active:translate-y-[1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2F5FB3]"
-                >
-                  <MapPin size={18} strokeWidth={2.2} />
-                  <span>{t.postCreateViewMapCat}</span>
-                </button>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowPosterPreview(true)}
-                    disabled={!postCreateItem?.location}
-                    className="flex min-h-12 items-center justify-center gap-2 rounded-[16px] border-2 border-[#221915] bg-[#FFFDF2] px-3 py-3 text-[12px] font-black text-[#221915] shadow-[3px_3px_0_rgba(47,95,179,0.18)] transition-all active:translate-y-[1px] disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2F5FB3]"
-                  >
-                    <Share2 size={17} strokeWidth={2.2} />
-                    <span className="break-keep text-center leading-tight">{t.postCreateSharePoster}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCreateAnother}
-                    className="flex min-h-12 items-center justify-center gap-2 rounded-[16px] border-2 border-[#221915] bg-[#F7C948] px-3 py-3 text-[12px] font-black text-[#221915] shadow-[3px_3px_0_rgba(34,25,21,0.14)] transition-all active:translate-y-[1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2F5FB3]"
-                  >
-                    <Plus size={17} strokeWidth={2.2} />
-                    <span className="break-keep text-center leading-tight">{t.postCreateAddAnother}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
-        </main>
-
-        <AnimatePresence>
-          {showPosterPreview && postCreateItem?.location ? (
-            <Suspense fallback={null}>
-              <SingleCatPosterPreviewModal
-                item={postCreateItem}
-                language={language}
-                onClose={() => setShowPosterPreview(false)}
-              />
-            </Suspense>
-          ) : null}
-        </AnimatePresence>
       </div>
     );
   }

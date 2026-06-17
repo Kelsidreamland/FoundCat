@@ -61,14 +61,6 @@ vi.mock('../components/LocationPicker', () => ({
   ),
 }));
 
-vi.mock('../components/share/SingleCatPosterPreviewModal', () => ({
-  default: ({ onClose }: { onClose: () => void }) => (
-    <div role="dialog" aria-label="分享測試面板">
-      <button type="button" onClick={onClose}>關閉分享測試面板</button>
-    </div>
-  ),
-}));
-
 function RouteDisplay() {
   const location = useLocation();
   return <div data-testid="current-route">{location.pathname}{location.search}</div>;
@@ -201,7 +193,7 @@ describe('Create page', () => {
     expect(screen.getByRole('img', { name: '轉角遇到貓 FOUND CAT Logo' })).toBeInTheDocument();
   });
 
-  it('shows explicit next steps after a location is picked', async () => {
+  it('returns directly to the map and focuses the new cat after a location is picked', async () => {
     render(
       <MemoryRouter initialEntries={['/create']}>
         <RouteDisplay />
@@ -224,42 +216,12 @@ describe('Create page', () => {
     expect(screen.queryByRole('button', { name: '完成標籤' })).not.toBeInTheDocument();
     await userEvent.click(await screen.findByRole('button', { name: '確認測試地點' }));
 
-    expect(await screen.findByTestId('current-route')).toHaveTextContent('/create');
-    expect(await screen.findByRole('heading', { name: '已存到貓咪地圖' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '查看地圖上的這隻貓' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '分享這張貓卡海報' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '繼續新增貓貓' })).toBeInTheDocument();
+    expect(await screen.findByTestId('current-route')).toHaveTextContent('/map?cat=new-cat-id&publishHint=1');
+    expect(screen.queryByRole('heading', { name: '已存到貓咪地圖' })).not.toBeInTheDocument();
     expect(useScrapbookStore.getState().items[0].location).toMatchObject({
       lat: 25.033,
       lng: 121.565,
       name: 'Taipei 101',
     });
-
-    await userEvent.click(screen.getByRole('button', { name: '查看地圖上的這隻貓' }));
-    expect(await screen.findByTestId('current-route')).toHaveTextContent('/map?cat=new-cat-id');
-  });
-
-  it('opens the single-cat poster preview from the post-create next steps', async () => {
-    render(
-      <MemoryRouter initialEntries={['/create']}>
-        <Routes>
-          <Route path="/create" element={<Create />} />
-        </Routes>
-      </MemoryRouter>
-    );
-
-    await userEvent.upload(
-      screen.getByLabelText('Upload from Album'),
-      new File(['cat'], 'cat.jpg', { type: 'image/jpeg' })
-    );
-
-    await screen.findByTestId('cropper');
-    await userEvent.click(screen.getByRole('button', { name: '方形貓卡' }));
-    await screen.findByAltText('預覽貓卡');
-    await userEvent.click(screen.getByRole('button', { name: /存入我的貓卡/ }));
-    await userEvent.click(await screen.findByRole('button', { name: '確認測試地點' }));
-
-    await userEvent.click(await screen.findByRole('button', { name: '分享這張貓卡海報' }));
-    expect(await screen.findByRole('dialog', { name: '分享測試面板' })).toBeInTheDocument();
   });
 });

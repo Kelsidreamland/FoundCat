@@ -595,7 +595,19 @@ export default function Map() {
   const previousSamePlaceCatLabel = language === 'zh' ? '上一隻同地點貓咪' : 'Previous cat at this spot';
   const nextSamePlaceCatLabel = language === 'zh' ? '下一隻同地點貓咪' : 'Next cat at this spot';
   const canPublishSelectedItem = Boolean(!isPublicMapMode && user && isCloudConfigured && selectedItem?.location);
-  const shouldShowPublishSignInPrompt = Boolean(!isPublicMapMode && !user && isCloudConfigured && selectedItem?.location);
+  const shouldShowPublishLoginHint = Boolean(
+    searchParams.get('publishHint') === '1' &&
+    selectedItem?.location &&
+    !isPublicMapMode &&
+    !user
+  );
+  const shouldShowPublishSignInPrompt = Boolean(
+    !shouldShowPublishLoginHint &&
+    !isPublicMapMode &&
+    !user &&
+    isCloudConfigured &&
+    selectedItem?.location
+  );
   const canEditSelectedItem = !isPublicMapMode;
   const mapModeCopy = {
     mine: language === 'zh' ? '我的地圖' : 'My Map',
@@ -637,6 +649,12 @@ export default function Map() {
     hint: language === 'zh'
       ? '公開後，其他人可在大家的地圖看到這隻貓。'
       : 'Once published, others can see this cat on the shared map.',
+  };
+  const publishLoginHintCopy = {
+    title: language === 'zh' ? '想讓大家也看到這隻貓？' : 'Want everyone to find this cat?',
+    body: language === 'zh'
+      ? '登入後可以公開到全世界地圖，也能之後修改或撤回。'
+      : 'Sign in to publish it to the world map, then edit or remove it later.',
   };
   const selectedPersonalityLabels = selectedPersonalityTags.flatMap((tagId) => {
     const tag = PERSONALITY_TAGS.find((candidate) => candidate.id === tagId);
@@ -981,6 +999,17 @@ export default function Map() {
                   {publishStatus === 'error' ? (
                     <p className="mt-2 text-xs font-black text-[#9f3a2f]">{publishCopy.error}</p>
                   ) : null}
+                </div>
+              ) : null}
+
+              {shouldShowPublishLoginHint ? (
+                <div className="rounded-[16px] border border-white/55 bg-white/55 px-3 py-2.5 shadow-[3px_3px_0_rgba(47,95,179,0.08)] backdrop-blur-md">
+                  <p className="text-sm font-black leading-snug text-[#221915]">
+                    {publishLoginHintCopy.title}
+                  </p>
+                  <p className="mt-1 text-xs font-bold leading-relaxed text-[#5f5148]">
+                    {publishLoginHintCopy.body}
+                  </p>
                 </div>
               ) : null}
 

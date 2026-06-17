@@ -736,6 +736,71 @@ describe('Map page', () => {
     expect(screen.queryByText('大家的地圖暫時載入失敗')).not.toBeInTheDocument();
   });
 
+  it('opens a newly created local cat and explains login is needed before publishing it', async () => {
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          id: 'new-cat-id',
+          imageData: 'data:image/png;base64,new-cat',
+          catdexNumber: 129,
+          location: {
+            lat: 25.033,
+            lng: 121.565,
+            name: 'Taipei 101',
+          },
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/map?cat=new-cat-id&publishHint=1']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('No.129')).toBeInTheDocument();
+    expect(screen.getByText('Taipei 101')).toBeInTheDocument();
+    expect(screen.getByText('想讓大家也看到這隻貓？')).toBeInTheDocument();
+    expect(screen.getByText('登入後可以公開到全世界地圖，也能之後修改或撤回。')).toBeInTheDocument();
+  });
+
+  it('does not show the publish login hint on the public map', async () => {
+    render(
+      <MemoryRouter initialEntries={['/map?mode=public&cat=public-cat-1&publishHint=1']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('No.088')).toBeInTheDocument();
+    expect(screen.getByText('曼谷街角咖啡')).toBeInTheDocument();
+    expect(screen.queryByText('想讓大家也看到這隻貓？')).not.toBeInTheDocument();
+  });
+
+  it('does not show the publish login hint to signed-in users', async () => {
+    useAuthStore.setState({
+      isConfigured: true,
+      user: {
+        id: 'user-1',
+        email: 'cat@example.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: '2026-06-02T00:00:00.000Z',
+      },
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/map?cat=cat-29&publishHint=1']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('No.029')).toBeInTheDocument();
+    expect(screen.queryByText('想讓大家也看到這隻貓？')).not.toBeInTheDocument();
+  });
+
   it('opens the requested cat card from a map deep link', async () => {
     render(
       <MemoryRouter initialEntries={['/map?cat=cat-29']}>

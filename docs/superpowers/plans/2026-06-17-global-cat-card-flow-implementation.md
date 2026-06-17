@@ -38,7 +38,7 @@
 - Modify: `src/pages/Map.tsx`
 - Modify: `src/pages/Map.test.tsx`
 
-- [ ] **Step 1: Write the failing Create test**
+- [x] **Step 1: Write the failing Create test**
 
 Replace the existing `Create.test.tsx` test named `shows explicit next steps after a location is picked` with a behavior test that expects direct navigation:
 
@@ -76,7 +76,7 @@ it('returns directly to the map and focuses the new cat after a location is pick
 });
 ```
 
-- [ ] **Step 2: Run the Create test and verify it fails**
+- [x] **Step 2: Run the Create test and verify it fails**
 
 Run:
 
@@ -86,7 +86,7 @@ npm test -- src/pages/Create.test.tsx
 
 Expected: failure because the route remains `/create` and the old post-create success panel is still rendered.
 
-- [ ] **Step 3: Implement direct navigation in `Create.tsx`**
+- [x] **Step 3: Implement direct navigation in `Create.tsx`**
 
 Update `handleLocationPicked` so a successfully located created cat navigates directly:
 
@@ -116,7 +116,7 @@ const handleCreateAnother = useCallback(...);
 
 If removing the success panel, also remove the `if (!imageSrc && postCreateItemId) { ... }` block and the lazy import/use of `SingleCatPosterPreviewModal` from `Create.tsx`.
 
-- [ ] **Step 4: Run the Create test and verify it passes**
+- [x] **Step 4: Run the Create test and verify it passes**
 
 Run:
 
@@ -126,7 +126,7 @@ npm test -- src/pages/Create.test.tsx
 
 Expected: all Create tests pass after replacing/removing any tests tied only to the deleted success panel.
 
-- [ ] **Step 5: Write failing Map tests for the public-sharing login hint**
+- [x] **Step 5: Write failing Map tests for the public-sharing login hint**
 
 Add tests in `src/pages/Map.test.tsx`:
 
@@ -190,7 +190,7 @@ it('does not show the publish login hint on the public map', async () => {
 
 If there is already a signed-in-user mock setup in `Map.test.tsx`, add a third test that sets `useAuthStore` to a signed-in user and asserts the prompt is absent.
 
-- [ ] **Step 6: Run the Map tests and verify they fail**
+- [x] **Step 6: Run the Map tests and verify they fail**
 
 Run:
 
@@ -200,7 +200,7 @@ npm test -- src/pages/Map.test.tsx
 
 Expected: failure because `publishHint` is not rendered yet.
 
-- [ ] **Step 7: Implement the Map prompt**
+- [x] **Step 7: Implement the Map prompt**
 
 In `src/pages/Map.tsx`, derive the prompt state:
 
@@ -239,7 +239,7 @@ Render it directly under the selected local cat card actions, not as a separate 
 
 If embedding `CloudBackupPrompt` creates too much visual weight inside the map card, render a compact button that opens the same cloud panel only after adding a `variant="compact"` prop to `CloudBackupPrompt` in a later task. For Task 1, prefer minimal text-only prompt if the existing component is too large.
 
-- [ ] **Step 8: Run focused tests**
+- [x] **Step 8: Run focused tests**
 
 Run:
 
@@ -249,7 +249,7 @@ npm test -- src/pages/Create.test.tsx src/pages/Map.test.tsx
 
 Expected: both test files pass.
 
-- [ ] **Step 9: Run broader verification**
+- [x] **Step 9: Run broader verification**
 
 Run:
 
@@ -262,12 +262,26 @@ npm run build
 
 Expected: all commands pass. Build may keep the existing chunk-size warning.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add src/pages/Create.tsx src/pages/Create.test.tsx src/pages/Map.tsx src/pages/Map.test.tsx
 git commit -m "Open new cats directly on map"
 ```
+
+Verified on 2026-06-17:
+
+```bash
+npm test -- src/pages/Create.test.tsx
+npm test -- src/pages/Map.test.tsx
+npm test -- src/pages/Create.test.tsx src/pages/Map.test.tsx
+npm test -- src/pages/Home.test.tsx src/components/catdex/CatActionNav.test.tsx src/components/cloud/CloudBackupPrompt.test.tsx src/App.test.tsx
+npm run lint
+npm run check
+npm run build
+```
+
+`npm run build` passed with the existing chunk-size warning.
 
 ---
 
