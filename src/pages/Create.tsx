@@ -9,6 +9,8 @@ import LocationPicker from '../components/LocationPicker';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import { imageBlobToHeroDataUrl } from '../lib/imageData';
 import { buildStickerDraft } from '../lib/createStickerDraft';
+import { useAuthStore } from '../store/useAuthStore';
+import { backupLocalCatCards } from '../lib/cloudBackup';
 
 type PixelCrop = { x: number; y: number; width: number; height: number };
 
@@ -104,6 +106,7 @@ const blobToDataUrl = async (blob: Blob): Promise<string> => new Promise((resolv
 export default function Create() {
   const navigate = useNavigate();
   const { addItem, updateItem, language, targetDate, setTargetDate } = useScrapbookStore();
+  const { user, isConfigured: isCloudConfigured } = useAuthStore();
   const t = translations[language];
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -150,6 +153,17 @@ export default function Create() {
     if (createdStickerId) {
       await updateItem(createdStickerId, { location });
       const catId = createdStickerId;
+      const updatedCat = useScrapbookStore.getState().items.find((item) => item.id === catId);
+      if (updatedCat && user && isCloudConfigured) {
+        void backupLocalCatCards({
+          ownerId: user.id,
+          items: [updatedCat],
+        }).then((result) => {
+          if (!result.ok) {
+            console.warn('Automatic cloud backup after create failed', result);
+          }
+        });
+      }
       setTargetDate(null);
       setCreatedStickerId(null);
       setShowLocationPicker(false);
@@ -157,7 +171,7 @@ export default function Create() {
       return;
     }
     finishCreateFlow();
-  }, [createdStickerId, finishCreateFlow, navigate, setTargetDate, updateItem]);
+  }, [createdStickerId, finishCreateFlow, isCloudConfigured, navigate, setTargetDate, updateItem, user]);
 
   const handleLocationSkipped = useCallback(() => {
     finishCreateFlow();

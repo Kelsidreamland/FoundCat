@@ -5,6 +5,8 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { useScrapbookStore } from '../store/useScrapbookStore';
+import { useAuthStore } from '../store/useAuthStore';
+import { backupLocalCatCards } from '../lib/cloudBackup';
 import Create from './Create';
 
 vi.mock('uuid', () => ({
@@ -22,6 +24,10 @@ vi.mock('browser-image-compression', () => ({
 
 vi.mock('heic2any', () => ({
   default: vi.fn(),
+}));
+
+vi.mock('../lib/cloudBackup', () => ({
+  backupLocalCatCards: vi.fn(async () => ({ ok: true, backedUpCount: 1 })),
 }));
 
 vi.mock('react-easy-crop', () => {
@@ -79,6 +85,18 @@ describe('Create page', () => {
       language: 'zh',
       targetDate: null,
     });
+    useAuthStore.setState({
+      session: null,
+      user: null,
+      isConfigured: false,
+      isLoading: false,
+      error: null,
+      unsubscribeAuthState: null,
+      signInWithEmail: vi.fn(async () => undefined),
+      signOut: vi.fn(async () => undefined),
+    });
+    vi.mocked(backupLocalCatCards).mockClear();
+    vi.mocked(backupLocalCatCards).mockResolvedValue({ ok: true, backedUpCount: 1 });
     Object.defineProperty(URL, 'createObjectURL', {
       configurable: true,
       value: vi.fn(() => 'blob:cat-photo'),
@@ -223,5 +241,81 @@ describe('Create page', () => {
       lng: 121.565,
       name: 'Taipei 101',
     });
+  });
+
+  it('backs up the newly located cat when the user is signed in', async () => {
+    useAuthStore.setState({
+      isConfigured: true,
+      user: {
+        id: 'user-1',
+        email: 'cat@example.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: '2026-06-02T00:00:00.000Z',
+      },
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/create']}>
+        <RouteDisplay />
+        <Routes>
+          <Route path="/create" element={<Create />} />
+          <Route path="/map" element={<div>Map page</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await userEvent.upload(
+      screen.getByLabelText('Upload from Album'),
+      new File(['cat'], 'cat.jpg', { type: 'image/jpeg' })
+    );
+
+    await screen.findByTestId('cropper');
+    await userEvent.click(screen.getByRole('button', { name: '方形貓卡' }));
+    await screen.findByAltText('預覽貓卡');
+    await userEvent.click(screen.getByRole('button', { name: /存入我的貓卡/ }));
+    await userEvent.click(await screen.findByRole('button', { name: '確認測試地點' }));
+
+    await waitFor(() => {
+      expect(backupLocalCatCards).toHaveBeenCalledWith({
+        ownerId: 'user-1',
+        items: [
+          expect.objectContaining({
+            id: 'new-cat-id',
+            location: expect.objectContaining({
+              name: 'Taipei 101',
+            }),
+          }),
+        ],
+      });
+    });
+    expect(await screen.findByTestId('current-route')).toHaveTextContent('/map?cat=new-cat-id&publishHint=1');
+  });
+
+  it('does not try cloud backup for logged-out users after adding a cat', async () => {
+    render(
+      <MemoryRouter initialEntries={['/create']}>
+        <RouteDisplay />
+        <Routes>
+          <Route path="/create" element={<Create />} />
+          <Route path="/map" element={<div>Map page</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await userEvent.upload(
+      screen.getByLabelText('Upload from Album'),
+      new File(['cat'], 'cat.jpg', { type: 'image/jpeg' })
+    );
+
+    await screen.findByTestId('cropper');
+    await userEvent.click(screen.getByRole('button', { name: '方形貓卡' }));
+    await screen.findByAltText('預覽貓卡');
+    await userEvent.click(screen.getByRole('button', { name: /存入我的貓卡/ }));
+    await userEvent.click(await screen.findByRole('button', { name: '確認測試地點' }));
+
+    expect(backupLocalCatCards).not.toHaveBeenCalled();
+    expect(await screen.findByTestId('current-route')).toHaveTextContent('/map?cat=new-cat-id&publishHint=1');
   });
 });
