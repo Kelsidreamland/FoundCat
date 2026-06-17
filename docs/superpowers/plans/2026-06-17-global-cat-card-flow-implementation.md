@@ -357,13 +357,25 @@ npm run build
 - Modify: `src/pages/Map.tsx`
 - Modify: `src/pages/Map.test.tsx`
 
-- [ ] **Step 1: Make map mode copy match the new model**
+- [x] **Step 1: Make map mode copy match the new model**
 
 Use "我的地圖" and "全世界地圖" consistently, while preserving English labels.
 
-- [ ] **Step 2: Keep public/private map mode switch in the map page only**
+- [x] **Step 2: Keep public/private map mode switch in the map page only**
 
 The bottom nav right button opens `/map`; the internal segmented control handles mine/world mode.
+
+Verified on 2026-06-17:
+
+```bash
+npm test -- src/pages/Map.test.tsx src/components/cloud/CloudBackupPrompt.test.tsx
+npm test -- src/pages/Map.test.tsx src/components/cloud/CloudBackupPrompt.test.tsx src/components/catdex/CatActionNav.test.tsx src/pages/Home.test.tsx src/App.test.tsx src/pages/Catdex.test.tsx src/pages/ShareCatdex.test.tsx src/pages/Create.test.tsx
+npm run lint
+npm run check
+npm run build
+```
+
+`npm run build` passed with the existing chunk-size warning.
 
 ---
 

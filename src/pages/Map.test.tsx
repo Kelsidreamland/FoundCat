@@ -244,7 +244,7 @@ describe('Map page', () => {
     expect(screen.getByRole('img', { name: '轉角遇到貓 FOUND CAT Logo' })).toBeInTheDocument();
   });
 
-  it('guides users from an unconfigured shared map back to cloud backup setup', async () => {
+  it('guides users from an unconfigured world map back to cloud backup setup', async () => {
     const user = userEvent.setup();
     vi.mocked(loadPublicCatCards).mockResolvedValue({ ok: false, reason: 'cloud_not_configured' });
 
@@ -260,20 +260,20 @@ describe('Map page', () => {
       </MemoryRouter>
     );
 
-    await user.click(await screen.findByRole('button', { name: '大家的地圖' }));
+    await user.click(await screen.findByRole('button', { name: '全世界地圖' }));
 
-    expect(await screen.findByText('大家的地圖準備中')).toBeInTheDocument();
+    expect(await screen.findByText('全世界地圖準備中')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '備份我的貓咪地圖' })).toBeInTheDocument();
   });
 
-  it('opens the shared cat map directly from the public map query', async () => {
+  it('opens the world cat map directly from the public map query', async () => {
     render(
       <MemoryRouter initialEntries={['/map?mode=public']}>
         <Map />
       </MemoryRouter>
     );
 
-    expect(await screen.findByRole('button', { name: '大家的地圖' })).toHaveAttribute('aria-pressed', 'true');
+    expect(await screen.findByRole('button', { name: '全世界地圖' })).toHaveAttribute('aria-pressed', 'true');
     expect(loadPublicCatCards).toHaveBeenCalledTimes(1);
     expect(await screen.findByRole('button', { name: '曼谷街角咖啡' })).toBeInTheDocument();
   });
@@ -525,7 +525,7 @@ describe('Map page', () => {
     );
 
     await user.click(await screen.findByRole('button', { name: '巷口咖啡店' }));
-    await user.click(await screen.findByRole('button', { name: '公開到大家的地圖' }));
+    await user.click(await screen.findByRole('button', { name: '公開到全世界地圖' }));
 
     await waitFor(() => {
       expect(setCloudCatCardVisibility).toHaveBeenCalledWith({
@@ -537,21 +537,21 @@ describe('Map page', () => {
     await waitFor(() => {
       expect(useScrapbookStore.getState().items[0].isPublic).toBe(true);
     });
-    expect(await screen.findByText('已公開在大家的地圖')).toBeInTheDocument();
-    expect(screen.getByText('已同步到大家的地圖，現在可以去看看公開貓點。')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: '去大家的地圖查看' }));
+    expect(await screen.findByText('已公開在全世界地圖')).toBeInTheDocument();
+    expect(screen.getByText('已同步到全世界地圖，現在可以去看看公開貓點。')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '去全世界地圖查看' }));
 
     await waitFor(() => {
       expect(loadPublicCatCards).toHaveBeenCalledTimes(1);
     });
-    expect(screen.getByRole('button', { name: '大家的地圖' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: '全世界地圖' })).toHaveAttribute('aria-pressed', 'true');
     expect(await screen.findByRole('button', { name: '曼谷街角咖啡' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '我的地圖' }));
     await user.click(await screen.findByRole('button', { name: '巷口咖啡店' }));
 
     vi.mocked(setCloudCatCardVisibility).mockResolvedValue({ ok: true, isPublic: false });
-    await user.click(await screen.findByRole('button', { name: '從大家的地圖移除' }));
+    await user.click(await screen.findByRole('button', { name: '從全世界地圖移除' }));
 
     await waitFor(() => {
       expect(setCloudCatCardVisibility).toHaveBeenLastCalledWith({
@@ -576,10 +576,10 @@ describe('Map page', () => {
 
     await user.click(await screen.findByRole('button', { name: '巷口咖啡店' }));
 
-    expect(screen.queryByRole('button', { name: '公開到大家的地圖' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '公開到全世界地圖' })).not.toBeInTheDocument();
   });
 
-  it('invites logged-out users to sign in before publishing a local cat to the shared map', async () => {
+  it('invites logged-out users to sign in before publishing a local cat to the world map', async () => {
     const user = userEvent.setup();
     useAuthStore.setState({
       isConfigured: true,
@@ -594,12 +594,12 @@ describe('Map page', () => {
 
     await user.click(await screen.findByRole('button', { name: '巷口咖啡店' }));
 
-    expect(screen.queryByRole('button', { name: '公開到大家的地圖' })).not.toBeInTheDocument();
-    expect(screen.getByText('登入後可以備份，也能把這隻貓公開到大家的地圖。')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '公開到全世界地圖' })).not.toBeInTheDocument();
+    expect(screen.getByText('登入後可以備份，也能把這隻貓公開到全世界地圖。')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '備份我的貓咪地圖' })).toBeInTheDocument();
   });
 
-  it('switches between my local map and the public shared map', async () => {
+  it('switches between my local map and the public world map', async () => {
     const user = userEvent.setup();
 
     render(
@@ -611,7 +611,7 @@ describe('Map page', () => {
     expect(await screen.findByRole('button', { name: '巷口咖啡店' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '我的地圖' })).toHaveAttribute('aria-pressed', 'true');
 
-    await user.click(screen.getByRole('button', { name: '大家的地圖' }));
+    await user.click(screen.getByRole('button', { name: '全世界地圖' }));
 
     await waitFor(() => {
       expect(loadPublicCatCards).toHaveBeenCalledTimes(1);
@@ -627,7 +627,7 @@ describe('Map page', () => {
     expect(screen.queryByRole('button', { name: '貓咪詳情' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '編輯地點' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '補充貓咪資訊' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '公開到大家的地圖' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '公開到全世界地圖' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '我的地圖' }));
 
@@ -648,14 +648,14 @@ describe('Map page', () => {
       </MemoryRouter>
     );
 
-    await user.click(await screen.findByRole('button', { name: '大家的地圖' }));
+    await user.click(await screen.findByRole('button', { name: '全世界地圖' }));
 
-    expect(await screen.findByText('大家的地圖暫時載入失敗')).toBeInTheDocument();
+    expect(await screen.findByText('全世界地圖暫時載入失敗')).toBeInTheDocument();
     expect(screen.getByText('可能是網路或雲端暫時不穩，可以重新載入或先回到我的地圖。')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '重新載入大家的地圖' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '重新載入全世界地圖' })).toBeInTheDocument();
   });
 
-  it('retries the shared map after a public loading failure', async () => {
+  it('retries the world map after a public loading failure', async () => {
     const user = userEvent.setup();
     vi.mocked(loadPublicCatCards)
       .mockResolvedValueOnce({
@@ -687,7 +687,7 @@ describe('Map page', () => {
       </MemoryRouter>
     );
 
-    await user.click(await screen.findByRole('button', { name: '重新載入大家的地圖' }));
+    await user.click(await screen.findByRole('button', { name: '重新載入全世界地圖' }));
 
     await waitFor(() => {
       expect(loadPublicCatCards).toHaveBeenCalledTimes(2);
@@ -695,7 +695,7 @@ describe('Map page', () => {
     expect(await screen.findByRole('button', { name: '重試後咖啡店' })).toBeInTheDocument();
   });
 
-  it('guides users to publish the first shared cat when the shared map is empty', async () => {
+  it('guides users to publish the first shared cat when the world map is empty', async () => {
     const user = userEvent.setup();
     vi.mocked(loadPublicCatCards).mockResolvedValue({
       ok: true,
@@ -708,7 +708,7 @@ describe('Map page', () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('大家的地圖還沒有貓貓')).toBeInTheDocument();
+    expect(await screen.findByText('全世界地圖還沒有貓貓')).toBeInTheDocument();
     expect(screen.getByText('現在還沒有公開貓點。先回到我的地圖，把你遇到的第一隻貓公開出來。')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '回我的地圖公開第一隻貓' }));
@@ -716,7 +716,7 @@ describe('Map page', () => {
     expect(screen.getByRole('button', { name: '我的地圖' })).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('explains that the shared map is preparing when cloud is not configured yet', async () => {
+  it('explains that the world map is preparing when cloud is not configured yet', async () => {
     const user = userEvent.setup();
     vi.mocked(loadPublicCatCards).mockResolvedValue({
       ok: false,
@@ -729,11 +729,36 @@ describe('Map page', () => {
       </MemoryRouter>
     );
 
-    await user.click(await screen.findByRole('button', { name: '大家的地圖' }));
+    await user.click(await screen.findByRole('button', { name: '全世界地圖' }));
 
-    expect(await screen.findByText('大家的地圖準備中')).toBeInTheDocument();
-    expect(screen.getByText('雲端地圖還在準備。你仍然可以先把遇到的貓存在我的地圖，之後再公開到大家的地圖。')).toBeInTheDocument();
-    expect(screen.queryByText('大家的地圖暫時載入失敗')).not.toBeInTheDocument();
+    expect(await screen.findByText('全世界地圖準備中')).toBeInTheDocument();
+    expect(screen.getByText('雲端地圖還在準備。你仍然可以先把遇到的貓存在我的地圖，之後再公開到全世界地圖。')).toBeInTheDocument();
+    expect(screen.queryByText('全世界地圖暫時載入失敗')).not.toBeInTheDocument();
+  });
+
+  it('uses World Map copy in English public-map states', async () => {
+    const user = userEvent.setup();
+    vi.mocked(loadPublicCatCards).mockResolvedValue({
+      ok: false,
+      reason: 'cloud_not_configured',
+    });
+    useScrapbookStore.setState({
+      items: [],
+      isLoading: false,
+      language: 'en',
+    });
+
+    render(
+      <MemoryRouter>
+        <Map />
+      </MemoryRouter>
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'World Map' }));
+
+    expect(await screen.findByText('World Map is preparing')).toBeInTheDocument();
+    expect(screen.getByText('The cloud map is still preparing. You can save cats in My Map now and publish them later.')).toBeInTheDocument();
+    expect(screen.queryByText(/Shared map/i)).not.toBeInTheDocument();
   });
 
   it('opens a newly created local cat and explains login is needed before publishing it', async () => {

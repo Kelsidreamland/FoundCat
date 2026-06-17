@@ -611,21 +611,21 @@ export default function Map() {
   const canEditSelectedItem = !isPublicMapMode;
   const mapModeCopy = {
     mine: language === 'zh' ? '我的地圖' : 'My Map',
-    public: language === 'zh' ? '大家的地圖' : 'Shared Map',
-    publicEmptyTitle: language === 'zh' ? '大家的地圖暫時載入失敗' : 'Shared map is unavailable',
-    publicPreparingTitle: language === 'zh' ? '大家的地圖準備中' : 'Shared map is preparing',
-    publicNoCatsTitle: language === 'zh' ? '大家的地圖還沒有貓貓' : 'No public cats yet',
+    public: language === 'zh' ? '全世界地圖' : 'World Map',
+    publicEmptyTitle: language === 'zh' ? '全世界地圖暫時載入失敗' : 'World Map is unavailable',
+    publicPreparingTitle: language === 'zh' ? '全世界地圖準備中' : 'World Map is preparing',
+    publicNoCatsTitle: language === 'zh' ? '全世界地圖還沒有貓貓' : 'No public cats yet',
     publicEmptyBody: language === 'zh'
       ? '可能是網路或雲端暫時不穩，可以重新載入或先回到我的地圖。'
       : 'The network or cloud may be unstable. Try reloading or return to My Map.',
     publicPreparingBody: language === 'zh'
-      ? '雲端地圖還在準備。你仍然可以先把遇到的貓存在我的地圖，之後再公開到大家的地圖。'
+      ? '雲端地圖還在準備。你仍然可以先把遇到的貓存在我的地圖，之後再公開到全世界地圖。'
       : 'The cloud map is still preparing. You can save cats in My Map now and publish them later.',
     publicNoCatsBody: language === 'zh'
       ? '現在還沒有公開貓點。先回到我的地圖，把你遇到的第一隻貓公開出來。'
       : 'No public cat spots yet. Return to My Map and publish the first cat you found.',
-    publicLoading: language === 'zh' ? '正在載入大家的貓咪地圖...' : 'Loading the shared cat map...',
-    publicRetry: language === 'zh' ? '重新載入大家的地圖' : 'Reload Shared Map',
+    publicLoading: language === 'zh' ? '正在載入全世界貓咪地圖...' : 'Loading the world cat map...',
+    publicRetry: language === 'zh' ? '重新載入全世界地圖' : 'Reload World Map',
     publicPublishFirst: language === 'zh' ? '回我的地圖公開第一隻貓' : 'Return to My Map to Publish a Cat',
   };
   const mapCountLabel = isPublicMapMode
@@ -636,19 +636,19 @@ export default function Map() {
         ? `${mapLocationGroups.length} 個打卡點`
         : `${mapLocationGroups.length} ${mapLocationGroups.length === 1 ? 'spot' : 'spots'}`);
   const publishCopy = {
-    publish: language === 'zh' ? '公開到大家的地圖' : 'Publish to Shared Map',
-    unpublish: language === 'zh' ? '從大家的地圖移除' : 'Remove from Shared Map',
+    publish: language === 'zh' ? '公開到全世界地圖' : 'Publish to World Map',
+    unpublish: language === 'zh' ? '從全世界地圖移除' : 'Remove from World Map',
     saving: language === 'zh' ? '同步中...' : 'Syncing...',
-    published: language === 'zh' ? '已公開在大家的地圖' : 'Published to the shared map',
+    published: language === 'zh' ? '已公開在全世界地圖' : 'Published to the world map',
     publishedHint: language === 'zh'
-      ? '已同步到大家的地圖，現在可以去看看公開貓點。'
-      : 'Synced to the shared map. You can now view public cat spots.',
-    viewPublicMap: language === 'zh' ? '去大家的地圖查看' : 'View on Shared Map',
-    unpublished: language === 'zh' ? '已從大家的地圖移除' : 'Removed from the shared map',
+      ? '已同步到全世界地圖，現在可以去看看公開貓點。'
+      : 'Synced to the world map. You can now view public cat spots.',
+    viewPublicMap: language === 'zh' ? '去全世界地圖查看' : 'View on World Map',
+    unpublished: language === 'zh' ? '已從全世界地圖移除' : 'Removed from the world map',
     error: language === 'zh' ? '同步失敗，請稍後再試。' : 'Sync failed. Please try again later.',
     hint: language === 'zh'
-      ? '公開後，其他人可在大家的地圖看到這隻貓。'
-      : 'Once published, others can see this cat on the shared map.',
+      ? '公開後，其他人可在全世界地圖看到這隻貓。'
+      : 'Once published, others can see this cat on the world map.',
   };
   const publishLoginHintCopy = {
     title: language === 'zh' ? '想讓大家也看到這隻貓？' : 'Want everyone to find this cat?',
@@ -1017,8 +1017,8 @@ export default function Map() {
                 <div className="rounded-[16px] border border-[#221915]/12 bg-[#2f5fb3]/8 p-2.5 shadow-[3px_3px_0_rgba(47,95,179,0.08)]">
                   <p className="text-xs font-bold leading-relaxed text-[#5f5148]">
                     {language === 'zh'
-                      ? '登入後可以備份，也能把這隻貓公開到大家的地圖。'
-                      : 'Sign in to back up this cat and publish it to the shared map.'}
+                      ? '登入後可以備份，也能把這隻貓公開到全世界地圖。'
+                      : 'Sign in to back up this cat and publish it to the world map.'}
                   </p>
                   <CloudBackupPrompt language={language} items={items} />
                 </div>
