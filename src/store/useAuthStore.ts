@@ -10,11 +10,22 @@ type AuthState = {
   isConfigured: boolean;
   isLoading: boolean;
   error: AuthErrorCode | null;
+  errorMessage: string | null;
   unsubscribeAuthState: (() => void) | null;
   initAuth: () => Promise<void>;
   signInWithEmail: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
+
+const getErrorMessage = (error: unknown) => (
+  error instanceof Error
+    ? error.message
+    : typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string'
+      ? error.message
+      : typeof error === 'string'
+        ? error
+        : null
+);
 
 export const useAuthStore = create<AuthState>((setStore, getStore) => ({
   session: null,
@@ -22,6 +33,7 @@ export const useAuthStore = create<AuthState>((setStore, getStore) => ({
   isConfigured: false,
   isLoading: false,
   error: null,
+  errorMessage: null,
   unsubscribeAuthState: null,
 
   initAuth: async () => {
@@ -36,12 +48,13 @@ export const useAuthStore = create<AuthState>((setStore, getStore) => ({
         isConfigured: false,
         isLoading: false,
         error: null,
+        errorMessage: null,
         unsubscribeAuthState: null,
       });
       return;
     }
 
-    setStore({ isConfigured: true, isLoading: true, error: null });
+    setStore({ isConfigured: true, isLoading: true, error: null, errorMessage: null });
 
     const { data, error } = await client.auth.getSession();
 
@@ -51,6 +64,7 @@ export const useAuthStore = create<AuthState>((setStore, getStore) => ({
         user: null,
         isLoading: false,
         error: 'session_load_failed',
+        errorMessage: getErrorMessage(error),
       });
       return;
     }
@@ -62,6 +76,7 @@ export const useAuthStore = create<AuthState>((setStore, getStore) => ({
         isConfigured: true,
         isLoading: false,
         error: null,
+        errorMessage: null,
       });
     });
 
@@ -71,6 +86,7 @@ export const useAuthStore = create<AuthState>((setStore, getStore) => ({
       isConfigured: true,
       isLoading: false,
       error: null,
+      errorMessage: null,
       unsubscribeAuthState: () => subscription.data.subscription.unsubscribe(),
     });
   },
@@ -78,32 +94,42 @@ export const useAuthStore = create<AuthState>((setStore, getStore) => ({
   signInWithEmail: async (email: string) => {
     const client = await getSupabaseClient();
     if (!client) {
-      setStore({ error: 'cloud_not_configured' });
+      setStore({ error: 'cloud_not_configured', errorMessage: null });
       return;
     }
 
-    setStore({ isLoading: true, error: null });
-    const { error } = await client.auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        emailRedirectTo: window.location.origin,
-      },
-    });
+    setStore({ isLoading: true, error: null, errorMessage: null });
 
-    setStore({
-      isLoading: false,
-      error: error ? 'sign_in_failed' : null,
-    });
+    try {
+      const { error } = await client.auth.signInWithOtp({
+        email: email.trim(),
+        options: {
+          emailRedirectTo: window.location.origin,
+        },
+      });
+
+      setStore({
+        isLoading: false,
+        error: error ? 'sign_in_failed' : null,
+        errorMessage: getErrorMessage(error),
+      });
+    } catch (error) {
+      setStore({
+        isLoading: false,
+        error: 'sign_in_failed',
+        errorMessage: getErrorMessage(error),
+      });
+    }
   },
 
   signOut: async () => {
     const client = await getSupabaseClient();
     if (!client) {
-      setStore({ session: null, user: null, error: null });
+      setStore({ session: null, user: null, error: null, errorMessage: null });
       return;
     }
 
-    setStore({ isLoading: true, error: null });
+    setStore({ isLoading: true, error: null, errorMessage: null });
     const { error } = await client.auth.signOut();
 
     setStore({
@@ -111,6 +137,7 @@ export const useAuthStore = create<AuthState>((setStore, getStore) => ({
       user: error ? getStore().user : null,
       isLoading: false,
       error: error ? 'sign_out_failed' : null,
+      errorMessage: getErrorMessage(error),
     });
   },
 }));

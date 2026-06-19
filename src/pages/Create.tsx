@@ -10,6 +10,7 @@ import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import { imageBlobToHeroDataUrl } from '../lib/imageData';
 import { buildStickerDraft } from '../lib/createStickerDraft';
 import { useAuthStore } from '../store/useAuthStore';
+import { useCloudBackupStatusStore } from '../store/useCloudBackupStatusStore';
 import { backupLocalCatCards } from '../lib/cloudBackup';
 
 type PixelCrop = { x: number; y: number; width: number; height: number };
@@ -155,13 +156,22 @@ export default function Create() {
       const catId = createdStickerId;
       const updatedCat = useScrapbookStore.getState().items.find((item) => item.id === catId);
       if (updatedCat && user && isCloudConfigured) {
+        const cloudBackupStatus = useCloudBackupStatusStore.getState();
+        cloudBackupStatus.markBackingUp();
         void backupLocalCatCards({
           ownerId: user.id,
           items: [updatedCat],
         }).then((result) => {
-          if (!result.ok) {
+          if (result.ok === false) {
+            useCloudBackupStatusStore.getState().markError(result.message);
             console.warn('Automatic cloud backup after create failed', result);
+            return;
           }
+
+          useCloudBackupStatusStore.getState().markSuccess(result.backedUpCount);
+        }).catch((error) => {
+          useCloudBackupStatusStore.getState().markError(error instanceof Error ? error.message : undefined);
+          console.warn('Automatic cloud backup after create failed', error);
         });
       }
       setTargetDate(null);

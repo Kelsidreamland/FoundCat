@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { backupLocalCatCards } from '../../lib/cloudBackup';
 import { restoreCloudCatCards } from '../../lib/cloudRestore';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useCloudBackupStatusStore } from '../../store/useCloudBackupStatusStore';
 import { useScrapbookStore, type ScrapbookItem } from '../../store/useScrapbookStore';
 import CloudBackupPrompt from './CloudBackupPrompt';
 
@@ -49,10 +50,12 @@ describe('CloudBackupPrompt', () => {
       isConfigured: false,
       isLoading: false,
       error: null,
+      errorMessage: null,
       unsubscribeAuthState: null,
       signInWithEmail: vi.fn(async () => undefined),
       signOut: vi.fn(async () => undefined),
     });
+    useCloudBackupStatusStore.getState().reset();
   });
 
   afterEach(() => cleanup());
@@ -95,6 +98,29 @@ describe('CloudBackupPrompt', () => {
       expect(signInWithEmail).toHaveBeenCalledWith('test@example.com');
     });
     expect(screen.getByText('已寄出登入信')).toBeInTheDocument();
+  });
+
+  it('shows a useful message when the magic-link email cannot be sent', async () => {
+    const user = userEvent.setup();
+    const signInWithEmail = vi.fn(async () => {
+      useAuthStore.setState({
+        error: 'sign_in_failed',
+        errorMessage: 'Failed to fetch',
+      });
+    });
+    useAuthStore.setState({
+      isConfigured: true,
+      signInWithEmail,
+    });
+
+    render(<CloudBackupPrompt language="zh" items={[localCat]} />);
+
+    await user.click(screen.getByRole('button', { name: '備份我的貓咪地圖' }));
+    await user.type(screen.getByLabelText('Email'), 'test@example.com');
+    await user.click(screen.getByRole('button', { name: '寄送登入信' }));
+
+    expect(await screen.findByText('登入信寄送失敗：雲端設定或網路無法連線，請稍後再試。')).toBeInTheDocument();
+    expect(screen.queryByText('已寄出登入信')).not.toBeInTheDocument();
   });
 
   it('shows signed-in backup status and lets users sign out', async () => {
@@ -194,6 +220,26 @@ describe('CloudBackupPrompt', () => {
     expect(screen.getByRole('link', { name: '去我的地圖公開貓點' })).toHaveAttribute('href', '/map');
   });
 
+  it('shows the latest automatic backup status on the signed-in cloud button', () => {
+    useAuthStore.setState({
+      isConfigured: true,
+      user: {
+        id: 'user-1',
+        email: 'cat@example.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: '2026-06-02T00:00:00.000Z',
+      },
+    });
+
+    useCloudBackupStatusStore.getState().markSuccess(1);
+
+    render(<CloudBackupPrompt language="zh" items={[localCat]} />);
+
+    expect(screen.getByText('剛剛已備份 1 隻貓')).toBeInTheDocument();
+  });
+
   it('restores cloud cats into the local device when signed in', async () => {
     const user = userEvent.setup();
     const remoteCat: ScrapbookItem = {
@@ -253,7 +299,7 @@ describe('CloudBackupPrompt', () => {
     await user.click(screen.getByRole('button', { name: '查看備份狀態' }));
     await user.click(screen.getByRole('button', { name: '立即備份' }));
 
-    expect(await screen.findByText('備份失敗，請稍後再試。')).toBeInTheDocument();
+    expect(await screen.findByText('備份失敗：row too large')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '再試一次' })).toBeInTheDocument();
   });
 });

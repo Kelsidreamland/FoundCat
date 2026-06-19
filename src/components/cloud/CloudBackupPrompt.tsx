@@ -3,6 +3,7 @@ import { AlertCircle, CheckCircle2, Cloud, DownloadCloud, LogOut, Mail, MapPin, 
 import { backupLocalCatCards } from '../../lib/cloudBackup';
 import { restoreCloudCatCards } from '../../lib/cloudRestore';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useCloudBackupStatusStore } from '../../store/useCloudBackupStatusStore';
 import { useScrapbookStore, type ScrapbookItem } from '../../store/useScrapbookStore';
 
 type CloudBackupPromptProps = {
@@ -20,6 +21,9 @@ const copy = {
     signedInCta: '查看備份狀態',
     localCount: (count: number) => `${count} 隻貓目前保存在這台裝置`,
     signedInHint: '已登入，之後可以同步你的貓咪地圖。',
+    autoBackupInProgress: '正在備份剛新增的貓',
+    autoBackupSuccess: (count: number) => `剛剛已備份 ${count} 隻貓`,
+    autoBackupError: '剛剛備份失敗，點開可重試',
     title: '備份我的貓咪地圖',
     subtitle: '用 Email 登入後，之後可以把貓卡、地點與備註保存到雲端。',
     notConfiguredTitle: '雲端備份尚未啟用',
@@ -31,6 +35,7 @@ const copy = {
     sentTitle: '已寄出登入信',
     sentBody: '請到信箱點擊連結，回到 FOUND CAT 後就能繼續備份。',
     signInFailed: '登入信寄送失敗，請稍後再試。',
+    signInFailedNetwork: '登入信寄送失敗：雲端設定或網路無法連線，請稍後再試。',
     signedInTitle: '已登入',
     emptyDeviceRestoreHint: '這台裝置目前沒有貓咪；如果你之前備份過，可以先恢復雲端貓咪。',
     backupNow: '立即備份',
@@ -39,6 +44,7 @@ const copy = {
     backedUp: (count: number) => `已備份 ${count} 隻貓`,
     openMapToPublish: '去我的地圖公開貓點',
     backupFailed: '備份失敗，請稍後再試。',
+    backupFailedDetail: (message: string) => `備份失敗：${message}`,
     restoreNow: '恢復雲端貓咪',
     restoring: '恢復中',
     restored: (count: number) => `已恢復 ${count} 隻貓`,
@@ -53,6 +59,9 @@ const copy = {
     signedInCta: 'View Backup Status',
     localCount: (count: number) => `${count} cats are saved on this device`,
     signedInHint: 'Signed in. Your cat map can sync later.',
+    autoBackupInProgress: 'Backing up the cat you just added',
+    autoBackupSuccess: (count: number) => `Just backed up ${count} cat${count === 1 ? '' : 's'}`,
+    autoBackupError: 'Last backup failed. Open to retry',
     title: 'Back Up My Cat Map',
     subtitle: 'Sign in with email so cat cards, places, and notes can be saved to the cloud later.',
     notConfiguredTitle: 'Cloud backup is not enabled yet',
@@ -64,6 +73,7 @@ const copy = {
     sentTitle: 'Sign-in link sent',
     sentBody: 'Open the email link, then return to FOUND CAT to continue backup.',
     signInFailed: 'Could not send the sign-in link. Please try again later.',
+    signInFailedNetwork: 'Could not send the sign-in link: cloud setup or network is unreachable. Please try again later.',
     signedInTitle: 'Signed in',
     emptyDeviceRestoreHint: 'This device has no cats yet. If you backed up before, restore your cloud cats first.',
     backupNow: 'Back Up Now',
@@ -72,6 +82,7 @@ const copy = {
     backedUp: (count: number) => `Backed up ${count} cat${count === 1 ? '' : 's'}`,
     openMapToPublish: 'Open My Map to Publish Cats',
     backupFailed: 'Backup failed. Please try again later.',
+    backupFailedDetail: (message: string) => `Backup failed: ${message}`,
     restoreNow: 'Restore Cloud Cats',
     restoring: 'Restoring',
     restored: (count: number) => `Restored ${count} cat${count === 1 ? '' : 's'}`,
@@ -89,8 +100,15 @@ export default function CloudBackupPrompt({ language, items, autoOpenOnSignedInE
   const isConfigured = useAuthStore((state) => state.isConfigured);
   const isLoading = useAuthStore((state) => state.isLoading);
   const error = useAuthStore((state) => state.error);
+  const errorMessage = useAuthStore((state) => state.errorMessage);
   const signInWithEmail = useAuthStore((state) => state.signInWithEmail);
   const signOut = useAuthStore((state) => state.signOut);
+  const latestBackupStatus = useCloudBackupStatusStore((state) => state.status);
+  const latestBackedUpCount = useCloudBackupStatusStore((state) => state.backedUpCount);
+  const latestBackupMessage = useCloudBackupStatusStore((state) => state.message);
+  const markBackingUp = useCloudBackupStatusStore((state) => state.markBackingUp);
+  const markSuccess = useCloudBackupStatusStore((state) => state.markSuccess);
+  const markError = useCloudBackupStatusStore((state) => state.markError);
   const mergeRestoredItems = useScrapbookStore((state) => state.mergeRestoredItems);
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState('');
@@ -104,6 +122,18 @@ export default function CloudBackupPrompt({ language, items, autoOpenOnSignedInE
   const isSignedIn = Boolean(user);
   const userEmail = user?.email;
   const catCount = items.length;
+  const signedInButtonHint = latestBackupStatus === 'backing_up'
+    ? t.autoBackupInProgress
+    : latestBackupStatus === 'success'
+      ? t.autoBackupSuccess(latestBackedUpCount)
+      : latestBackupStatus === 'error'
+        ? t.autoBackupError
+        : t.signedInHint;
+  const signInErrorMessage = errorMessage?.toLowerCase().includes('fetch')
+    || errorMessage?.toLowerCase().includes('network')
+    || errorMessage?.toLowerCase().includes('failed to fetch')
+    ? t.signInFailedNetwork
+    : t.signInFailed;
 
   useEffect(() => {
     if (
@@ -138,6 +168,7 @@ export default function CloudBackupPrompt({ language, items, autoOpenOnSignedInE
     if (backupStatus === 'backing_up') return;
 
     setBackupStatus('backing_up');
+    markBackingUp();
     const result = await backupLocalCatCards({
       ownerId: user?.id ?? null,
       items,
@@ -146,10 +177,14 @@ export default function CloudBackupPrompt({ language, items, autoOpenOnSignedInE
     if (result.ok) {
       setBackedUpCount(result.backedUpCount);
       setBackupStatus('success');
+      markSuccess(result.backedUpCount);
       return;
     }
 
-    setBackupStatus('error');
+    if (result.ok === false) {
+      setBackupStatus('error');
+      markError(result.message);
+    }
   };
 
   const handleRestore = async () => {
@@ -186,7 +221,7 @@ export default function CloudBackupPrompt({ language, items, autoOpenOnSignedInE
             {isSignedIn ? t.signedInCta : t.cta}
           </span>
           <span className="block truncate text-[11px] font-extrabold text-[#6d5f52]">
-            {isSignedIn ? t.signedInHint : t.localCount(catCount)}
+            {isSignedIn ? signedInButtonHint : t.localCount(catCount)}
           </span>
         </span>
         <span className="rounded-full border border-[#1d1714]/20 bg-[#fff2cf] px-2 py-1 text-[10px] font-black tracking-[0.12em] text-[#2f5fb3]">
@@ -296,7 +331,9 @@ export default function CloudBackupPrompt({ language, items, autoOpenOnSignedInE
                   </div>
                 ) : null}
                 {backupStatus === 'error' ? (
-                  <p className="mt-3 text-xs font-black text-[#9f3a2f]">{t.backupFailed}</p>
+                  <p className="mt-3 text-xs font-black text-[#9f3a2f]">
+                    {latestBackupMessage ? t.backupFailedDetail(latestBackupMessage) : t.backupFailed}
+                  </p>
                 ) : null}
               </div>
             ) : !isConfigured ? (
@@ -337,7 +374,7 @@ export default function CloudBackupPrompt({ language, items, autoOpenOnSignedInE
                   />
                 </label>
                 {error === 'sign_in_failed' ? (
-                  <p className="mt-2 text-xs font-black text-[#9f3a2f]">{t.signInFailed}</p>
+                  <p className="mt-2 text-xs font-black text-[#9f3a2f]">{signInErrorMessage}</p>
                 ) : null}
                 <button
                   type="submit"

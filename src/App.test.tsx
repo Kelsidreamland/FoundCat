@@ -35,6 +35,7 @@ describe('App viewport shell', () => {
       isConfigured: false,
       isLoading: false,
       error: null,
+      errorMessage: null,
       unsubscribeAuthState: null,
       initAuth: mockInitAuth,
       signInWithEmail: vi.fn(async () => undefined),

@@ -93,6 +93,37 @@ describe('useAuthStore', () => {
     expect(useAuthStore.getState().error).toBeNull();
   });
 
+  it('keeps the Supabase sign-in failure message for troubleshooting', async () => {
+    const { getSupabaseClient } = await import('../lib/supabaseClient');
+    vi.mocked(getSupabaseClient).mockResolvedValue(supabaseClient as never);
+    supabaseClient.auth.signInWithOtp.mockResolvedValue({
+      data: {},
+      error: { message: 'Failed to fetch' },
+    });
+
+    await useAuthStore.getState().signInWithEmail('test@example.com');
+
+    expect(useAuthStore.getState()).toMatchObject({
+      error: 'sign_in_failed',
+      errorMessage: 'Failed to fetch',
+      isLoading: false,
+    });
+  });
+
+  it('keeps thrown sign-in errors as a readable message', async () => {
+    const { getSupabaseClient } = await import('../lib/supabaseClient');
+    vi.mocked(getSupabaseClient).mockResolvedValue(supabaseClient as never);
+    supabaseClient.auth.signInWithOtp.mockRejectedValue(new Error('network request failed'));
+
+    await useAuthStore.getState().signInWithEmail('test@example.com');
+
+    expect(useAuthStore.getState()).toMatchObject({
+      error: 'sign_in_failed',
+      errorMessage: 'network request failed',
+      isLoading: false,
+    });
+  });
+
   it('sets an error when sign-in is requested without configuration', async () => {
     await useAuthStore.getState().signInWithEmail('test@example.com');
 

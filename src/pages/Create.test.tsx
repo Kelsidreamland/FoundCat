@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { useScrapbookStore } from '../store/useScrapbookStore';
 import { useAuthStore } from '../store/useAuthStore';
+import { useCloudBackupStatusStore } from '../store/useCloudBackupStatusStore';
 import { backupLocalCatCards } from '../lib/cloudBackup';
 import Create from './Create';
 
@@ -91,10 +92,12 @@ describe('Create page', () => {
       isConfigured: false,
       isLoading: false,
       error: null,
+      errorMessage: null,
       unsubscribeAuthState: null,
       signInWithEmail: vi.fn(async () => undefined),
       signOut: vi.fn(async () => undefined),
     });
+    useCloudBackupStatusStore.getState().reset();
     vi.mocked(backupLocalCatCards).mockClear();
     vi.mocked(backupLocalCatCards).mockResolvedValue({ ok: true, backedUpCount: 1 });
     Object.defineProperty(URL, 'createObjectURL', {
@@ -288,6 +291,60 @@ describe('Create page', () => {
             }),
           }),
         ],
+      });
+    });
+    await waitFor(() => {
+      expect(useCloudBackupStatusStore.getState()).toMatchObject({
+        status: 'success',
+        backedUpCount: 1,
+      });
+    });
+    expect(await screen.findByTestId('current-route')).toHaveTextContent('/map?cat=new-cat-id&publishHint=1');
+  });
+
+  it('keeps automatic backup failure visible after creating a located cat', async () => {
+    vi.mocked(backupLocalCatCards).mockResolvedValue({
+      ok: false,
+      reason: 'backup_failed',
+      message: 'row too large',
+    });
+    useAuthStore.setState({
+      isConfigured: true,
+      user: {
+        id: 'user-1',
+        email: 'cat@example.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: '2026-06-02T00:00:00.000Z',
+      },
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/create']}>
+        <RouteDisplay />
+        <Routes>
+          <Route path="/create" element={<Create />} />
+          <Route path="/map" element={<div>Map page</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await userEvent.upload(
+      screen.getByLabelText('Upload from Album'),
+      new File(['cat'], 'cat.jpg', { type: 'image/jpeg' })
+    );
+
+    await screen.findByTestId('cropper');
+    await userEvent.click(screen.getByRole('button', { name: '方形貓卡' }));
+    await screen.findByAltText('預覽貓卡');
+    await userEvent.click(screen.getByRole('button', { name: /存入我的貓卡/ }));
+    await userEvent.click(await screen.findByRole('button', { name: '確認測試地點' }));
+
+    await waitFor(() => {
+      expect(useCloudBackupStatusStore.getState()).toMatchObject({
+        status: 'error',
+        message: 'row too large',
       });
     });
     expect(await screen.findByTestId('current-route')).toHaveTextContent('/map?cat=new-cat-id&publishHint=1');
