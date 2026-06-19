@@ -24,6 +24,7 @@ const copy = {
     autoBackupInProgress: '正在備份剛新增的貓',
     autoBackupSuccess: (count: number) => `剛剛已備份 ${count} 隻貓`,
     autoBackupError: '剛剛備份失敗，點開可重試',
+    autoBackupPending: (count: number) => `${count} 隻貓待備份，手機內資料不受影響`,
     title: '備份我的貓咪地圖',
     subtitle: '用 Email 登入後，之後可以把貓卡、地點與備註保存到雲端。',
     notConfiguredTitle: '雲端備份尚未啟用',
@@ -45,6 +46,7 @@ const copy = {
     openMapToPublish: '去我的地圖公開貓點',
     backupFailed: '備份失敗，請稍後再試。',
     backupFailedDetail: (message: string) => `備份失敗：${message}`,
+    backupCloudUnavailable: (count: number) => `雲端目前連不上，${count} 隻貓仍安全保存在這台手機。等雲端恢復後可以再試一次。`,
     restoreNow: '恢復雲端貓咪',
     restoring: '恢復中',
     restored: (count: number) => `已恢復 ${count} 隻貓`,
@@ -62,6 +64,7 @@ const copy = {
     autoBackupInProgress: 'Backing up the cat you just added',
     autoBackupSuccess: (count: number) => `Just backed up ${count} cat${count === 1 ? '' : 's'}`,
     autoBackupError: 'Last backup failed. Open to retry',
+    autoBackupPending: (count: number) => `${count} cat${count === 1 ? '' : 's'} waiting to back up. Local data is safe.`,
     title: 'Back Up My Cat Map',
     subtitle: 'Sign in with email so cat cards, places, and notes can be saved to the cloud later.',
     notConfiguredTitle: 'Cloud backup is not enabled yet',
@@ -83,6 +86,7 @@ const copy = {
     openMapToPublish: 'Open My Map to Publish Cats',
     backupFailed: 'Backup failed. Please try again later.',
     backupFailedDetail: (message: string) => `Backup failed: ${message}`,
+    backupCloudUnavailable: (count: number) => `Cloud is unreachable right now. ${count} cat${count === 1 ? ' is' : 's are'} still safe on this device. Try again after cloud service is restored.`,
     restoreNow: 'Restore Cloud Cats',
     restoring: 'Restoring',
     restored: (count: number) => `Restored ${count} cat${count === 1 ? '' : 's'}`,
@@ -105,6 +109,7 @@ export default function CloudBackupPrompt({ language, items, autoOpenOnSignedInE
   const signOut = useAuthStore((state) => state.signOut);
   const latestBackupStatus = useCloudBackupStatusStore((state) => state.status);
   const latestBackedUpCount = useCloudBackupStatusStore((state) => state.backedUpCount);
+  const latestPendingCount = useCloudBackupStatusStore((state) => state.pendingCount);
   const latestBackupMessage = useCloudBackupStatusStore((state) => state.message);
   const markBackingUp = useCloudBackupStatusStore((state) => state.markBackingUp);
   const markSuccess = useCloudBackupStatusStore((state) => state.markSuccess);
@@ -127,13 +132,23 @@ export default function CloudBackupPrompt({ language, items, autoOpenOnSignedInE
     : latestBackupStatus === 'success'
       ? t.autoBackupSuccess(latestBackedUpCount)
       : latestBackupStatus === 'error'
-        ? t.autoBackupError
+        ? latestPendingCount > 0
+          ? t.autoBackupPending(latestPendingCount)
+          : t.autoBackupError
         : t.signedInHint;
   const signInErrorMessage = errorMessage?.toLowerCase().includes('fetch')
     || errorMessage?.toLowerCase().includes('network')
     || errorMessage?.toLowerCase().includes('failed to fetch')
     ? t.signInFailedNetwork
     : t.signInFailed;
+  const backupErrorLooksLikeUnavailable = latestBackupMessage?.toLowerCase().includes('fetch')
+    || latestBackupMessage?.toLowerCase().includes('network')
+    || latestBackupMessage?.toLowerCase().includes('failed to fetch');
+  const backupErrorMessage = backupErrorLooksLikeUnavailable && latestPendingCount > 0
+    ? t.backupCloudUnavailable(latestPendingCount)
+    : latestBackupMessage
+      ? t.backupFailedDetail(latestBackupMessage)
+      : t.backupFailed;
 
   useEffect(() => {
     if (
@@ -183,7 +198,10 @@ export default function CloudBackupPrompt({ language, items, autoOpenOnSignedInE
 
     if (result.ok === false) {
       setBackupStatus('error');
-      markError(result.message);
+      markError({
+        message: result.message,
+        pendingCount: items.length,
+      });
     }
   };
 
@@ -332,7 +350,7 @@ export default function CloudBackupPrompt({ language, items, autoOpenOnSignedInE
                 ) : null}
                 {backupStatus === 'error' ? (
                   <p className="mt-3 text-xs font-black text-[#9f3a2f]">
-                    {latestBackupMessage ? t.backupFailedDetail(latestBackupMessage) : t.backupFailed}
+                    {backupErrorMessage}
                   </p>
                 ) : null}
               </div>

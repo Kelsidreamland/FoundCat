@@ -345,6 +345,7 @@ describe('Create page', () => {
       expect(useCloudBackupStatusStore.getState()).toMatchObject({
         status: 'error',
         message: 'row too large',
+        pendingCount: 1,
       });
     });
     expect(await screen.findByTestId('current-route')).toHaveTextContent('/map?cat=new-cat-id&publishHint=1');

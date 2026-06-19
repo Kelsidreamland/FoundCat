@@ -240,6 +240,29 @@ describe('CloudBackupPrompt', () => {
     expect(screen.getByText('剛剛已備份 1 隻貓')).toBeInTheDocument();
   });
 
+  it('keeps the pending local cat count visible after automatic backup fails', () => {
+    useAuthStore.setState({
+      isConfigured: true,
+      user: {
+        id: 'user-1',
+        email: 'cat@example.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: '2026-06-02T00:00:00.000Z',
+      },
+    });
+
+    useCloudBackupStatusStore.getState().markError({
+      message: 'Failed to fetch',
+      pendingCount: 2,
+    });
+
+    render(<CloudBackupPrompt language="zh" items={[localCat, { ...localCat, id: 'cat-2' }]} />);
+
+    expect(screen.getByText('2 隻貓待備份，手機內資料不受影響')).toBeInTheDocument();
+  });
+
   it('restores cloud cats into the local device when signed in', async () => {
     const user = userEvent.setup();
     const remoteCat: ScrapbookItem = {
@@ -301,5 +324,36 @@ describe('CloudBackupPrompt', () => {
 
     expect(await screen.findByText('備份失敗：row too large')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '再試一次' })).toBeInTheDocument();
+  });
+
+  it('explains paused or unreachable cloud backup without implying local data is lost', async () => {
+    const user = userEvent.setup();
+    vi.mocked(backupLocalCatCards).mockResolvedValue({
+      ok: false,
+      reason: 'backup_failed',
+      message: 'Failed to fetch',
+    });
+    useAuthStore.setState({
+      isConfigured: true,
+      user: {
+        id: 'user-1',
+        email: 'cat@example.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: '2026-06-02T00:00:00.000Z',
+      },
+    });
+
+    render(<CloudBackupPrompt language="zh" items={[localCat, { ...localCat, id: 'cat-2' }]} />);
+
+    await user.click(screen.getByRole('button', { name: '查看備份狀態' }));
+    await user.click(screen.getByRole('button', { name: '立即備份' }));
+
+    expect(await screen.findByText('雲端目前連不上，2 隻貓仍安全保存在這台手機。等雲端恢復後可以再試一次。')).toBeInTheDocument();
+    expect(useCloudBackupStatusStore.getState()).toMatchObject({
+      status: 'error',
+      pendingCount: 2,
+    });
   });
 });

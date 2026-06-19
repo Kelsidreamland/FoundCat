@@ -163,14 +163,20 @@ export default function Create() {
           items: [updatedCat],
         }).then((result) => {
           if (result.ok === false) {
-            useCloudBackupStatusStore.getState().markError(result.message);
+            useCloudBackupStatusStore.getState().markError({
+              message: result.message,
+              pendingCount: 1,
+            });
             console.warn('Automatic cloud backup after create failed', result);
             return;
           }
 
           useCloudBackupStatusStore.getState().markSuccess(result.backedUpCount);
         }).catch((error) => {
-          useCloudBackupStatusStore.getState().markError(error instanceof Error ? error.message : undefined);
+          useCloudBackupStatusStore.getState().markError({
+            message: error instanceof Error ? error.message : undefined,
+            pendingCount: 1,
+          });
           console.warn('Automatic cloud backup after create failed', error);
         });
       }
