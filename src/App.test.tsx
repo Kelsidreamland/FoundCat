@@ -39,6 +39,7 @@ describe('App viewport shell', () => {
       unsubscribeAuthState: null,
       initAuth: mockInitAuth,
       signInWithEmail: vi.fn(async () => undefined),
+      verifyEmailOtp: vi.fn(async () => undefined),
       signOut: vi.fn(async () => undefined),
     }) as never);
     window.history.pushState({}, '', '/');

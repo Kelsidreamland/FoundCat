@@ -14,6 +14,7 @@ const supabaseClient = {
     getSession: vi.fn(),
     onAuthStateChange: vi.fn(() => authStateSubscription),
     signInWithOtp: vi.fn(),
+    verifyOtp: vi.fn(),
     signOut: vi.fn(),
   },
 };
@@ -29,6 +30,7 @@ describe('useAuthStore', () => {
     supabaseClient.auth.getSession.mockReset();
     supabaseClient.auth.onAuthStateChange.mockClear();
     supabaseClient.auth.signInWithOtp.mockReset();
+    supabaseClient.auth.verifyOtp.mockReset();
     supabaseClient.auth.signOut.mockReset();
     authStateSubscription.data.subscription.unsubscribe.mockClear();
     useAuthStore.setState({
@@ -107,6 +109,53 @@ describe('useAuthStore', () => {
       options: {
         emailRedirectTo: 'https://found-cat.vercel.app/map?cat=cat-29&publishHint=1',
       },
+    });
+  });
+
+  it('verifies an email OTP inside the current app session', async () => {
+    const { getSupabaseClient } = await import('../lib/supabaseClient');
+    const session = {
+      access_token: 'token',
+      refresh_token: 'refresh',
+      expires_in: 3600,
+      token_type: 'bearer',
+      user: { id: 'user-1', email: 'cat@example.com', app_metadata: {}, user_metadata: {}, aud: 'authenticated', created_at: '2026-06-02T00:00:00.000Z' },
+    };
+    vi.mocked(getSupabaseClient).mockResolvedValue(supabaseClient as never);
+    supabaseClient.auth.verifyOtp.mockResolvedValue({
+      data: { session, user: session.user },
+      error: null,
+    });
+
+    await useAuthStore.getState().verifyEmailOtp(' cat@example.com ', ' 123456 ');
+
+    expect(supabaseClient.auth.verifyOtp).toHaveBeenCalledWith({
+      email: 'cat@example.com',
+      token: '123456',
+      type: 'email',
+    });
+    expect(useAuthStore.getState()).toMatchObject({
+      session,
+      user: session.user,
+      isLoading: false,
+      error: null,
+    });
+  });
+
+  it('keeps email OTP verification failures readable', async () => {
+    const { getSupabaseClient } = await import('../lib/supabaseClient');
+    vi.mocked(getSupabaseClient).mockResolvedValue(supabaseClient as never);
+    supabaseClient.auth.verifyOtp.mockResolvedValue({
+      data: { session: null, user: null },
+      error: { message: 'Token has expired or is invalid' },
+    });
+
+    await useAuthStore.getState().verifyEmailOtp('cat@example.com', '000000');
+
+    expect(useAuthStore.getState()).toMatchObject({
+      error: 'otp_verify_failed',
+      errorMessage: 'Token has expired or is invalid',
+      isLoading: false,
     });
   });
 

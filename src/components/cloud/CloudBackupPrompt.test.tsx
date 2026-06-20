@@ -53,6 +53,7 @@ describe('CloudBackupPrompt', () => {
       errorMessage: null,
       unsubscribeAuthState: null,
       signInWithEmail: vi.fn(async () => undefined),
+      verifyEmailOtp: vi.fn(async () => undefined),
       signOut: vi.fn(async () => undefined),
     });
     useCloudBackupStatusStore.getState().reset();
@@ -80,7 +81,7 @@ describe('CloudBackupPrompt', () => {
     expect(screen.getByText('不會影響目前手機裡的貓卡。')).toBeInTheDocument();
   });
 
-  it('sends a magic-link email when cloud auth is configured', async () => {
+  it('sends a sign-in email and asks for the OTP inside the current app', async () => {
     const user = userEvent.setup();
     const signInWithEmail = vi.fn(async () => undefined);
     useAuthStore.setState({
@@ -100,6 +101,59 @@ describe('CloudBackupPrompt', () => {
       });
     });
     expect(screen.getByText('已寄出登入信')).toBeInTheDocument();
+    expect(screen.getByText('請不要離開這個 App。到信箱看 6 位數驗證碼，回到這裡輸入完成登入。')).toBeInTheDocument();
+    expect(screen.getByLabelText('Email 驗證碼')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '驗證並登入' })).toBeDisabled();
+  });
+
+  it('verifies the OTP without opening a separate browser storage space', async () => {
+    const user = userEvent.setup();
+    const signInWithEmail = vi.fn(async () => undefined);
+    const verifyEmailOtp = vi.fn(async () => undefined);
+    useAuthStore.setState({
+      isConfigured: true,
+      signInWithEmail,
+      verifyEmailOtp,
+    });
+
+    render(<CloudBackupPrompt language="zh" items={[localCat]} />);
+
+    await user.click(screen.getByRole('button', { name: '備份我的貓咪地圖' }));
+    await user.type(screen.getByLabelText('Email'), 'cat@example.com');
+    await user.click(screen.getByRole('button', { name: '寄送登入信' }));
+    await user.type(await screen.findByLabelText('Email 驗證碼'), ' 123456 ');
+    await user.click(screen.getByRole('button', { name: '驗證並登入' }));
+
+    await waitFor(() => {
+      expect(verifyEmailOtp).toHaveBeenCalledWith('cat@example.com', '123456');
+    });
+    expect(screen.getByText('驗證完成，正在保留這台裝置上的貓卡。')).toBeInTheDocument();
+  });
+
+  it('shows a retryable message when the OTP cannot be verified', async () => {
+    const user = userEvent.setup();
+    const signInWithEmail = vi.fn(async () => undefined);
+    const verifyEmailOtp = vi.fn(async () => {
+      useAuthStore.setState({
+        error: 'otp_verify_failed',
+        errorMessage: 'Token has expired or is invalid',
+      });
+    });
+    useAuthStore.setState({
+      isConfigured: true,
+      signInWithEmail,
+      verifyEmailOtp,
+    });
+
+    render(<CloudBackupPrompt language="zh" items={[localCat]} />);
+
+    await user.click(screen.getByRole('button', { name: '備份我的貓咪地圖' }));
+    await user.type(screen.getByLabelText('Email'), 'cat@example.com');
+    await user.click(screen.getByRole('button', { name: '寄送登入信' }));
+    await user.type(await screen.findByLabelText('Email 驗證碼'), '000000');
+    await user.click(screen.getByRole('button', { name: '驗證並登入' }));
+
+    expect(await screen.findByText('驗證碼無法使用，請確認是否過期，或重新寄送登入信。')).toBeInTheDocument();
   });
 
   it('uses the supplied return URL when sending the sign-in email', async () => {
@@ -200,6 +254,24 @@ describe('CloudBackupPrompt', () => {
     expect(screen.getByText('這台裝置目前沒有貓咪；如果你之前備份過，可以先恢復雲端貓咪。')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '恢復雲端貓咪' })).toBeInTheDocument();
     expect(screen.getByText('cat@example.com')).toBeInTheDocument();
+  });
+
+  it('warns that an empty signed-in browser may be a separate storage space', () => {
+    useAuthStore.setState({
+      isConfigured: true,
+      user: {
+        id: 'user-1',
+        email: 'cat@example.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: '2026-06-02T00:00:00.000Z',
+      },
+    });
+
+    render(<CloudBackupPrompt language="zh" items={[]} autoOpenOnSignedInEmptyDevice />);
+
+    expect(screen.getByText('如果你是從 Email 連結打開瀏覽器看到空白，原本的貓卡大多還在手機桌面版 App 裡。請先回到原本的 App 再登入備份，不要在這個空白視窗新增或備份。')).toBeInTheDocument();
   });
 
   it('does not auto-open restore guidance when signed-in users already have local cats', () => {

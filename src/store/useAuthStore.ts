@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Session, User } from '@supabase/supabase-js';
 import { getSupabaseClient } from '../lib/supabaseClient';
 
-export type AuthErrorCode = 'cloud_not_configured' | 'session_load_failed' | 'sign_in_failed' | 'sign_out_failed';
+export type AuthErrorCode = 'cloud_not_configured' | 'session_load_failed' | 'sign_in_failed' | 'otp_verify_failed' | 'sign_out_failed';
 
 type SignInWithEmailOptions = {
   redirectTo?: string;
@@ -18,6 +18,7 @@ type AuthState = {
   unsubscribeAuthState: (() => void) | null;
   initAuth: () => Promise<void>;
   signInWithEmail: (email: string, options?: SignInWithEmailOptions) => Promise<void>;
+  verifyEmailOtp: (email: string, token: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -121,6 +122,39 @@ export const useAuthStore = create<AuthState>((setStore, getStore) => ({
       setStore({
         isLoading: false,
         error: 'sign_in_failed',
+        errorMessage: getErrorMessage(error),
+      });
+    }
+  },
+
+  verifyEmailOtp: async (email: string, token: string) => {
+    const client = await getSupabaseClient();
+    if (!client) {
+      setStore({ error: 'cloud_not_configured', errorMessage: null });
+      return;
+    }
+
+    setStore({ isLoading: true, error: null, errorMessage: null });
+
+    try {
+      const { data, error } = await client.auth.verifyOtp({
+        email: email.trim(),
+        token: token.trim(),
+        type: 'email',
+      });
+
+      setStore({
+        session: error ? getStore().session : data.session,
+        user: error ? getStore().user : data.user,
+        isConfigured: true,
+        isLoading: false,
+        error: error ? 'otp_verify_failed' : null,
+        errorMessage: getErrorMessage(error),
+      });
+    } catch (error) {
+      setStore({
+        isLoading: false,
+        error: 'otp_verify_failed',
         errorMessage: getErrorMessage(error),
       });
     }
