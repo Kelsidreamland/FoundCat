@@ -601,6 +601,13 @@ export default function Map() {
     !isPublicMapMode &&
     !user
   );
+  const shouldShowPublishReadyHint = Boolean(
+    searchParams.get('publishHint') === '1' &&
+    selectedItem?.location &&
+    !isPublicMapMode &&
+    user &&
+    isCloudConfigured
+  );
   const shouldShowPublishSignInPrompt = Boolean(
     !shouldShowPublishLoginHint &&
     !isPublicMapMode &&
@@ -614,7 +621,7 @@ export default function Map() {
     public: language === 'zh' ? '全世界地圖' : 'World Map',
     publicEmptyTitle: language === 'zh' ? '全世界地圖暫時載入失敗' : 'World Map is unavailable',
     publicPreparingTitle: language === 'zh' ? '全世界地圖準備中' : 'World Map is preparing',
-    publicNoCatsTitle: language === 'zh' ? '全世界地圖還沒有貓貓' : 'No public cats yet',
+    publicNoCatsTitle: language === 'zh' ? '全世界地圖等第一批貓點' : 'World Map is waiting for the first cats',
     publicEmptyBody: language === 'zh'
       ? '可能是網路或雲端暫時不穩，可以重新載入或先回到我的地圖。'
       : 'The network or cloud may be unstable. Try reloading or return to My Map.',
@@ -622,8 +629,8 @@ export default function Map() {
       ? '雲端地圖還在準備。你仍然可以先把遇到的貓存在我的地圖，之後再公開到全世界地圖。'
       : 'The cloud map is still preparing. You can save cats in My Map now and publish them later.',
     publicNoCatsBody: language === 'zh'
-      ? '現在還沒有公開貓點。先回到我的地圖，把你遇到的第一隻貓公開出來。'
-      : 'No public cat spots yet. Return to My Map and publish the first cat you found.',
+      ? '把你遇到的貓公開出去，朋友就能在同一張地圖上看到。'
+      : 'Publish a cat you found so friends can see it on the same map.',
     publicLoading: language === 'zh' ? '正在載入全世界貓咪地圖...' : 'Loading the world cat map...',
     publicRetry: language === 'zh' ? '重新載入全世界地圖' : 'Reload World Map',
     publicPublishFirst: language === 'zh' ? '回我的地圖公開第一隻貓' : 'Return to My Map to Publish a Cat',
@@ -1013,6 +1020,14 @@ export default function Map() {
                 </div>
               ) : null}
 
+              {shouldShowPublishReadyHint ? (
+                <p className="rounded-[16px] border border-[#2f5fb3]/20 bg-[#d9ecff]/60 px-3 py-2 text-xs font-black leading-relaxed text-[#2f5fb3] shadow-[3px_3px_0_rgba(47,95,179,0.08)]">
+                  {language === 'zh'
+                    ? '現在可以公開這隻貓到全世界地圖。'
+                    : 'You can now publish this cat to the World Map.'}
+                </p>
+              ) : null}
+
               {shouldShowPublishSignInPrompt ? (
                 <div className="rounded-[16px] border border-[#221915]/12 bg-[#2f5fb3]/8 p-2.5 shadow-[3px_3px_0_rgba(47,95,179,0.08)]">
                   <p className="text-xs font-bold leading-relaxed text-[#5f5148]">
@@ -1020,7 +1035,7 @@ export default function Map() {
                       ? '登入後可以備份，也能把這隻貓公開到全世界地圖。'
                       : 'Sign in to back up this cat and publish it to the world map.'}
                   </p>
-                  <CloudBackupPrompt language={language} items={items} />
+                  <CloudBackupPrompt language={language} items={items} redirectTo={window.location.href} />
                 </div>
               ) : null}
 

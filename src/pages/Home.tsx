@@ -63,6 +63,12 @@ export default function Home() {
   }, []);
 
   const deckItems = usePublicDeck ? publicItems : items;
+  const deckSourceLabel = usePublicDeck
+    ? (language === 'zh' ? '全世界貓卡' : 'World Cat Cards')
+    : (language === 'zh' ? '我的貓卡' : 'My Cat Cards');
+  const emptyDeckLabel = language === 'zh'
+    ? '還沒有貓卡，先拍下你遇到的第一隻貓。'
+    : 'No cat cards yet. Capture the first cat you found.';
 
   const handleShareCard = async (item: ScrapbookItem) => {
     const { shareCatCardPoster } = await import('../lib/sharePoster');
@@ -114,11 +120,18 @@ export default function Home() {
 
       <main className="relative z-10 mb-[calc(4.75rem+env(safe-area-inset-bottom))] min-h-0 flex-1 overflow-y-auto px-5 pb-4 pt-[clamp(2rem,9vh,5rem)]">
         <section className="relative mx-auto max-w-sm">
+          {deckItems.length > 0 ? (
+            <div className="mb-1 flex justify-center">
+              <span className="rounded-full border border-[#1d1714]/15 bg-[#fffdf2]/82 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3] shadow-[2px_2px_0_rgba(47,95,179,0.12)] backdrop-blur-sm">
+                {deckSourceLabel}
+              </span>
+            </div>
+          ) : null}
           <CatCardDeck
             items={deckItems}
             language={language}
             labels={{
-              empty: language === 'zh' ? '還沒有貓卡' : 'No cat cards yet',
+              empty: emptyDeckLabel,
               previous: language === 'zh' ? '上一張' : 'Previous card',
               next: language === 'zh' ? '下一張' : 'Next card',
               shareCard: t.singleCardShare,

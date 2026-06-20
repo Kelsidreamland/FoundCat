@@ -708,8 +708,8 @@ describe('Map page', () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('全世界地圖還沒有貓貓')).toBeInTheDocument();
-    expect(screen.getByText('現在還沒有公開貓點。先回到我的地圖，把你遇到的第一隻貓公開出來。')).toBeInTheDocument();
+    expect(await screen.findByText('全世界地圖等第一批貓點')).toBeInTheDocument();
+    expect(screen.getByText('把你遇到的貓公開出去，朋友就能在同一張地圖上看到。')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '回我的地圖公開第一隻貓' }));
 
@@ -824,6 +824,30 @@ describe('Map page', () => {
 
     expect(await screen.findByText('No.029')).toBeInTheDocument();
     expect(screen.queryByText('想讓大家也看到這隻貓？')).not.toBeInTheDocument();
+  });
+
+  it('shows a publish-ready hint after a signed-in user returns from the new-cat flow', async () => {
+    useAuthStore.setState({
+      isConfigured: true,
+      user: {
+        id: 'user-1',
+        email: 'cat@example.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: '2026-06-02T00:00:00.000Z',
+      },
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/map?cat=cat-29&publishHint=1']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('No.029')).toBeInTheDocument();
+    expect(screen.getByText('現在可以公開這隻貓到全世界地圖。')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '公開到全世界地圖' })).toBeInTheDocument();
   });
 
   it('opens the requested cat card from a map deep link', async () => {

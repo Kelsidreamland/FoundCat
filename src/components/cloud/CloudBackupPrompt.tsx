@@ -10,6 +10,7 @@ type CloudBackupPromptProps = {
   language: 'zh' | 'en';
   items: ScrapbookItem[];
   autoOpenOnSignedInEmptyDevice?: boolean;
+  redirectTo?: string;
 };
 
 type BackupStatus = 'idle' | 'backing_up' | 'success' | 'error';
@@ -98,7 +99,12 @@ const copy = {
   },
 };
 
-export default function CloudBackupPrompt({ language, items, autoOpenOnSignedInEmptyDevice = false }: CloudBackupPromptProps) {
+export default function CloudBackupPrompt({
+  language,
+  items,
+  autoOpenOnSignedInEmptyDevice = false,
+  redirectTo,
+}: CloudBackupPromptProps) {
   const t = copy[language];
   const user = useAuthStore((state) => state.user);
   const isConfigured = useAuthStore((state) => state.isConfigured);
@@ -173,7 +179,9 @@ export default function CloudBackupPrompt({ language, items, autoOpenOnSignedInE
     const normalizedEmail = email.trim();
     if (!normalizedEmail) return;
 
-    await signInWithEmail(normalizedEmail);
+    await signInWithEmail(normalizedEmail, {
+      redirectTo: redirectTo ?? window.location.href,
+    });
     if (!useAuthStore.getState().error) {
       setIsSent(true);
     }

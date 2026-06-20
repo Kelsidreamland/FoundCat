@@ -63,7 +63,11 @@ export async function loadPublicCatCards(): Promise<LoadPublicCatCardsResult> {
     };
   }
 
-  const { data, error } = await client.from('public_cat_cards').select('*');
+  const { data, error } = await client
+    .from('public_cat_cards')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(80);
 
   if (error) {
     return {

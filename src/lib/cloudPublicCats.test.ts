@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadPublicCatCards } from './cloudPublicCats';
 
 const select = vi.fn();
+const order = vi.fn();
+const limit = vi.fn();
 const from = vi.fn(() => ({ select }));
 const getSupabaseClient = vi.fn();
 
@@ -14,6 +16,10 @@ describe('loadPublicCatCards', () => {
     getSupabaseClient.mockReset();
     from.mockClear();
     select.mockReset();
+    order.mockReset();
+    limit.mockReset();
+    select.mockReturnValue({ order });
+    order.mockReturnValue({ limit });
   });
 
   it('returns cloud_not_configured when Supabase is unavailable', async () => {
@@ -28,7 +34,7 @@ describe('loadPublicCatCards', () => {
 
   it('loads public cat cards through the limited public view', async () => {
     getSupabaseClient.mockResolvedValue({ from });
-    select.mockResolvedValue({
+    limit.mockResolvedValue({
       data: [
         {
           id: 'public-cat-1',
@@ -69,11 +75,13 @@ describe('loadPublicCatCards', () => {
 
     expect(from).toHaveBeenCalledWith('public_cat_cards');
     expect(select).toHaveBeenCalledWith('*');
+    expect(order).toHaveBeenCalledWith('created_at', { ascending: false });
+    expect(limit).toHaveBeenCalledWith(80);
   });
 
   it('returns public_load_failed when the public view query fails', async () => {
     getSupabaseClient.mockResolvedValue({ from });
-    select.mockResolvedValue({
+    limit.mockResolvedValue({
       data: null,
       error: { message: 'network failed' },
     });

@@ -154,7 +154,7 @@ describe('Home page', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('還沒有貓卡')).toBeInTheDocument();
+    expect(screen.getByText('還沒有貓卡，先拍下你遇到的第一隻貓。')).toBeInTheDocument();
   });
 
   it('loads public cat cards as the default home deck', async () => {
@@ -189,6 +189,7 @@ describe('Home page', () => {
     );
 
     expect(await screen.findByText('首爾店長貓')).toBeInTheDocument();
+    expect(screen.getByText('全世界貓卡')).toBeInTheDocument();
     expect(screen.getByText('首爾咖啡店')).toBeInTheDocument();
     expect(screen.queryByText('巷口咖啡店')).not.toBeInTheDocument();
   });
@@ -217,6 +218,7 @@ describe('Home page', () => {
     );
 
     expect(await screen.findByText('巷口咖啡店')).toBeInTheDocument();
+    expect(screen.getByText('我的貓卡')).toBeInTheDocument();
     expect(loadPublicCatCards).toHaveBeenCalledTimes(1);
   });
 

@@ -93,6 +93,23 @@ describe('useAuthStore', () => {
     expect(useAuthStore.getState().error).toBeNull();
   });
 
+  it('can request a magic-link that returns to the current page', async () => {
+    const { getSupabaseClient } = await import('../lib/supabaseClient');
+    vi.mocked(getSupabaseClient).mockResolvedValue(supabaseClient as never);
+    supabaseClient.auth.signInWithOtp.mockResolvedValue({ data: {}, error: null });
+
+    await useAuthStore.getState().signInWithEmail('cat@example.com', {
+      redirectTo: 'https://found-cat.vercel.app/map?cat=cat-29&publishHint=1',
+    });
+
+    expect(supabaseClient.auth.signInWithOtp).toHaveBeenCalledWith({
+      email: 'cat@example.com',
+      options: {
+        emailRedirectTo: 'https://found-cat.vercel.app/map?cat=cat-29&publishHint=1',
+      },
+    });
+  });
+
   it('keeps the Supabase sign-in failure message for troubleshooting', async () => {
     const { getSupabaseClient } = await import('../lib/supabaseClient');
     vi.mocked(getSupabaseClient).mockResolvedValue(supabaseClient as never);

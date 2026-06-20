@@ -95,9 +95,38 @@ describe('CloudBackupPrompt', () => {
     await user.click(screen.getByRole('button', { name: '寄送登入信' }));
 
     await waitFor(() => {
-      expect(signInWithEmail).toHaveBeenCalledWith('test@example.com');
+      expect(signInWithEmail).toHaveBeenCalledWith('test@example.com', {
+        redirectTo: window.location.href,
+      });
     });
     expect(screen.getByText('已寄出登入信')).toBeInTheDocument();
+  });
+
+  it('uses the supplied return URL when sending the sign-in email', async () => {
+    const user = userEvent.setup();
+    const signInWithEmail = vi.fn(async () => undefined);
+    useAuthStore.setState({
+      isConfigured: true,
+      signInWithEmail,
+    });
+
+    render(
+      <CloudBackupPrompt
+        language="zh"
+        items={[localCat]}
+        redirectTo="https://found-cat.vercel.app/map?cat=cat-1&publishHint=1"
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: '備份我的貓咪地圖' }));
+    await user.type(screen.getByLabelText('Email'), 'cat@example.com');
+    await user.click(screen.getByRole('button', { name: '寄送登入信' }));
+
+    await waitFor(() => {
+      expect(signInWithEmail).toHaveBeenCalledWith('cat@example.com', {
+        redirectTo: 'https://found-cat.vercel.app/map?cat=cat-1&publishHint=1',
+      });
+    });
   });
 
   it('shows a useful message when the magic-link email cannot be sent', async () => {

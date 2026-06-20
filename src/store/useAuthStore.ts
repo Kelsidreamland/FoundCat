@@ -4,6 +4,10 @@ import { getSupabaseClient } from '../lib/supabaseClient';
 
 export type AuthErrorCode = 'cloud_not_configured' | 'session_load_failed' | 'sign_in_failed' | 'sign_out_failed';
 
+type SignInWithEmailOptions = {
+  redirectTo?: string;
+};
+
 type AuthState = {
   session: Session | null;
   user: User | null;
@@ -13,7 +17,7 @@ type AuthState = {
   errorMessage: string | null;
   unsubscribeAuthState: (() => void) | null;
   initAuth: () => Promise<void>;
-  signInWithEmail: (email: string) => Promise<void>;
+  signInWithEmail: (email: string, options?: SignInWithEmailOptions) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -91,7 +95,7 @@ export const useAuthStore = create<AuthState>((setStore, getStore) => ({
     });
   },
 
-  signInWithEmail: async (email: string) => {
+  signInWithEmail: async (email: string, options?: SignInWithEmailOptions) => {
     const client = await getSupabaseClient();
     if (!client) {
       setStore({ error: 'cloud_not_configured', errorMessage: null });
@@ -104,7 +108,7 @@ export const useAuthStore = create<AuthState>((setStore, getStore) => ({
       const { error } = await client.auth.signInWithOtp({
         email: email.trim(),
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: options?.redirectTo ?? window.location.origin,
         },
       });
 
