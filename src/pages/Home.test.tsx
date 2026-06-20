@@ -117,6 +117,24 @@ describe('Home page', () => {
     expect(screen.queryByText('最新遇見')).not.toBeInTheDocument();
   });
 
+  it('renders the cloud login dialog outside the main stacking layer so bottom navigation cannot cover it', async () => {
+    const user = userEvent.setup();
+    useAuthStore.setState({
+      isConfigured: true,
+    });
+
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole('button', { name: '備份我的貓咪地圖' }));
+
+    const dialog = screen.getByRole('dialog', { name: '備份我的貓咪地圖' });
+    expect(screen.getByRole('main')).not.toContainElement(dialog);
+  });
+
   it('shares the active cat as a poster instead of plain text', async () => {
     const user = userEvent.setup();
     useScrapbookStore.setState({
