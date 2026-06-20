@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  font-family: "M PLUS Rounded 1c", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  font-family: "Noto Sans TC", "M PLUS Rounded 1c", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   line-height: 1.5;
   font-weight: 500; /* Use medium weight as base for a cuter look */
 
@@ -14,7 +14,7 @@
 }
 
 body {
-  font-family: "M PLUS Rounded 1c", sans-serif;
+  font-family: inherit;
   overflow: hidden;
 }
 

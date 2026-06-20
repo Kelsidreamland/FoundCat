@@ -11,7 +11,6 @@ const STATUS_MESSAGE_DURATION_MS = 3000;
 export default function PWAUpdatePrompt() {
   const { language } = useScrapbookStore();
   const t = translations[language];
-  const showVersionChecker = import.meta.env.DEV;
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | undefined>();
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);
@@ -175,30 +174,31 @@ export default function PWAUpdatePrompt() {
         ) : null}
       </AnimatePresence>
 
-      {showVersionChecker ? (
-        <div className="version-check-chip fixed bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] left-4 z-[60] flex flex-col items-start gap-2">
-          <button
-            onClick={() => void checkForUpdates(true)}
-            disabled={isChecking}
-            className="border border-black/15 bg-[#fffdf2]/90 px-3 py-1.5 text-[11px] font-bold text-black/58 shadow-sm backdrop-blur disabled:opacity-60"
-          >
-            {versionText}
-          </button>
+      <div className="version-check-chip fixed bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] left-4 z-[60] flex flex-col items-start gap-2">
+        <button
+          type="button"
+          onClick={() => void checkForUpdates(true)}
+          disabled={isChecking || !registration}
+          aria-label={language === 'zh' ? `${versionText}，檢查更新` : `${versionText}, check for updates`}
+          className="rounded-full border border-[#221915]/15 bg-[#fffdf2]/88 px-3 py-1.5 text-[10px] font-black tracking-[0.06em] text-[#5c5148] shadow-[2px_2px_0_rgba(47,95,179,0.12)] backdrop-blur disabled:opacity-55"
+        >
+          {versionText}
+        </button>
 
-          <AnimatePresence>
-            {statusMessage && !needRefresh ? (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                className="border border-black/12 bg-[#fffdf2] px-3 py-2 text-[11px] font-bold text-black/62 shadow-sm"
-              >
-                {statusMessage}
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
-        </div>
-      ) : null}
+        <AnimatePresence>
+          {statusMessage && !needRefresh ? (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              className="max-w-[15rem] rounded-[12px] border border-[#221915]/12 bg-[#fffdf2] px-3 py-2 text-[11px] font-bold leading-4 text-[#5c5148] shadow-[3px_3px_0_rgba(47,95,179,0.12)]"
+            >
+              {statusMessage}
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      </div>
+
     </>
   );
 }

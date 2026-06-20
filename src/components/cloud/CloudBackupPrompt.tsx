@@ -45,6 +45,7 @@ const copy = {
     otpFailed: '驗證碼無法使用，請確認是否過期，或重新寄送登入信。',
     resendEmail: '重新寄送登入信',
     signInFailed: '登入信寄送失敗，請稍後再試。',
+    signInFailedDetail: (message: string) => `登入信寄送失敗：${message}`,
     signInFailedNetwork: '登入信寄送失敗：雲端設定或網路無法連線，請稍後再試。',
     signedInTitle: '已登入',
     emptyDeviceRestoreHint: '這台裝置目前沒有貓咪；如果你之前備份過，可以先恢復雲端貓咪。',
@@ -93,6 +94,7 @@ const copy = {
     otpFailed: 'The code could not be verified. Check if it expired, or send a new sign-in email.',
     resendEmail: 'Send a New Sign-In Email',
     signInFailed: 'Could not send the sign-in link. Please try again later.',
+    signInFailedDetail: (message: string) => `Could not send the sign-in email: ${message}`,
     signInFailedNetwork: 'Could not send the sign-in link: cloud setup or network is unreachable. Please try again later.',
     signedInTitle: 'Signed in',
     emptyDeviceRestoreHint: 'This device has no cats yet. If you backed up before, restore your cloud cats first.',
@@ -168,7 +170,9 @@ export default function CloudBackupPrompt({
     || errorMessage?.toLowerCase().includes('network')
     || errorMessage?.toLowerCase().includes('failed to fetch')
     ? t.signInFailedNetwork
-    : t.signInFailed;
+    : errorMessage
+      ? t.signInFailedDetail(errorMessage)
+      : t.signInFailed;
   const backupErrorLooksLikeUnavailable = latestBackupMessage?.toLowerCase().includes('fetch')
     || latestBackupMessage?.toLowerCase().includes('network')
     || latestBackupMessage?.toLowerCase().includes('failed to fetch');

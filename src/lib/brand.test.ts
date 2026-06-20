@@ -114,7 +114,16 @@ describe('cat app brand copy', () => {
     expect(viteConfig).toContain("purpose: 'maskable'");
     expect(viteConfig).not.toContain("purpose: 'any maskable'");
     expect(indexHtml).toContain('rel="preload" as="image" href="/brand/moodboard-l1-logo-transparent.png"');
-    expect(indexHtml).toContain('rel="prefetch" as="image" href="/cat-icon-maskable-512.png"');
+    expect(indexHtml).toContain('rel="apple-touch-icon" href="/cat-icon-512.png"');
+    expect(indexHtml).toContain('rel="prefetch" as="image" href="/cat-icon-512.png"');
+  });
+
+  it('prioritizes the Traditional Chinese font before decorative rounded fonts', () => {
+    const indexCss = readFileSync(join(repoRoot, 'src/index.css'), 'utf8');
+
+    expect(indexCss).toContain('font-family: "Noto Sans TC", "M PLUS Rounded 1c"');
+    expect(indexCss.indexOf('"Noto Sans TC"')).toBeLessThan(indexCss.indexOf('"M PLUS Rounded 1c"'));
+    expect(indexCss).not.toContain('body {\n  font-family: "M PLUS Rounded 1c", sans-serif;');
   });
 
   it('uses transparent AI Moodboard V1 brand marks in app headers', () => {

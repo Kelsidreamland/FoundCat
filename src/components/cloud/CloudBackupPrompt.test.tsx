@@ -206,6 +206,28 @@ describe('CloudBackupPrompt', () => {
     expect(screen.queryByText('已寄出登入信')).not.toBeInTheDocument();
   });
 
+  it('keeps the cloud sign-in failure detail visible for debugging on mobile', async () => {
+    const user = userEvent.setup();
+    const signInWithEmail = vi.fn(async () => {
+      useAuthStore.setState({
+        error: 'sign_in_failed',
+        errorMessage: 'Email rate limit exceeded',
+      });
+    });
+    useAuthStore.setState({
+      isConfigured: true,
+      signInWithEmail,
+    });
+
+    render(<CloudBackupPrompt language="zh" items={[localCat]} />);
+
+    await user.click(screen.getByRole('button', { name: '備份我的貓咪地圖' }));
+    await user.type(screen.getByLabelText('Email'), 'test@example.com');
+    await user.click(screen.getByRole('button', { name: '寄送登入信' }));
+
+    expect(await screen.findByText('登入信寄送失敗：Email rate limit exceeded')).toBeInTheDocument();
+  });
+
   it('shows signed-in backup status and lets users sign out', async () => {
     const user = userEvent.setup();
     const signOut = vi.fn(async () => undefined);
