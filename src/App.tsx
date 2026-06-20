@@ -13,6 +13,7 @@ const Map = lazy(() => import('./pages/Map'));
 const ShareCatdex = lazy(() => import('./pages/ShareCatdex'));
 const SingleCatShare = lazy(() => import('./pages/SingleCatShare'));
 const SharedCatMap = lazy(() => import('./pages/SharedCatMap'));
+const LocalRescue = lazy(() => import('./pages/LocalRescue'));
 
 const APP_HEIGHT_CSS_VAR = '--found-cat-app-height';
 
@@ -86,6 +87,7 @@ function App() {
                 <Route path="/map" element={<Map />} />
                 <Route path="/catdex" element={<Catdex />} />
                 <Route path="/share" element={<ShareCatdex />} />
+                <Route path="/rescue" element={<LocalRescue />} />
                 <Route path="/s/c" element={<SingleCatShare />} />
                 <Route path="/s/map" element={<SharedCatMap />} />
               </Routes>

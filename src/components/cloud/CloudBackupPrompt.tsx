@@ -50,6 +50,7 @@ const copy = {
     signedInTitle: '已登入',
     emptyDeviceRestoreHint: '這台裝置目前沒有貓咪；如果你之前備份過，可以先恢復雲端貓咪。',
     emptyDeviceSeparateStorageWarning: '如果你是從 Email 連結打開瀏覽器看到空白，原本的貓卡大多還在手機桌面版 App 裡。請先回到原本的 App 再登入備份，不要在這個空白視窗新增或備份。',
+    localRescue: '打開本機貓卡救援',
     backupNow: '立即備份',
     retryBackup: '再試一次',
     backingUp: '備份中',
@@ -99,6 +100,7 @@ const copy = {
     signedInTitle: 'Signed in',
     emptyDeviceRestoreHint: 'This device has no cats yet. If you backed up before, restore your cloud cats first.',
     emptyDeviceSeparateStorageWarning: 'If an email link opened a blank browser view, your original cat cards are probably still inside the installed home-screen app. Go back to that app before signing in or backing up; do not add or back up from this blank window.',
+    localRescue: 'Open Local Cat Rescue',
     backupNow: 'Back Up Now',
     retryBackup: 'Try Again',
     backingUp: 'Backing Up',
@@ -345,6 +347,12 @@ export default function CloudBackupPrompt({
                 <p className="rounded-[14px] border border-[#9f3a2f]/20 bg-[#fff2cf]/80 px-3 py-2 text-xs font-black leading-5 text-[#7f3b2d]">
                   {t.emptyDeviceSeparateStorageWarning}
                 </p>
+                <a
+                  href="/rescue"
+                  className="inline-flex min-h-9 items-center justify-center rounded-full border-2 border-[#1d1714] bg-[#fffdf2] px-4 text-[11px] font-black text-[#2f5fb3] shadow-[3px_3px_0_rgba(47,95,179,0.18)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+                >
+                  {t.localRescue}
+                </a>
               </div>
             ) : null}
             <a

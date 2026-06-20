@@ -52,9 +52,9 @@ interface ScrapbookState {
   setTargetDate: (date: string | null) => void;
 }
 
-const STORAGE_KEY = 'scrapbook_items';
-const LANG_STORAGE_KEY = 'scrapbook_language';
-const CATDEX_NAME_STORAGE_KEY = 'scrapbook_catdex_display_name';
+export const STORAGE_KEY = 'scrapbook_items';
+export const LANG_STORAGE_KEY = 'scrapbook_language';
+export const CATDEX_NAME_STORAGE_KEY = 'scrapbook_catdex_display_name';
 const DEFAULT_CATDEX_DISPLAY_NAME = '我的轉角貓地圖';
 
 export const useScrapbookStore = create<ScrapbookState>((setStore, getStore) => ({

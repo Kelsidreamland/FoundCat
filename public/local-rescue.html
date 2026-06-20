@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>FOUND CAT 本機救援</title>
+    <style>
+      :root {
+        color: #1d1714;
+        background: #fff7e8;
+        font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        background:
+          linear-gradient(105deg, rgba(47, 95, 179, 0.055) 0 1px, transparent 1px 100%),
+          repeating-linear-gradient(96deg, rgba(0, 0, 0, 0.022) 0 1px, transparent 1px 11px),
+          #fff7e8;
+      }
+
+      main {
+        width: min(100%, 460px);
+        margin: 0 auto;
+        padding: calc(18px + env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom));
+      }
+
+      .eyebrow {
+        margin: 0;
+        color: #2f5fb3;
+        font-size: 10px;
+        font-weight: 900;
+        letter-spacing: 0.2em;
+      }
+
+      h1 {
+        margin: 6px 0 0;
+        font-size: 28px;
+        line-height: 1.05;
+      }
+
+      .hint {
+        margin: 8px 0 0;
+        color: #6d5f52;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.7;
+      }
+
+      section {
+        margin-top: 16px;
+        border: 2px solid #1d1714;
+        border-radius: 24px;
+        background: #fffdf2;
+        padding: 16px;
+        box-shadow: 5px 5px 0 rgba(47, 95, 179, 0.2);
+      }
+
+      .status {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 900;
+      }
+
+      .warning {
+        border-color: rgba(159, 58, 47, 0.22);
+        background: rgba(255, 242, 207, 0.88);
+        color: #7f3b2d;
+        box-shadow: 5px 5px 0 rgba(247, 201, 72, 0.28);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      button,
+      a.button {
+        display: inline-flex;
+        min-height: 44px;
+        width: 100%;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #1d1714;
+        border-radius: 16px;
+        background: #fff2cf;
+        color: #1d1714;
+        padding: 0 12px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 900;
+        text-decoration: none;
+        box-shadow: 3px 3px 0 rgba(29, 23, 20, 0.62);
+      }
+
+      button.primary {
+        background: #2f5fb3;
+        color: #fffdf2;
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        background: #b8b1a6;
+        color: #fffdf2;
+      }
+
+      .cat-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .cat-card {
+        overflow: hidden;
+        border: 1px solid rgba(29, 23, 20, 0.18);
+        border-radius: 18px;
+        background: #fff7e8;
+        padding: 8px;
+      }
+
+      .cat-card img {
+        display: block;
+        aspect-ratio: 1;
+        width: 100%;
+        border: 1px solid rgba(29, 23, 20, 0.15);
+        border-radius: 14px;
+        object-fit: cover;
+        background: #f6ead7;
+      }
+
+      .cat-card strong {
+        display: block;
+        overflow: hidden;
+        margin-top: 8px;
+        font-size: 12px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 130px;
+        margin-top: 8px;
+        resize: vertical;
+        border: 2px solid rgba(29, 23, 20, 0.65);
+        border-radius: 16px;
+        background: #fff7e8;
+        padding: 12px;
+        color: #1d1714;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.6;
+      }
+
+      .mono {
+        overflow-wrap: anywhere;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">FOUND CAT RESCUE</p>
+      <h1>本機貓卡救援</h1>
+      <p class="hint">這個頁面會直接讀取同一個網址底下的 IndexedDB，不登入、不同步、不覆蓋資料。</p>
+
+      <section>
+        <p id="status" class="status">正在讀取本機貓卡...</p>
+        <p class="hint">如果這裡顯示 0 張，但舊桌面 App 裡看得到貓卡，代表資料可能在另一個 PWA 儲存容器裡，並不等於資料消失。</p>
+        <div id="cat-list" class="cat-list"></div>
+        <div class="grid">
+          <button id="download" class="primary" type="button" disabled>下載 JSON</button>
+          <button id="copy" type="button" disabled>複製備份文字</button>
+        </div>
+      </section>
+
+      <section class="warning">
+        <p class="status">安全提醒</p>
+        <p class="hint">先不要刪除舊桌面 App。救出 JSON 之前，也不要在空白新版裡按雲端備份，避免把空資料當成主資料。</p>
+        <p id="debug" class="mono"></p>
+      </section>
+    </main>
+
+    <script>
+      const statusEl = document.getElementById('status');
+      const catListEl = document.getElementById('cat-list');
+      const downloadButton = document.getElementById('download');
+      const copyButton = document.getElementById('copy');
+      const debugEl = document.getElementById('debug');
+      let payload = '';
+
+      function openDb() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open('keyval-store');
+          request.onupgradeneeded = () => {
+            if (!request.result.objectStoreNames.contains('keyval')) {
+              request.result.createObjectStore('keyval');
+            }
+          };
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      function getKey(db, key) {
+        return new Promise((resolve, reject) => {
+          const transaction = db.transaction('keyval', 'readonly');
+          const store = transaction.objectStore('keyval');
+          const request = store.get(key);
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      function createFilename() {
+        return `found-cat-local-backup-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.json`;
+      }
+
+      function renderCats(items) {
+        catListEl.innerHTML = '';
+        items.slice(0, 6).forEach((item) => {
+          const article = document.createElement('article');
+          article.className = 'cat-card';
+          const image = document.createElement('img');
+          image.alt = '';
+          image.src = item.heroImageData || item.imageData || '';
+          const title = document.createElement('strong');
+          title.textContent = item.catName || `貓卡 #${item.catdexNumber || '?'}`;
+          article.append(image, title);
+          catListEl.append(article);
+        });
+      }
+
+      async function load() {
+        try {
+          const db = await openDb();
+          const itemsValue = await getKey(db, 'scrapbook_items');
+          const language = await getKey(db, 'scrapbook_language');
+          const catdexDisplayName = await getKey(db, 'scrapbook_catdex_display_name');
+          const items = Array.isArray(itemsValue) ? itemsValue : [];
+          const backup = {
+            kind: 'found-cat-local-rescue',
+            version: 1,
+            exportedAt: new Date().toISOString(),
+            appVersion: 'static-rescue',
+            itemCount: items.length,
+            items,
+            language: language === 'zh' || language === 'en' ? language : undefined,
+            catdexDisplayName: typeof catdexDisplayName === 'string' ? catdexDisplayName : undefined,
+          };
+          payload = JSON.stringify(backup, null, 2);
+          statusEl.textContent = items.length > 0 ? `找到 ${items.length} 張本機貓卡` : '這個視窗讀不到本機貓卡';
+          debugEl.textContent = `origin=${location.origin} / database=keyval-store / key=scrapbook_items`;
+          renderCats(items);
+          downloadButton.disabled = items.length === 0;
+          copyButton.disabled = items.length === 0;
+        } catch (error) {
+          statusEl.textContent = '讀取失敗，可能是這個視窗沒有同一份 PWA 儲存權限。';
+          debugEl.textContent = String(error && error.message ? error.message : error);
+        }
+      }
+
+      downloadButton.addEventListener('click', () => {
+        const blob = new Blob([payload], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = createFilename();
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        statusEl.textContent = '已下載本機備份 JSON';
+      });
+
+      copyButton.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(payload);
+          statusEl.textContent = '已複製備份文字';
+        } catch (error) {
+          statusEl.textContent = '無法自動複製，請改用下載 JSON。';
+        }
+      });
+
+      load();
+    </script>
+  </body>
+</html>
