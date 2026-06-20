@@ -106,6 +106,10 @@ describe('cat app brand copy', () => {
     const viteConfig = readFileSync(join(repoRoot, 'vite.config.ts'), 'utf8');
     const indexHtml = readFileSync(join(repoRoot, 'index.html'), 'utf8');
 
+    expect(viteConfig).toContain("registerType: 'autoUpdate'");
+    expect(viteConfig).toContain('cleanupOutdatedCaches: true');
+    expect(viteConfig).toContain('clientsClaim: true');
+    expect(viteConfig).toContain('skipWaiting: true');
     expect(viteConfig).toContain("src: 'cat-icon-192.png'");
     expect(viteConfig).toContain("src: 'cat-icon-512.png'");
     expect(viteConfig).toContain("src: 'cat-icon-maskable-192.png'");

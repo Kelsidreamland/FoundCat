@@ -43,8 +43,11 @@ export default defineConfig({
       },
     }),
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         globIgnores: [
           '**/*.wasm',
         ],
