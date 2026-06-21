@@ -47,7 +47,7 @@ export default function Home() {
     void loadPublicCatCards().then((result) => {
       if (cancelled) return;
 
-      if (result.ok && result.items.length > 0) {
+      if (result.ok) {
         setPublicItems(result.items);
         setUsePublicDeck(true);
         return;
@@ -67,8 +67,8 @@ export default function Home() {
     ? (language === 'zh' ? '全世界貓卡' : 'World Cat Cards')
     : (language === 'zh' ? '我的貓卡' : 'My Cat Cards');
   const emptyDeckLabel = language === 'zh'
-    ? '還沒有貓卡，先拍下你遇到的第一隻貓。'
-    : 'No cat cards yet. Capture the first cat you found.';
+    ? '全世界地圖等第一批貓點\n先拍下你遇到的貓，公開後朋友就能在地圖上找到牠。'
+    : 'The world map is waiting for its first cats.\nCapture a cat you found, then publish it so friends can find the spot.';
 
   const handleShareCard = async (item: ScrapbookItem) => {
     const { shareCatCardPoster } = await import('../lib/sharePoster');
@@ -116,11 +116,12 @@ export default function Home() {
         toggleLabel={language === 'zh' ? t.switchToEnglish : t.switchToChinese}
         donationUrl={DONATION_URL}
         donationLabel={t.donate}
+        accessory={<CloudBackupPrompt language={language} items={items} autoOpenOnSignedInEmptyDevice variant="compact" />}
       />
 
-      <main className="relative z-10 mb-[calc(4.75rem+env(safe-area-inset-bottom))] min-h-0 flex-1 overflow-y-auto px-5 pb-4 pt-[clamp(2rem,9vh,5rem)]">
+      <main className="relative z-10 mb-[calc(4.25rem+env(safe-area-inset-bottom))] min-h-0 flex-1 overflow-y-auto px-5 pb-4 pt-[clamp(0.75rem,4vh,2.25rem)]">
         <section className="relative mx-auto max-w-sm">
-          {deckItems.length > 0 ? (
+          {usePublicDeck || deckItems.length > 0 ? (
             <div className="mb-1 flex justify-center">
               <span className="rounded-full border border-[#1d1714]/15 bg-[#fffdf2]/82 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3] shadow-[2px_2px_0_rgba(47,95,179,0.12)] backdrop-blur-sm">
                 {deckSourceLabel}
@@ -139,7 +140,6 @@ export default function Home() {
             onShareCard={handleShareCard}
             onCollectCard={handleCollectCard}
           />
-          <CloudBackupPrompt language={language} items={items} autoOpenOnSignedInEmptyDevice />
         </section>
       </main>
 

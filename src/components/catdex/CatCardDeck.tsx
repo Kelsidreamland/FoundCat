@@ -114,11 +114,21 @@ export default function CatCardDeck({
   };
 
   if (!active) {
+    const [emptyTitle, ...emptyBodyParts] = labels.empty.split('\n');
+    const emptyBody = emptyBodyParts.join('\n').trim();
+
     return (
       <div className="flex h-[min(390px,calc(100dvh-240px))] min-h-[320px] items-center justify-center rounded-[24px] border-2 border-[#1d1714] bg-[#fffdf7] p-6 text-center shadow-[7px_8px_0_#1d1714]">
-        <p className="max-w-[14rem] text-lg font-black leading-7 text-[#1d1714]">
-          {labels.empty}
-        </p>
+        <div className="max-w-[15rem]">
+          <p className="text-lg font-black leading-7 text-[#1d1714]">
+            {emptyTitle}
+          </p>
+          {emptyBody ? (
+            <p className="mt-3 text-sm font-bold leading-6 text-[#6d5f52]">
+              {emptyBody}
+            </p>
+          ) : null}
+        </div>
       </div>
     );
   }

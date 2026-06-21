@@ -112,8 +112,8 @@ describe('Home page', () => {
     expect(screen.getByText('No.029')).toBeInTheDocument();
     expect(screen.getByText('巷口咖啡店')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '分享這張貓卡海報' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '備份我的貓咪地圖' })).toBeInTheDocument();
-    expect(screen.getByText('1 隻貓目前保存在這台裝置')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '備份' })).toBeInTheDocument();
+    expect(screen.queryByText('1 隻貓目前保存在這台裝置')).not.toBeInTheDocument();
     expect(screen.queryByText('最新遇見')).not.toBeInTheDocument();
   });
 
@@ -129,7 +129,7 @@ describe('Home page', () => {
       </MemoryRouter>
     );
 
-    await user.click(screen.getByRole('button', { name: '備份我的貓咪地圖' }));
+    await user.click(screen.getByRole('button', { name: '備份' }));
 
     const dialog = screen.getByRole('dialog', { name: '備份我的貓咪地圖' });
     expect(screen.getByRole('main')).not.toContainElement(dialog);
@@ -137,16 +137,17 @@ describe('Home page', () => {
 
   it('shares the active cat as a poster instead of plain text', async () => {
     const user = userEvent.setup();
-    useScrapbookStore.setState({
+    vi.mocked(loadPublicCatCards).mockResolvedValue({
+      ok: true,
       items: [
         makeItem({
           id: 'cat-29',
           catdexNumber: 29,
+          catName: '巷口店長',
           location: { lat: 25, lng: 121, name: '巷口咖啡店' },
+          isPublic: true,
         }),
       ],
-      isLoading: false,
-      language: 'zh',
     });
 
     render(
@@ -155,6 +156,7 @@ describe('Home page', () => {
       </MemoryRouter>
     );
 
+    expect(await screen.findByText('巷口店長')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '分享這張貓卡海報' }));
 
     await waitFor(() => {
@@ -172,7 +174,8 @@ describe('Home page', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('還沒有貓卡，先拍下你遇到的第一隻貓。')).toBeInTheDocument();
+    expect(screen.getByText('全世界地圖等第一批貓點')).toBeInTheDocument();
+    expect(screen.getByText('先拍下你遇到的貓，公開後朋友就能在地圖上找到牠。')).toBeInTheDocument();
   });
 
   it('loads public cat cards as the default home deck', async () => {
@@ -240,6 +243,34 @@ describe('Home page', () => {
     expect(loadPublicCatCards).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps the home deck on the public empty state when the world feed loads with no cats', async () => {
+    vi.mocked(loadPublicCatCards).mockResolvedValue({
+      ok: true,
+      items: [],
+    });
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          id: 'local-cat-29',
+          catdexNumber: 29,
+          location: { lat: 25, lng: 121, name: '巷口咖啡店' },
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('全世界地圖等第一批貓點')).toBeInTheDocument();
+    expect(screen.getByText('全世界貓卡')).toBeInTheDocument();
+    expect(screen.queryByText('巷口咖啡店')).not.toBeInTheDocument();
+  });
+
   it('collects a public cat card into the local deck when the deck asks to collect it', async () => {
     vi.mocked(loadPublicCatCards).mockResolvedValue({
       ok: true,
@@ -291,7 +322,18 @@ describe('Home page', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByRole('main')).toHaveClass('pt-[clamp(2rem,9vh,5rem)]');
-    expect(screen.getByRole('main')).toHaveClass('mb-[calc(4.75rem+env(safe-area-inset-bottom))]');
+    expect(screen.getByRole('main')).toHaveClass('pt-[clamp(0.75rem,4vh,2.25rem)]');
+    expect(screen.getByRole('main')).toHaveClass('mb-[calc(4.25rem+env(safe-area-inset-bottom))]');
+  });
+
+  it('keeps cloud backup as a compact secondary action instead of a full-width card under the deck', () => {
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('button', { name: '備份' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '備份我的貓咪地圖' })).not.toBeInTheDocument();
   });
 });

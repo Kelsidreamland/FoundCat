@@ -1,4 +1,5 @@
 import { Heart, X } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { PostcardCatBrandMark } from '../brand/BrandMarks';
 
@@ -14,6 +15,7 @@ interface CatBrandHeaderProps {
   logoLabel?: string;
   donationUrl?: string;
   donationLabel?: string;
+  accessory?: ReactNode;
 }
 
 export default function CatBrandHeader({
@@ -28,6 +30,7 @@ export default function CatBrandHeader({
   logoLabel = '回到首頁',
   donationUrl,
   donationLabel = '捐贈',
+  accessory,
 }: CatBrandHeaderProps) {
   return (
     <header className="relative z-20 flex min-h-[76px] items-start justify-between gap-3 px-5 pb-0 pt-2 sm:min-h-[82px]">
@@ -67,6 +70,7 @@ export default function CatBrandHeader({
             {language === 'zh' ? 'EN' : '繁'}
           </button>
         ) : null}
+        {accessory}
         {showClose ? (
           <Link
             to="/"

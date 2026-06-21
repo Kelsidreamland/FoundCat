@@ -17,7 +17,7 @@ describe('CatActionNav', () => {
 
     expect(screen.getByRole('link', { name: '我的貓卡' })).toHaveAttribute('href', '/catdex');
     expect(screen.getByRole('link', { name: '拍貓' })).toHaveAttribute('href', '/create');
-    expect(screen.getByRole('link', { name: '貓咪地圖' })).toHaveAttribute('href', '/map');
+    expect(screen.getByRole('link', { name: '貓咪地圖' })).toHaveAttribute('href', '/map?mode=public');
   });
 
   it('does not mark the cat-card action as current on the home page', () => {
@@ -64,5 +64,16 @@ describe('CatActionNav', () => {
     expect(screen.getByTestId('brand-icon-cat-cards')).toHaveAttribute('data-brand-icon', 'cat-cards');
     expect(screen.getByTestId('brand-icon-camera')).toHaveAttribute('data-brand-icon', 'camera');
     expect(screen.getByTestId('brand-icon-map')).toHaveAttribute('data-brand-icon', 'map');
+  });
+
+  it('uses simplified line icons for cat cards and capture', () => {
+    render(
+      <MemoryRouter>
+        <CatActionNav />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByTestId('brand-icon-cat-cards')).toHaveAttribute('data-icon-detail', 'simple');
+    expect(screen.getByTestId('brand-icon-camera')).toHaveAttribute('data-icon-detail', 'simple');
   });
 });

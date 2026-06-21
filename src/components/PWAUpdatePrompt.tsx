@@ -174,7 +174,10 @@ export default function PWAUpdatePrompt() {
         ) : null}
       </AnimatePresence>
 
-      <div className="version-check-chip fixed bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] left-4 z-[60] flex flex-col items-start gap-2">
+      <div
+        data-testid="version-check-chip"
+        className="version-check-chip fixed bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] left-4 z-[60] flex max-w-[calc(100vw-2rem)] flex-col items-start gap-2"
+      >
         <button
           type="button"
           onClick={() => void checkForUpdates(true)}

@@ -12,6 +12,7 @@ type CloudBackupPromptProps = {
   items: ScrapbookItem[];
   autoOpenOnSignedInEmptyDevice?: boolean;
   redirectTo?: string;
+  variant?: 'card' | 'compact';
 };
 
 type BackupStatus = 'idle' | 'backing_up' | 'success' | 'error';
@@ -20,7 +21,9 @@ type RestoreStatus = 'idle' | 'restoring' | 'success' | 'error';
 const copy = {
   zh: {
     cta: '備份我的貓咪地圖',
+    compactCta: '備份',
     signedInCta: '查看備份狀態',
+    compactSignedInCta: '備份',
     localCount: (count: number) => `${count} 隻貓目前保存在這台裝置`,
     signedInHint: '已登入，之後可以同步你的貓咪地圖。',
     autoBackupInProgress: '正在備份剛新增的貓',
@@ -70,7 +73,9 @@ const copy = {
   },
   en: {
     cta: 'Back Up My Cat Map',
+    compactCta: 'Back Up',
     signedInCta: 'View Backup Status',
+    compactSignedInCta: 'Backup',
     localCount: (count: number) => `${count} cats are saved on this device`,
     signedInHint: 'Signed in. Your cat map can sync later.',
     autoBackupInProgress: 'Backing up the cat you just added',
@@ -125,6 +130,7 @@ export default function CloudBackupPrompt({
   items,
   autoOpenOnSignedInEmptyDevice = false,
   redirectTo,
+  variant = 'card',
 }: CloudBackupPromptProps) {
   const t = copy[language];
   const user = useAuthStore((state) => state.user);
@@ -494,27 +500,39 @@ export default function CloudBackupPrompt({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        aria-label={isSignedIn ? t.signedInCta : t.cta}
-        className="mt-3 flex w-full items-center justify-between gap-3 rounded-[18px] border-2 border-[#1d1714]/65 bg-[#fffdf2]/92 px-3 py-2.5 text-left shadow-[4px_4px_0_rgba(47,95,179,0.22)] transition-transform active:translate-y-[1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
-      >
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[13px] border-2 border-[#1d1714] bg-[#d9ecff] text-[#2f5fb3] shadow-[2px_2px_0_rgba(29,23,20,0.55)]">
-          <Cloud size={18} strokeWidth={2.8} aria-hidden="true" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13px] font-black text-[#1d1714]">
-            {isSignedIn ? t.signedInCta : t.cta}
+      {variant === 'compact' ? (
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          aria-label={isSignedIn ? t.compactSignedInCta : t.compactCta}
+          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[#1d1714]/24 bg-[#fffdf2]/88 px-2.5 text-[0.68rem] font-black tracking-[0.04em] text-[#1d1714] shadow-[2px_2px_0_rgba(47,95,179,0.14)] backdrop-blur-sm transition-transform active:translate-y-[1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+        >
+          <Cloud size={13} strokeWidth={2.8} className="text-[#2f5fb3]" aria-hidden="true" />
+          <span>{isSignedIn ? t.compactSignedInCta : t.compactCta}</span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          aria-label={isSignedIn ? t.signedInCta : t.cta}
+          className="mt-3 flex w-full items-center justify-between gap-3 rounded-[18px] border-2 border-[#1d1714]/65 bg-[#fffdf2]/92 px-3 py-2.5 text-left shadow-[4px_4px_0_rgba(47,95,179,0.22)] transition-transform active:translate-y-[1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+        >
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[13px] border-2 border-[#1d1714] bg-[#d9ecff] text-[#2f5fb3] shadow-[2px_2px_0_rgba(29,23,20,0.55)]">
+            <Cloud size={18} strokeWidth={2.8} aria-hidden="true" />
           </span>
-          <span className="block truncate text-[11px] font-extrabold text-[#6d5f52]">
-            {isSignedIn ? signedInButtonHint : t.localCount(catCount)}
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[13px] font-black text-[#1d1714]">
+              {isSignedIn ? t.signedInCta : t.cta}
+            </span>
+            <span className="block truncate text-[11px] font-extrabold text-[#6d5f52]">
+              {isSignedIn ? signedInButtonHint : t.localCount(catCount)}
+            </span>
           </span>
-        </span>
-        <span className="rounded-full border border-[#1d1714]/20 bg-[#fff2cf] px-2 py-1 text-[10px] font-black tracking-[0.12em] text-[#2f5fb3]">
-          CLOUD
-        </span>
-      </button>
+          <span className="rounded-full border border-[#1d1714]/20 bg-[#fff2cf] px-2 py-1 text-[10px] font-black tracking-[0.12em] text-[#2f5fb3]">
+            CLOUD
+          </span>
+        </button>
+      )}
 
       {canUsePortal ? createPortal(dialog, document.body) : dialog}
     </>

@@ -14,17 +14,17 @@ function CatCardsIcon() {
     <svg
       aria-hidden="true"
       data-brand-icon="cat-cards"
+      data-icon-detail="simple"
       data-testid="brand-icon-cat-cards"
       viewBox="0 0 64 64"
       className={iconClass}
       {...iconProps}
     >
-      <path d="M15 14h30c4 0 7 3 7 7v30H22c-4 0-7-3-7-7V14Z" fill="#FFFDF2" />
-      <path d="M9 20h30c4 0 7 3 7 7v27H16c-4 0-7-3-7-7V20Z" fill="#D9ECFF" />
-      <path d="M16 27h24v19H16z" fill="#FFFDF2" />
-      <path d="M21 33c3.2-3.6 9.8-3.6 13 0 1.8 2.1 1.8 5.1 0 7.2-3.2 3.6-9.8 3.6-13 0-1.8-2.1-1.8-5.1 0-7.2Z" fill="#2F5FB3" />
-      <path d="M27.5 34.1c2.7 0 4.8 1.9 5.8 3.7-1 1.8-3.1 3.7-5.8 3.7s-4.8-1.9-5.8-3.7c1-1.8 3.1-3.7 5.8-3.7Z" fill="#FFFDF2" strokeWidth="2.1" />
-      <path d="M40 54h12L40 42v12Z" fill="#F7C948" />
+      <path d="M18 13h27c5 0 8 3 8 8v30H25c-4 0-7-3-7-7V13Z" fill="#FFFDF2" />
+      <path d="M11 20h28c5 0 8 3 8 8v27H18c-4 0-7-3-7-7V20Z" fill="#D9ECFF" />
+      <path d="M18 29h22v16H18z" fill="#FFFDF2" strokeWidth="2.4" />
+      <path d="M23 35c3-3 9-3 12 0 1.6 1.7 1.6 4.1 0 5.8-3 3-9 3-12 0-1.6-1.7-1.6-4.1 0-5.8Z" fill="#2F5FB3" />
+      <path d="M39 55h8l-8-8v8Z" fill="#F7C948" />
     </svg>
   );
 }
@@ -34,17 +34,17 @@ function CatCaptureIcon() {
     <svg
       aria-hidden="true"
       data-brand-icon="camera"
+      data-icon-detail="simple"
       data-testid="brand-icon-camera"
       viewBox="0 0 64 64"
       className="h-10 w-10 overflow-visible"
       {...iconProps}
     >
-      <path d="M13 25h10l4-6h10l4 6h10c4 0 7 3 7 7v17c0 4-3 7-7 7H13c-4 0-7-3-7-7V32c0-4 3-7 7-7Z" fill="#FFFDF2" />
-      <path d="M18 30h28v18H18z" fill="#2F5FB3" />
-      <path d="M26 30h20v18H26z" fill="#F7C948" />
-      <path d="M36 30h10v18H36z" fill="#221915" />
-      <path d="M39 37c2.8 0 5.2 2.1 6.4 4.1-1.2 2-3.6 4.1-6.4 4.1s-5.2-2.1-6.4-4.1c1.2-2 3.6-4.1 6.4-4.1Z" fill="#FFFDF2" />
-      <circle cx="39" cy="41.1" r="2.1" fill="#F7C948" />
+      <path d="M13 25h11l4-6h10l4 6h9c4 0 7 3 7 7v17c0 4-3 7-7 7H13c-4 0-7-3-7-7V32c0-4 3-7 7-7Z" fill="#FFFDF2" />
+      <path d="M18 33h28v15H18z" fill="#2F5FB3" />
+      <circle cx="38" cy="40.5" r="7.5" fill="#F7C948" />
+      <circle cx="38" cy="40.5" r="3.2" fill="#FFFDF2" />
+      <path d="M16 25h7" />
     </svg>
   );
 }
@@ -128,7 +128,7 @@ export default function CatActionNav({ labels }: CatActionNavProps) {
         </Link>
 
         <Link
-          to="/map"
+          to="/map?mode=public"
           aria-label={navLabels.map}
           aria-current={isMyMapActive ? 'page' : undefined}
           className={sideLinkClass(isMyMapActive)}
