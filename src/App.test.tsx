@@ -105,4 +105,13 @@ describe('App viewport shell', () => {
     expect(await screen.findByRole('heading', { name: '我的貓卡' })).toBeInTheDocument();
     expect(screen.getByText('FOUND CATS ARCHIVE')).toBeInTheDocument();
   });
+
+  it('serves the local rescue page when the service worker falls back /local-rescue.html into the app shell', async () => {
+    window.history.pushState({}, '', '/local-rescue.html');
+
+    render(<App />);
+
+    expect(await screen.findByRole('heading', { name: '本機貓卡救援' })).toBeInTheDocument();
+    expect(screen.getByText('FOUND CAT RESCUE')).toBeInTheDocument();
+  });
 });

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import { lazy, Suspense, useEffect } from 'react';
 import Home from './pages/Home';
 import { useAuthStore } from './store/useAuthStore';
@@ -88,8 +88,10 @@ function App() {
                 <Route path="/catdex" element={<Catdex />} />
                 <Route path="/share" element={<ShareCatdex />} />
                 <Route path="/rescue" element={<LocalRescue />} />
+                <Route path="/local-rescue.html" element={<LocalRescue />} />
                 <Route path="/s/c" element={<SingleCatShare />} />
                 <Route path="/s/map" element={<SharedCatMap />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
             <PWAPrompt />
