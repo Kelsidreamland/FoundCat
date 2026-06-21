@@ -165,7 +165,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
           language,
           signal: controller.signal,
           around: getSearchCenter(),
-          includeAddressFallback: false,
+          includeAddressFallback: true,
           limit: 12,
         });
         if (controller.signal.aborted) return;
@@ -223,18 +223,6 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
         zoom: 15,
         duration: 0,
       });
-    } else if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          hasReliableSearchCenterRef.current = true;
-          map.easeTo({
-            center: [position.coords.longitude, position.coords.latitude],
-            zoom: 14,
-            duration: 800,
-          });
-        },
-        () => {}
-      );
     }
 
     return () => {

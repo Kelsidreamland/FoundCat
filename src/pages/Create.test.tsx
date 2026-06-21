@@ -246,6 +246,47 @@ describe('Create page', () => {
     });
   });
 
+  it('resumes the pending location step for the newest cat without a location after the app reloads', async () => {
+    useScrapbookStore.setState({
+      items: [
+        {
+          id: 'pending-cat-id',
+          type: 'sticker',
+          imageData: 'data:image/png;base64,pending-cat',
+          catdexNumber: 8,
+          date: new Date().toISOString(),
+          x: 0,
+          y: 0,
+          rotation: 0,
+          scale: 1,
+          zIndex: 1,
+        },
+      ],
+      isLoading: false,
+      language: 'zh',
+      targetDate: null,
+    });
+    window.sessionStorage.setItem('found-cat-pending-location-id', 'pending-cat-id');
+
+    render(
+      <MemoryRouter initialEntries={['/create']}>
+        <RouteDisplay />
+        <Routes>
+          <Route path="/create" element={<Create />} />
+          <Route path="/map" element={<div>Map page</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await userEvent.click(await screen.findByRole('button', { name: '確認測試地點' }));
+
+    expect(await screen.findByTestId('current-route')).toHaveTextContent('/map?cat=pending-cat-id&publishHint=1');
+    expect(useScrapbookStore.getState().items[0].location).toMatchObject({
+      name: 'Taipei 101',
+    });
+    expect(window.sessionStorage.getItem('found-cat-pending-location-id')).toBeNull();
+  });
+
   it('backs up the newly located cat when the user is signed in', async () => {
     useAuthStore.setState({
       isConfigured: true,

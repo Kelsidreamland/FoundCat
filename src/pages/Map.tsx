@@ -382,19 +382,6 @@ export default function Map() {
 
     map.on('load', () => {
       setMapReady(true);
-
-      if (itemsWithLocation.length === 0 && navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            map.easeTo({
-              center: [position.coords.longitude, position.coords.latitude],
-              zoom: 13,
-              duration: 800,
-            });
-          },
-          () => {}
-        );
-      }
     });
 
     map.on('error', (event) => {

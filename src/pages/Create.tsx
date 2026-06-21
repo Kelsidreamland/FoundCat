@@ -15,6 +15,8 @@ import { backupLocalCatCards } from '../lib/cloudBackup';
 
 type PixelCrop = { x: number; y: number; width: number; height: number };
 
+const PENDING_LOCATION_STORAGE_KEY = 'found-cat-pending-location-id';
+
 const resizeBlobToMaxSize = async (blob: Blob, maxWidthOrHeight: number): Promise<Blob> => {
   if (maxWidthOrHeight <= 0) return blob;
 
@@ -106,7 +108,7 @@ const blobToDataUrl = async (blob: Blob): Promise<string> => new Promise((resolv
 
 export default function Create() {
   const navigate = useNavigate();
-  const { addItem, updateItem, language, targetDate, setTargetDate } = useScrapbookStore();
+  const { addItem, updateItem, items, isLoading, language, targetDate, setTargetDate } = useScrapbookStore();
   const { user, isConfigured: isCloudConfigured } = useAuthStore();
   const t = translations[language];
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -120,6 +122,24 @@ export default function Create() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [createdStickerId, setCreatedStickerId] = useState<string | null>(null);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
+
+  useEffect(() => {
+    if (createdStickerId || imageSrc || previewMode) return;
+
+    const pendingId = window.sessionStorage.getItem(PENDING_LOCATION_STORAGE_KEY);
+    if (!pendingId) return;
+
+    if (isLoading) return;
+
+    const pendingItem = items.find((item) => item.id === pendingId);
+    if (!pendingItem || pendingItem.location) {
+      window.sessionStorage.removeItem(PENDING_LOCATION_STORAGE_KEY);
+      return;
+    }
+
+    setCreatedStickerId(pendingId);
+    setShowLocationPicker(true);
+  }, [createdStickerId, imageSrc, isLoading, items, previewMode]);
 
   useEffect(() => {
     if (!toastMessage) return;
@@ -136,6 +156,7 @@ export default function Create() {
   }, [navigate, setTargetDate, targetDate]);
 
   const beginPostCreateFlow = useCallback((stickerId: string) => {
+    window.sessionStorage.setItem(PENDING_LOCATION_STORAGE_KEY, stickerId);
     setCreatedStickerId(stickerId);
     setImageSrc(null);
     setPreviewImage(null);
@@ -183,6 +204,7 @@ export default function Create() {
       setTargetDate(null);
       setCreatedStickerId(null);
       setShowLocationPicker(false);
+      window.sessionStorage.removeItem(PENDING_LOCATION_STORAGE_KEY);
       navigate(`/map?cat=${encodeURIComponent(catId)}&publishHint=1`);
       return;
     }
@@ -190,6 +212,7 @@ export default function Create() {
   }, [createdStickerId, finishCreateFlow, isCloudConfigured, navigate, setTargetDate, updateItem, user]);
 
   const handleLocationSkipped = useCallback(() => {
+    window.sessionStorage.removeItem(PENDING_LOCATION_STORAGE_KEY);
     finishCreateFlow();
   }, [finishCreateFlow]);
 

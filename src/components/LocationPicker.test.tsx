@@ -110,7 +110,7 @@ describe('LocationPicker', () => {
         'Taipei 101',
         expect.objectContaining({
           language: 'zh',
-          includeAddressFallback: false,
+          includeAddressFallback: true,
           limit: 12,
         })
       );
@@ -127,6 +127,49 @@ describe('LocationPicker', () => {
         placeId: 'N:12345',
       });
     });
+  });
+
+  it('does not request GPS automatically when the picker opens', () => {
+    const getCurrentPosition = vi.fn();
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: { getCurrentPosition },
+    });
+
+    render(
+      <LocationPicker
+        language="zh"
+        onPicked={vi.fn()}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(getCurrentPosition).not.toHaveBeenCalled();
+  });
+
+  it('uses address fallback for instant suggestions so pasted addresses and local-language cafe names can resolve sooner', async () => {
+    render(
+      <LocationPicker
+        language="zh"
+        onPicked={vi.fn()}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText('地點名稱'), {
+      target: { value: 'ตลาดแมว ถนนเจริญกรุง' },
+    });
+
+    await screen.findByRole('button', { name: /Taipei 101/ });
+
+    expect(searchPlaces).toHaveBeenCalledWith(
+      'ตลาดแมว ถนนเจริญกรุง',
+      expect.objectContaining({
+        language: 'zh',
+        includeAddressFallback: true,
+        limit: 12,
+      })
+    );
   });
 
   it('lets a typed address be confirmed by resolving the first matching search result', async () => {

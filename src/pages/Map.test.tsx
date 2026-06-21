@@ -232,6 +232,30 @@ describe('Map page', () => {
     expect(screen.getByText('還沒有地圖記錄')).toBeInTheDocument();
   });
 
+  it('does not request GPS just from opening an empty map', async () => {
+    const getCurrentPosition = vi.fn();
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: { getCurrentPosition },
+    });
+    useScrapbookStore.setState({
+      items: [],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter>
+        <Map />
+      </MemoryRouter>
+    );
+
+    await screen.findByTestId('cat-map-container');
+    await screen.findByText('還沒有地圖記錄');
+
+    expect(getCurrentPosition).not.toHaveBeenCalled();
+  });
+
   it('uses the shared moodboard brand header with logo and close navigation', async () => {
     render(
       <MemoryRouter>
