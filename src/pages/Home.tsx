@@ -64,7 +64,7 @@ export default function Home() {
 
   const deckItems = usePublicDeck ? publicItems : items;
   const deckSourceLabel = usePublicDeck
-    ? (language === 'zh' ? '全世界貓卡' : 'World Cat Cards')
+    ? (language === 'zh' ? '大家遇見的貓' : 'Cats people found')
     : (language === 'zh' ? '我的貓卡' : 'My Cat Cards');
   const emptyDeckLabel = language === 'zh'
     ? '全世界地圖等第一批貓點\n先拍下你遇到的貓，公開後朋友就能在地圖上找到牠。'
@@ -122,8 +122,8 @@ export default function Home() {
       <main className="relative z-10 mb-[calc(4.25rem+env(safe-area-inset-bottom))] min-h-0 flex-1 overflow-y-auto px-5 pb-4 pt-[clamp(0.75rem,4vh,2.25rem)]">
         <section className="relative mx-auto max-w-sm">
           {usePublicDeck || deckItems.length > 0 ? (
-            <div className="mb-1 flex justify-center">
-              <span className="rounded-full border border-[#1d1714]/15 bg-[#fffdf2]/82 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3] shadow-[2px_2px_0_rgba(47,95,179,0.12)] backdrop-blur-sm">
+            <div className="mb-1 flex justify-center" aria-label={language === 'zh' ? '目前卡片來源' : 'Current card source'}>
+              <span className="relative inline-flex rotate-[-1.5deg] items-center border-y border-[#221915]/18 bg-[#fffdf2]/64 px-3 py-1 text-[11px] font-black tracking-[0.08em] text-[#4f453d] shadow-[0_2px_0_rgba(247,201,72,0.32)] backdrop-blur-sm before:absolute before:-left-2 before:top-1/2 before:h-3 before:w-3 before:-translate-y-1/2 before:rotate-45 before:border-l before:border-t before:border-[#221915]/14 before:bg-[#fff7e8] after:absolute after:-right-2 after:top-1/2 after:h-3 after:w-3 after:-translate-y-1/2 after:rotate-45 after:border-b after:border-r after:border-[#221915]/14 after:bg-[#fff7e8]">
                 {deckSourceLabel}
               </span>
             </div>
