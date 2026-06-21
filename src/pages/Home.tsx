@@ -136,6 +136,7 @@ export default function Home() {
               previous: language === 'zh' ? '上一張' : 'Previous card',
               next: language === 'zh' ? '下一張' : 'Next card',
               shareCard: t.singleCardShare,
+              collectFeedback: language === 'zh' ? '已收藏到我的貓卡' : 'Saved to My Cat Cards',
             }}
             onShareCard={handleShareCard}
             onCollectCard={handleCollectCard}

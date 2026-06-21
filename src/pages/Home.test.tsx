@@ -302,6 +302,8 @@ describe('Home page', () => {
     vi.useFakeTimers();
     fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
+    expect(screen.getByRole('status')).toHaveTextContent('已收藏到我的貓卡');
+
     await act(async () => {
       vi.advanceTimersByTime(260);
     });

@@ -12,6 +12,7 @@ interface CatCardDeckProps {
     previous: string;
     next: string;
     shareCard: string;
+    collectFeedback?: string;
   };
   onShareCard: (item: ScrapbookItem) => void;
   onCollectCard?: (item: ScrapbookItem) => void;
@@ -27,6 +28,7 @@ const dateFormatter = (language: 'zh' | 'en') => {
 const SWIPE_THRESHOLD = 90;
 const SWIPE_VELOCITY_THRESHOLD = 650;
 const SWIPE_ANIMATION_MS = 220;
+const COLLECT_FEEDBACK_MS = 1400;
 const SWIPE_HINT_STORAGE_KEY = 'corner-cat-swipe-hint-seen';
 
 type SwipeDirection = -1 | 1;
@@ -60,7 +62,9 @@ export default function CatCardDeck({
   const [activeIndex, setActiveIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState<SwipeDirection | null>(null);
   const [isSwipeHintDismissed, setIsSwipeHintDismissed] = useState(hasSeenSwipeHint);
+  const [collectFeedback, setCollectFeedback] = useState<string | null>(null);
   const swipeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const collectFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { previous, active, next } = getDeckNeighbors(cards, activeIndex);
   const formatter = dateFormatter(language);
   const hasMultipleCards = cards.length > 1;
@@ -69,6 +73,7 @@ export default function CatCardDeck({
   useEffect(() => {
     return () => {
       if (swipeTimerRef.current) clearTimeout(swipeTimerRef.current);
+      if (collectFeedbackTimerRef.current) clearTimeout(collectFeedbackTimerRef.current);
     };
   }, []);
 
@@ -86,7 +91,15 @@ export default function CatCardDeck({
   const move = (direction: SwipeDirection) => {
     if (cards.length <= 1 || swipeDirection) return;
     if (showSwipeHint) dismissSwipeHint();
-    if (direction === 1 && active) onCollectCard?.(active);
+    if (direction === 1 && active) {
+      onCollectCard?.(active);
+      setCollectFeedback(labels.collectFeedback ?? (language === 'zh' ? '已收藏到我的貓卡' : 'Saved to My Cat Cards'));
+      if (collectFeedbackTimerRef.current) clearTimeout(collectFeedbackTimerRef.current);
+      collectFeedbackTimerRef.current = setTimeout(() => {
+        setCollectFeedback(null);
+        collectFeedbackTimerRef.current = null;
+      }, COLLECT_FEEDBACK_MS);
+    }
     setSwipeDirection(direction);
 
     if (swipeTimerRef.current) clearTimeout(swipeTimerRef.current);
@@ -152,6 +165,15 @@ export default function CatCardDeck({
             >
               ×
             </button>
+          </div>
+        ) : null}
+
+        {collectFeedback ? (
+          <div
+            role="status"
+            className="absolute left-1/2 top-[46%] z-40 -translate-x-1/2 rounded-full border-2 border-[#1d1714] bg-[#fffdf7]/94 px-4 py-2 text-[12px] font-black text-[#1d1714] shadow-[4px_4px_0_rgba(47,95,179,0.25)] backdrop-blur-sm"
+          >
+            {collectFeedback}
           </div>
         ) : null}
 

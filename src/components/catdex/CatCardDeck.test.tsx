@@ -205,6 +205,7 @@ describe('CatCardDeck', () => {
           previous: '上一張',
           next: '下一張',
           shareCard: '分享這張卡與地址',
+          collectFeedback: '已收藏到我的貓卡',
         }}
         onShareCard={vi.fn()}
         onCollectCard={onCollectCard}
@@ -214,6 +215,7 @@ describe('CatCardDeck', () => {
     fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
     expect(onCollectCard).toHaveBeenCalledWith(expect.objectContaining({ id: 'cat-1' }));
+    expect(screen.getByRole('status')).toHaveTextContent('已收藏到我的貓卡');
     expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-swipe-exit', 'right');
 
     act(() => {
@@ -221,6 +223,12 @@ describe('CatCardDeck', () => {
     });
 
     expect(screen.getByText('No.002')).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(1500);
+    });
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
   it('skips without collecting on a left swipe and then advances', () => {
