@@ -2,6 +2,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import maplibregl from 'maplibre-gl';
 import { loadPublicCatCards } from '../lib/cloudPublicCats';
 import { setCloudCatCardVisibility } from '../lib/cloudVisibility';
 import { useAuthStore } from '../store/useAuthStore';
@@ -157,6 +158,7 @@ const makeItem = (overrides: Partial<ScrapbookItem> = {}): ScrapbookItem => ({
   personalityTags: overrides.personalityTags,
   spotNote: overrides.spotNote,
   careStatusTags: overrides.careStatusTags,
+  isPublic: overrides.isPublic,
 });
 
 describe('Map page', () => {
@@ -220,7 +222,7 @@ describe('Map page', () => {
     });
 
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
         <Map />
       </MemoryRouter>
     );
@@ -245,7 +247,7 @@ describe('Map page', () => {
     });
 
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
         <Map />
       </MemoryRouter>
     );
@@ -258,7 +260,7 @@ describe('Map page', () => {
 
   it('uses the shared moodboard brand header with logo and close navigation', async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
         <Map />
       </MemoryRouter>
     );
@@ -284,10 +286,20 @@ describe('Map page', () => {
       </MemoryRouter>
     );
 
-    await user.click(await screen.findByRole('button', { name: '全世界地圖' }));
-
     expect(await screen.findByText('全世界地圖準備中')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '備份我的貓咪地圖' })).toBeInTheDocument();
+  });
+
+  it('opens the world cat map by default', async () => {
+    render(
+      <MemoryRouter>
+        <Map />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('button', { name: '全世界地圖' })).toHaveAttribute('aria-pressed', 'true');
+    expect(loadPublicCatCards).toHaveBeenCalledTimes(1);
+    expect(await screen.findByRole('button', { name: '曼谷街角咖啡' })).toBeInTheDocument();
   });
 
   it('opens the world cat map directly from the public map query', async () => {
@@ -304,7 +316,7 @@ describe('Map page', () => {
 
   it('pins the MapLibre container with inline geometry so library CSS cannot collapse it', async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
         <Map />
       </MemoryRouter>
     );
@@ -322,7 +334,7 @@ describe('Map page', () => {
     const user = userEvent.setup();
 
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
         <Map />
       </MemoryRouter>
     );
@@ -403,7 +415,7 @@ describe('Map page', () => {
     });
 
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
         <Map />
       </MemoryRouter>
     );
@@ -430,7 +442,7 @@ describe('Map page', () => {
     const user = userEvent.setup();
 
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
         <Map />
       </MemoryRouter>
     );
@@ -465,7 +477,7 @@ describe('Map page', () => {
     const user = userEvent.setup();
 
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
         <Map />
       </MemoryRouter>
     );
@@ -481,7 +493,7 @@ describe('Map page', () => {
     const user = userEvent.setup();
 
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
         <Map />
       </MemoryRouter>
     );
@@ -504,7 +516,7 @@ describe('Map page', () => {
     const user = userEvent.setup();
 
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
         <Map />
       </MemoryRouter>
     );
@@ -543,7 +555,7 @@ describe('Map page', () => {
     });
 
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
         <Map />
       </MemoryRouter>
     );
@@ -593,7 +605,7 @@ describe('Map page', () => {
     const user = userEvent.setup();
 
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
         <Map />
       </MemoryRouter>
     );
@@ -611,7 +623,7 @@ describe('Map page', () => {
     });
 
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
         <Map />
       </MemoryRouter>
     );
@@ -627,7 +639,7 @@ describe('Map page', () => {
     const user = userEvent.setup();
 
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
         <Map />
       </MemoryRouter>
     );
@@ -671,8 +683,6 @@ describe('Map page', () => {
         <Map />
       </MemoryRouter>
     );
-
-    await user.click(await screen.findByRole('button', { name: '全世界地圖' }));
 
     expect(await screen.findByText('全世界地圖暫時載入失敗')).toBeInTheDocument();
     expect(screen.getByText('可能是網路或雲端暫時不穩，可以重新載入或先回到我的地圖。')).toBeInTheDocument();
@@ -753,8 +763,6 @@ describe('Map page', () => {
       </MemoryRouter>
     );
 
-    await user.click(await screen.findByRole('button', { name: '全世界地圖' }));
-
     expect(await screen.findByText('全世界地圖準備中')).toBeInTheDocument();
     expect(screen.getByText('雲端地圖還在準備。你仍然可以先把遇到的貓存在我的地圖，之後再公開到全世界地圖。')).toBeInTheDocument();
     expect(screen.queryByText('全世界地圖暫時載入失敗')).not.toBeInTheDocument();
@@ -777,8 +785,6 @@ describe('Map page', () => {
         <Map />
       </MemoryRouter>
     );
-
-    await user.click(await screen.findByRole('button', { name: 'World Map' }));
 
     expect(await screen.findByText('World Map is preparing')).toBeInTheDocument();
     expect(screen.getByText('The cloud map is still preparing. You can save cats in My Map now and publish them later.')).toBeInTheDocument();
@@ -889,5 +895,66 @@ describe('Map page', () => {
         expect.objectContaining({ center: [121.565, 25.033], zoom: 15 })
       );
     });
+  });
+
+  it('keeps the map instance stable when switching between local and world markers', async () => {
+    const user = userEvent.setup();
+    const MapMock = vi.mocked(maplibregl.Map);
+
+    render(
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('button', { name: '巷口咖啡店' })).toBeInTheDocument();
+    const mapCreateCount = MapMock.mock.calls.length;
+
+    await user.click(screen.getByRole('button', { name: '全世界地圖' }));
+    expect(await screen.findByRole('button', { name: '曼谷街角咖啡' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '我的地圖' }));
+    expect(await screen.findByRole('button', { name: '巷口咖啡店' })).toBeInTheDocument();
+
+    expect(MapMock).toHaveBeenCalledTimes(mapCreateCount);
+  });
+
+  it('puts world-map removal below the main navigation and note actions', async () => {
+    const user = userEvent.setup();
+    useAuthStore.setState({
+      isConfigured: true,
+      user: {
+        id: 'user-1',
+        email: 'cat@example.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: '2026-06-02T00:00:00.000Z',
+      },
+    });
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          isPublic: true,
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    await user.click(await screen.findByRole('button', { name: '巷口咖啡店' }));
+
+    const actionRow = screen.getByTestId('map-card-action-row');
+    const notesButton = screen.getByRole('button', { name: '補充貓咪資訊' });
+    const removeButton = screen.getByRole('button', { name: '從全世界地圖移除' });
+
+    expect(actionRow.compareDocumentPosition(removeButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(notesButton.compareDocumentPosition(removeButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });

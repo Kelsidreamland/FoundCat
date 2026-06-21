@@ -65,6 +65,7 @@ export default function CatCardDeck({
   const [collectFeedback, setCollectFeedback] = useState<string | null>(null);
   const swipeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const collectFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isSwipeAnimatingRef = useRef(false);
   const { previous, active, next } = getDeckNeighbors(cards, activeIndex);
   const formatter = dateFormatter(language);
   const hasMultipleCards = cards.length > 1;
@@ -78,9 +79,10 @@ export default function CatCardDeck({
   }, []);
 
   const completeMove = () => {
-    setActiveIndex((current) => (current + 1) % cards.length);
+    setActiveIndex((current) => (cards.length > 0 ? (current + 1) % cards.length : 0));
     setSwipeDirection(null);
     swipeTimerRef.current = null;
+    isSwipeAnimatingRef.current = false;
   };
 
   const dismissSwipeHint = () => {
@@ -89,7 +91,8 @@ export default function CatCardDeck({
   };
 
   const move = (direction: SwipeDirection) => {
-    if (cards.length <= 1 || swipeDirection) return;
+    if (cards.length <= 1 || swipeDirection || isSwipeAnimatingRef.current) return;
+    isSwipeAnimatingRef.current = true;
     if (showSwipeHint) dismissSwipeHint();
     if (direction === 1 && active) {
       onCollectCard?.(active);

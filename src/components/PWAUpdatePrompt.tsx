@@ -176,7 +176,7 @@ export default function PWAUpdatePrompt() {
 
       <div
         data-testid="version-check-chip"
-        className="version-check-chip fixed bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] left-4 z-[60] flex max-w-[calc(100vw-2rem)] flex-col items-start gap-2"
+        className="version-check-chip fixed right-4 top-[calc(env(safe-area-inset-top)+3.05rem)] z-[60] flex max-w-[calc(100vw-2rem)] flex-col items-end gap-2"
       >
         <button
           type="button"
@@ -194,7 +194,7 @@ export default function PWAUpdatePrompt() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
-              className="max-w-[15rem] rounded-[12px] border border-[#221915]/12 bg-[#fffdf2] px-3 py-2 text-[11px] font-bold leading-4 text-[#5c5148] shadow-[3px_3px_0_rgba(47,95,179,0.12)]"
+              className="max-w-[15rem] rounded-[12px] border border-[#221915]/12 bg-[#fffdf2] px-3 py-2 text-right text-[11px] font-bold leading-4 text-[#5c5148] shadow-[3px_3px_0_rgba(47,95,179,0.12)]"
             >
               {statusMessage}
             </motion.div>

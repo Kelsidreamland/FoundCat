@@ -32,6 +32,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   const locationNameRef = useRef(initialLocation?.name ?? '');
   const defaultLocationNameRef = useRef('');
   const hasReliableSearchCenterRef = useRef(Boolean(initialLocation));
+  const pickedManualCoordinateRef = useRef(false);
   const languageRef = useRef(language);
   const reverseLookupIdRef = useRef(0);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(
@@ -107,6 +108,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
     const lookupId = reverseLookupIdRef.current + 1;
     reverseLookupIdRef.current = lookupId;
     hasReliableSearchCenterRef.current = true;
+    pickedManualCoordinateRef.current = true;
     selectedSuggestionNameRef.current = null;
     setMarkerAt(lat, lng);
 
@@ -266,6 +268,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
 
   const applySuggestion = useCallback((suggestion: PlaceSuggestion) => {
     hasReliableSearchCenterRef.current = true;
+    pickedManualCoordinateRef.current = false;
     selectedSuggestionNameRef.current = suggestion.name;
     setLocationName(suggestion.name);
     setSuggestions([]);
@@ -326,7 +329,9 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
 
   const handleConfirm = useCallback(async () => {
     const query = locationName.trim();
-    const shouldResolveTypedQuery = query.length >= 2 && query !== selectedSuggestionNameRef.current;
+    const shouldResolveTypedQuery = !pickedManualCoordinateRef.current &&
+      query.length >= 2 &&
+      query !== selectedSuggestionNameRef.current;
 
     if (shouldResolveTypedQuery) {
       setIsConfirmingLocation(true);
@@ -478,6 +483,11 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
                   {searchStatus === 'no-results' ? (
                     <div className="px-4 py-3">
                       <p className="text-sm text-cat-text-tertiary">{t.locationSearchNoResults}</p>
+                      <p className="mt-1 text-xs font-bold leading-5 text-cat-text-secondary">
+                        {language === 'zh'
+                          ? '搜尋不到也沒關係，可以點地圖選大概位置，並用輸入文字當地點名稱。'
+                          : 'No result is okay. Tap the map for an approximate spot and keep your typed place name.'}
+                      </p>
                       <button
                         type="button"
                         onClick={() => void handleFullAddressSearch()}

@@ -266,6 +266,58 @@ describe('LocationPicker', () => {
     });
   });
 
+  it('saves a tapped map point with the typed cafe name when search providers cannot find it', async () => {
+    const onPicked = vi.fn();
+    vi.mocked(searchPlaces).mockResolvedValue([]);
+    let clickHandler: ((event: { lngLat: { lat: number; lng: number } }) => void) | undefined;
+
+    const MapMock = vi.mocked(maplibregl.Map) as unknown as ReturnType<typeof vi.fn>;
+    MapMock.mockImplementationOnce(function MapMock(this: {
+      addControl: ReturnType<typeof vi.fn>;
+      on: ReturnType<typeof vi.fn>;
+      easeTo: ReturnType<typeof vi.fn>;
+      getCenter: ReturnType<typeof vi.fn>;
+      getZoom: ReturnType<typeof vi.fn>;
+      remove: ReturnType<typeof vi.fn>;
+    }) {
+      this.addControl = vi.fn();
+      this.on = vi.fn((event: string, callback: (event: { lngLat: { lat: number; lng: number } }) => void) => {
+        if (event === 'click') clickHandler = callback;
+      });
+      this.easeTo = mapEaseTo;
+      this.getCenter = mapGetCenter;
+      this.getZoom = mapGetZoom;
+      this.remove = mapRemove;
+    });
+
+    render(
+      <LocationPicker
+        language="zh"
+        onPicked={onPicked}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText('地點名稱'), {
+      target: { value: '成都貓咪咖啡館' },
+    });
+    clickHandler?.({ lngLat: { lat: 30.657, lng: 104.066 } });
+
+    await waitFor(() => {
+      expect(screen.getByText('搜尋不到也沒關係，可以點地圖選大概位置，並用輸入文字當地點名稱。')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: '確認地點' }));
+
+    await waitFor(() => {
+      expect(onPicked).toHaveBeenCalledWith(expect.objectContaining({
+        lat: 30.657,
+        lng: 104.066,
+        name: '成都貓咪咖啡館',
+      }));
+    });
+  });
+
   it('keeps the same map instance after typing and choosing a suggestion', async () => {
     render(
       <LocationPicker

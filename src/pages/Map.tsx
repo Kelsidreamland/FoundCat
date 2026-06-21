@@ -121,7 +121,10 @@ export default function Map() {
   const [encounterDetailSavedMessage, setEncounterDetailSavedMessage] = useState<string | null>(null);
   const [isEncounterDetailsOpen, setIsEncounterDetailsOpen] = useState(false);
   const [publishStatus, setPublishStatus] = useState<PublishStatus>('idle');
-  const initialMapMode: MapMode = searchParams.get('mode') === 'public' ? 'public' : 'mine';
+  const focusedCatId = searchParams.get('cat');
+  const initialMapMode: MapMode = searchParams.get('mode') === 'mine' || (focusedCatId && searchParams.get('mode') !== 'public')
+    ? 'mine'
+    : 'public';
   const [mapMode, setMapMode] = useState<MapMode>(initialMapMode);
   const [publicItems, setPublicItems] = useState<ScrapbookItem[]>([]);
   const [publicLoadStatus, setPublicLoadStatus] = useState<PublicLoadStatus>('idle');
@@ -157,8 +160,6 @@ export default function Map() {
 
     return groups;
   }, [itemsWithLocation]);
-  const focusedCatId = searchParams.get('cat');
-
   const selectedItem = activeItems.find((item) => item.id === selectedItemId) ?? null;
   const selectedLocationGroup = selectedItem
     ? mapLocationGroups.find((group) => group.items.some((item) => item.id === selectedItem.id)) ?? null
@@ -283,7 +284,7 @@ export default function Map() {
     if (nextMode === 'public') {
       nextSearchParams.set('mode', 'public');
     } else {
-      nextSearchParams.delete('mode');
+      nextSearchParams.set('mode', 'mine');
     }
     navigate(
       {
@@ -397,7 +398,7 @@ export default function Map() {
       map.remove();
       mapRef.current = null;
     };
-  }, [itemsWithLocation.length]);
+  }, []);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -943,59 +944,6 @@ export default function Map() {
                 </div>
               ) : null}
 
-              {canPublishSelectedItem ? (
-                <div className="rounded-[16px] border border-[#221915]/12 bg-[#2f5fb3]/8 p-2.5 shadow-[3px_3px_0_rgba(47,95,179,0.08)]">
-                  <button
-                    type="button"
-                    onClick={() => void handleTogglePublicVisibility()}
-                    disabled={publishStatus === 'saving'}
-                    aria-label={selectedItem.isPublic ? publishCopy.unpublish : publishCopy.publish}
-                    className="flex min-h-11 w-full items-center justify-between gap-3 rounded-[14px] border border-[#221915]/15 bg-[#fffdf2] px-3 py-2 text-left text-[#221915] transition-colors hover:border-[#2f5fb3]/50 disabled:cursor-wait disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
-                  >
-                    <span className="min-w-0">
-                      <span className="block text-sm font-black">
-                        {publishStatus === 'saving'
-                          ? publishCopy.saving
-                          : selectedItem.isPublic
-                            ? publishCopy.unpublish
-                            : publishCopy.publish}
-                      </span>
-                      <span className="mt-0.5 block text-[11px] font-bold leading-snug text-cat-text-tertiary">
-                        {publishCopy.hint}
-                      </span>
-                    </span>
-                    <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[#221915]/15 ${
-                      selectedItem.isPublic ? 'bg-[#2f5fb3] text-[#fffdf2]' : 'bg-[#fff2cf] text-[#2f5fb3]'
-                    }`}>
-                      <MapPin size={15} />
-                    </span>
-                  </button>
-                  {publishStatus === 'published' ? (
-                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-xs font-black text-[#2f5fb3]">{publishCopy.published}</p>
-                        <p className="mt-0.5 text-[11px] font-bold leading-snug text-[#5f5148]">
-                          {publishCopy.publishedHint}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleMapModeChange('public')}
-                        className="inline-flex min-h-8 items-center justify-center rounded-full border border-[#221915]/15 bg-[#fff2cf] px-3 py-1.5 text-[11px] font-black text-[#221915] shadow-[2px_2px_0_rgba(47,95,179,0.12)] transition-transform active:translate-x-[1px] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
-                      >
-                        {publishCopy.viewPublicMap}
-                      </button>
-                    </div>
-                  ) : null}
-                  {publishStatus === 'unpublished' ? (
-                    <p className="mt-2 text-xs font-black text-[#6d5f52]">{publishCopy.unpublished}</p>
-                  ) : null}
-                  {publishStatus === 'error' ? (
-                    <p className="mt-2 text-xs font-black text-[#9f3a2f]">{publishCopy.error}</p>
-                  ) : null}
-                </div>
-              ) : null}
-
               {shouldShowPublishLoginHint ? (
                 <div className="rounded-[16px] border border-white/55 bg-white/55 px-3 py-2.5 shadow-[3px_3px_0_rgba(47,95,179,0.08)] backdrop-blur-md">
                   <p className="text-sm font-black leading-snug text-[#221915]">
@@ -1085,6 +1033,59 @@ export default function Map() {
                 <p className="rounded-[14px] border border-[#221915]/10 bg-[#f7c948]/25 px-3 py-2 text-sm font-black text-[#221915]">
                   {[selectedBreedLabel, selectedColorLabel].filter(Boolean).join(' · ')}
                 </p>
+              ) : null}
+
+              {canPublishSelectedItem ? (
+                <div className="rounded-[16px] border border-[#221915]/12 bg-[#2f5fb3]/8 p-2.5 shadow-[3px_3px_0_rgba(47,95,179,0.08)]">
+                  <button
+                    type="button"
+                    onClick={() => void handleTogglePublicVisibility()}
+                    disabled={publishStatus === 'saving'}
+                    aria-label={selectedItem.isPublic ? publishCopy.unpublish : publishCopy.publish}
+                    className="flex min-h-11 w-full items-center justify-between gap-3 rounded-[14px] border border-[#221915]/15 bg-[#fffdf2] px-3 py-2 text-left text-[#221915] transition-colors hover:border-[#2f5fb3]/50 disabled:cursor-wait disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-sm font-black">
+                        {publishStatus === 'saving'
+                          ? publishCopy.saving
+                          : selectedItem.isPublic
+                            ? publishCopy.unpublish
+                            : publishCopy.publish}
+                      </span>
+                      <span className="mt-0.5 block text-[11px] font-bold leading-snug text-cat-text-tertiary">
+                        {publishCopy.hint}
+                      </span>
+                    </span>
+                    <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[#221915]/15 ${
+                      selectedItem.isPublic ? 'bg-[#2f5fb3] text-[#fffdf2]' : 'bg-[#fff2cf] text-[#2f5fb3]'
+                    }`}>
+                      <MapPin size={15} />
+                    </span>
+                  </button>
+                  {publishStatus === 'published' ? (
+                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-black text-[#2f5fb3]">{publishCopy.published}</p>
+                        <p className="mt-0.5 text-[11px] font-bold leading-snug text-[#5f5148]">
+                          {publishCopy.publishedHint}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleMapModeChange('public')}
+                        className="inline-flex min-h-8 items-center justify-center rounded-full border border-[#221915]/15 bg-[#fff2cf] px-3 py-1.5 text-[11px] font-black text-[#221915] shadow-[2px_2px_0_rgba(47,95,179,0.12)] transition-transform active:translate-x-[1px] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
+                      >
+                        {publishCopy.viewPublicMap}
+                      </button>
+                    </div>
+                  ) : null}
+                  {publishStatus === 'unpublished' ? (
+                    <p className="mt-2 text-xs font-black text-[#6d5f52]">{publishCopy.unpublished}</p>
+                  ) : null}
+                  {publishStatus === 'error' ? (
+                    <p className="mt-2 text-xs font-black text-[#9f3a2f]">{publishCopy.error}</p>
+                  ) : null}
+                </div>
               ) : null}
 
             </div>

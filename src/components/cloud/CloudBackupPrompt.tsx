@@ -392,7 +392,7 @@ export default function CloudBackupPrompt({
               <div className="mt-3 space-y-2">
                 <p className="text-xs font-black text-[#2f5fb3]">{t.backedUp(backedUpCount)}</p>
                 <a
-                  href="/map"
+                  href="/map?mode=mine"
                   className="inline-flex h-9 items-center justify-center rounded-full border-2 border-[#1d1714] bg-[#fff2cf] px-4 text-[11px] font-black text-[#1d1714] shadow-[3px_3px_0_rgba(47,95,179,0.22)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
                 >
                   {t.openMapToPublish}

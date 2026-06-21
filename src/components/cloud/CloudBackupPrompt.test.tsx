@@ -340,7 +340,7 @@ describe('CloudBackupPrompt', () => {
       });
     });
     expect(screen.getByText('已備份 1 隻貓')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '去我的地圖公開貓點' })).toHaveAttribute('href', '/map');
+    expect(screen.getByRole('link', { name: '去我的地圖公開貓點' })).toHaveAttribute('href', '/map?mode=mine');
   });
 
   it('shows the latest automatic backup status on the signed-in cloud button', () => {

@@ -231,6 +231,47 @@ describe('CatCardDeck', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
+  it('ignores duplicate swipe triggers while the current card is animating out', () => {
+    vi.useFakeTimers();
+    const onCollectCard = vi.fn();
+
+    render(
+      <CatCardDeck
+        items={[
+          makeItem({ id: 'cat-1', catdexNumber: 1 }),
+          makeItem({ id: 'cat-2', catdexNumber: 2 }),
+          makeItem({ id: 'cat-3', catdexNumber: 3 }),
+        ]}
+        language="zh"
+        labels={{
+          empty: '還沒有貓卡',
+          previous: '上一張',
+          next: '下一張',
+          shareCard: '分享這張卡與地址',
+          collectFeedback: '已收藏到我的貓卡',
+        }}
+        onShareCard={vi.fn()}
+        onCollectCard={onCollectCard}
+      />
+    );
+
+    const activeCard = screen.getByTestId('active-cat-card');
+    act(() => {
+      activeCard.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      activeCard.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    });
+
+    expect(onCollectCard).toHaveBeenCalledTimes(1);
+    expect(onCollectCard).toHaveBeenCalledWith(expect.objectContaining({ id: 'cat-1' }));
+
+    act(() => {
+      vi.advanceTimersByTime(260);
+    });
+
+    expect(screen.getByText('No.002')).toBeInTheDocument();
+    expect(screen.queryByText('No.003')).not.toBeInTheDocument();
+  });
+
   it('skips without collecting on a left swipe and then advances', () => {
     vi.useFakeTimers();
     const onCollectCard = vi.fn();
