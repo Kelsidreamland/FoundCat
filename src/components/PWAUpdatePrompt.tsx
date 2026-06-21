@@ -7,6 +7,7 @@ import { translations } from '../translations';
 
 const UPDATE_CHECK_INTERVAL_MS = 60 * 1000;
 const STATUS_MESSAGE_DURATION_MS = 3000;
+const PWA_RELOAD_STORAGE_KEY = 'found-cat-pwa-reloaded-for-update';
 
 export default function PWAUpdatePrompt() {
   const { language } = useScrapbookStore();
@@ -15,12 +16,16 @@ export default function PWAUpdatePrompt() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const needRefreshRef = useRef(false);
+  const shouldReloadAfterControllerChangeRef = useRef(false);
 
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
     immediate: true,
+    onNeedRefresh: () => {
+      shouldReloadAfterControllerChangeRef.current = true;
+    },
     onRegisteredSW: (_swUrl, swRegistration) => {
       setRegistration(swRegistration);
     },
@@ -31,7 +36,34 @@ export default function PWAUpdatePrompt() {
 
   useEffect(() => {
     needRefreshRef.current = needRefresh;
+    if (needRefresh) {
+      shouldReloadAfterControllerChangeRef.current = true;
+    }
   }, [needRefresh]);
+
+  useEffect(() => {
+    const reloadOnceForFreshServiceWorker = () => {
+      if (!shouldReloadAfterControllerChangeRef.current) return;
+
+      try {
+        if (window.sessionStorage.getItem(PWA_RELOAD_STORAGE_KEY) === 'true') return;
+        window.sessionStorage.setItem(PWA_RELOAD_STORAGE_KEY, 'true');
+      } catch {
+        // If sessionStorage is unavailable, still prefer one refresh over leaving a stale app shell.
+      }
+
+      window.location.reload();
+    };
+
+    const handleControllerChange = () => reloadOnceForFreshServiceWorker();
+    navigator.serviceWorker?.addEventListener('controllerchange', handleControllerChange);
+    window.addEventListener('found-cat-sw-controllerchange', handleControllerChange);
+
+    return () => {
+      navigator.serviceWorker?.removeEventListener('controllerchange', handleControllerChange);
+      window.removeEventListener('found-cat-sw-controllerchange', handleControllerChange);
+    };
+  }, []);
 
   useEffect(() => {
     if (!statusMessage) return;

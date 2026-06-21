@@ -39,13 +39,14 @@ const copy = {
     sendMagicLink: '寄送登入信',
     sending: '寄送中',
     sentTitle: '已寄出登入信',
-    sentBody: '請不要離開這個 App。到信箱看 6 位數驗證碼，回到這裡輸入完成登入。',
-    otpLabel: 'Email 驗證碼',
+    sentBody: '請到信箱點登入連結；如果信裡有 6 位數驗證碼，也可以留在這裡輸入。',
+    sentStorageHint: '點 Email 連結時，手機可能會打開瀏覽器或桌面版 App；請選擇原本有貓卡資料的那一個版本繼續備份。',
+    otpLabel: '如果信裡有驗證碼',
     otpPlaceholder: '123456',
-    verifyOtp: '驗證並登入',
+    verifyOtp: '用驗證碼登入',
     verifyingOtp: '驗證中',
     otpVerified: '驗證完成，正在保留這台裝置上的貓卡。',
-    otpFailed: '驗證碼無法使用，請確認是否過期，或重新寄送登入信。',
+    otpFailed: '驗證碼無法使用，請確認是否過期；也可以直接點 Email 裡的登入連結。',
     resendEmail: '重新寄送登入信',
     signInFailed: '登入信寄送失敗，請稍後再試。',
     signInFailedDetail: (message: string) => `登入信寄送失敗：${message}`,
@@ -91,13 +92,14 @@ const copy = {
     sendMagicLink: 'Send Sign-In Link',
     sending: 'Sending',
     sentTitle: 'Sign-in link sent',
-    sentBody: 'Stay in this app. Check your email for the 6-digit code, then enter it here to sign in.',
-    otpLabel: 'Email verification code',
+    sentBody: 'Open the sign-in link in your email. If the email includes a 6-digit code, you can also enter it here.',
+    sentStorageHint: 'On mobile, the email link may open the browser or the installed app. Continue in the one that still has your local cat cards.',
+    otpLabel: 'Code, if your email has one',
     otpPlaceholder: '123456',
-    verifyOtp: 'Verify and Sign In',
+    verifyOtp: 'Sign In with Code',
     verifyingOtp: 'Verifying',
     otpVerified: 'Verified. Keeping the cat cards saved on this device.',
-    otpFailed: 'The code could not be verified. Check if it expired, or send a new sign-in email.',
+    otpFailed: 'The code could not be verified. Check if it expired, or use the sign-in link in your email.',
     resendEmail: 'Send a New Sign-In Email',
     signInFailed: 'Could not send the sign-in link. Please try again later.',
     signInFailedDetail: (message: string) => `Could not send the sign-in email: ${message}`,
@@ -423,6 +425,9 @@ export default function CloudBackupPrompt({
               <div>
                 <p className="text-sm font-black">{t.sentTitle}</p>
                 <p className="mt-1 text-xs font-bold leading-5 text-[#6d5f52]">{t.sentBody}</p>
+                <p className="mt-2 rounded-[14px] border border-[#2f5fb3]/22 bg-[#d9ecff]/55 px-3 py-2 text-xs font-black leading-5 text-[#2f5fb3]">
+                  {t.sentStorageHint}
+                </p>
               </div>
             </div>
             <label className="mt-3 block">

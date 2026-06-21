@@ -11,11 +11,23 @@ const registration = {
 };
 let needRefreshState = true;
 let didRegister = false;
+let registeredOptions: {
+  onRegisteredSW?: (swUrl: string, registration: ServiceWorkerRegistration) => void;
+  onOfflineReady?: () => void;
+  onNeedRefresh?: () => void;
+  onRegistered?: (registration: ServiceWorkerRegistration | undefined) => void;
+  onRegisterError?: (error: unknown) => void;
+} | undefined;
 
 vi.mock('virtual:pwa-register/react', () => ({
   useRegisterSW: (options?: {
     onRegisteredSW?: (swUrl: string, registration: ServiceWorkerRegistration) => void;
+    onOfflineReady?: () => void;
+    onNeedRefresh?: () => void;
+    onRegistered?: (registration: ServiceWorkerRegistration | undefined) => void;
+    onRegisterError?: (error: unknown) => void;
   }) => {
+    registeredOptions = options;
     if (!didRegister) {
       didRegister = true;
       window.setTimeout(() => {
@@ -37,6 +49,8 @@ describe('PWAUpdatePrompt', () => {
     registration.update.mockClear();
     needRefreshState = true;
     didRegister = false;
+    registeredOptions = undefined;
+    window.sessionStorage.clear();
     useScrapbookStore.setState({
       language: 'zh',
     });
@@ -83,5 +97,34 @@ describe('PWAUpdatePrompt', () => {
     await userEvent.click(screen.getByRole('button', { name: '稍後' }));
 
     expect(setNeedRefresh).toHaveBeenCalledWith(false);
+  });
+
+  it('reloads once after the new service worker controls the stale page', () => {
+    const originalLocation = window.location;
+    const reload = vi.fn();
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: {
+        ...originalLocation,
+        reload,
+      },
+    });
+
+    render(<PWAUpdatePrompt />);
+
+    registeredOptions?.onNeedRefresh?.();
+    window.dispatchEvent(new Event('found-cat-sw-controllerchange'));
+
+    expect(reload).toHaveBeenCalledTimes(1);
+    expect(window.sessionStorage.getItem('found-cat-pwa-reloaded-for-update')).toBe('true');
+
+    window.dispatchEvent(new Event('found-cat-sw-controllerchange'));
+
+    expect(reload).toHaveBeenCalledTimes(1);
+
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: originalLocation,
+    });
   });
 });

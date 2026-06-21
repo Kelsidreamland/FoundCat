@@ -81,7 +81,7 @@ describe('CloudBackupPrompt', () => {
     expect(screen.getByText('不會影響目前手機裡的貓卡。')).toBeInTheDocument();
   });
 
-  it('sends a sign-in email and asks for the OTP inside the current app', async () => {
+  it('sends a sign-in email and explains that the current email may be a link instead of a code', async () => {
     const user = userEvent.setup();
     const signInWithEmail = vi.fn(async () => undefined);
     useAuthStore.setState({
@@ -101,9 +101,10 @@ describe('CloudBackupPrompt', () => {
       });
     });
     expect(screen.getByText('已寄出登入信')).toBeInTheDocument();
-    expect(screen.getByText('請不要離開這個 App。到信箱看 6 位數驗證碼，回到這裡輸入完成登入。')).toBeInTheDocument();
-    expect(screen.getByLabelText('Email 驗證碼')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '驗證並登入' })).toBeDisabled();
+    expect(screen.getByText('請到信箱點登入連結；如果信裡有 6 位數驗證碼，也可以留在這裡輸入。')).toBeInTheDocument();
+    expect(screen.getByText('點 Email 連結時，手機可能會打開瀏覽器或桌面版 App；請選擇原本有貓卡資料的那一個版本繼續備份。')).toBeInTheDocument();
+    expect(screen.getByLabelText('如果信裡有驗證碼')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '用驗證碼登入' })).toBeDisabled();
   });
 
   it('verifies the OTP without opening a separate browser storage space', async () => {
@@ -121,8 +122,8 @@ describe('CloudBackupPrompt', () => {
     await user.click(screen.getByRole('button', { name: '備份我的貓咪地圖' }));
     await user.type(screen.getByLabelText('Email'), 'cat@example.com');
     await user.click(screen.getByRole('button', { name: '寄送登入信' }));
-    await user.type(await screen.findByLabelText('Email 驗證碼'), ' 123456 ');
-    await user.click(screen.getByRole('button', { name: '驗證並登入' }));
+    await user.type(await screen.findByLabelText('如果信裡有驗證碼'), ' 123456 ');
+    await user.click(screen.getByRole('button', { name: '用驗證碼登入' }));
 
     await waitFor(() => {
       expect(verifyEmailOtp).toHaveBeenCalledWith('cat@example.com', '123456');
@@ -150,10 +151,10 @@ describe('CloudBackupPrompt', () => {
     await user.click(screen.getByRole('button', { name: '備份我的貓咪地圖' }));
     await user.type(screen.getByLabelText('Email'), 'cat@example.com');
     await user.click(screen.getByRole('button', { name: '寄送登入信' }));
-    await user.type(await screen.findByLabelText('Email 驗證碼'), '000000');
-    await user.click(screen.getByRole('button', { name: '驗證並登入' }));
+    await user.type(await screen.findByLabelText('如果信裡有驗證碼'), '000000');
+    await user.click(screen.getByRole('button', { name: '用驗證碼登入' }));
 
-    expect(await screen.findByText('驗證碼無法使用，請確認是否過期，或重新寄送登入信。')).toBeInTheDocument();
+    expect(await screen.findByText('驗證碼無法使用，請確認是否過期；也可以直接點 Email 裡的登入連結。')).toBeInTheDocument();
   });
 
   it('uses the supplied return URL when sending the sign-in email', async () => {
