@@ -266,6 +266,38 @@ describe('LocationPicker', () => {
     });
   });
 
+  it('lets users paste a Google Maps link and apply its coordinates without calling Google APIs', async () => {
+    const onPicked = vi.fn();
+
+    render(
+      <LocationPicker
+        language="zh"
+        onPicked={onPicked}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText('地點名稱'), {
+      target: { value: 'https://www.google.com/maps/place/G+Nimman+Chiang+Mai/@18.795163,98.967533,18z' },
+    });
+
+    expect(await screen.findByText('已讀取 Google Maps 位置')).toBeInTheDocument();
+    expect(searchPlaces).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: '套用 Google Maps 位置' }));
+    fireEvent.click(screen.getByRole('button', { name: '確認地點' }));
+
+    expect(markerSetLngLat).toHaveBeenCalledWith([98.967533, 18.795163]);
+    expect(mapEaseTo).toHaveBeenCalledWith(
+      expect.objectContaining({ center: [98.967533, 18.795163], zoom: 16 })
+    );
+    expect(onPicked).toHaveBeenCalledWith({
+      lat: 18.795163,
+      lng: 98.967533,
+      name: 'G Nimman Chiang Mai',
+    });
+  });
+
   it('saves a tapped map point with the typed cafe name when search providers cannot find it', async () => {
     const onPicked = vi.fn();
     vi.mocked(searchPlaces).mockResolvedValue([]);

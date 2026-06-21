@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import { Loader2, LocateFixed, MapPin, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { translations } from '../translations';
 import { reverseGeocodePlace, searchPlaces, type PlaceSuggestion } from '../lib/placeSearch';
+import { parseGoogleMapsLink } from '../lib/googleMapsLink';
 
 const OPEN_FREE_MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 const DEFAULT_CENTER: [number, number] = [114.1694, 22.3193];
@@ -50,6 +51,8 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   const [searchStatus, setSearchStatus] = useState<'idle' | 'no-results' | 'error'>('idle');
 
   const defaultLocationName = language === 'zh' ? '貓咪出沒點' : 'Cat Spot';
+  const parsedGoogleMapsLocation = useMemo(() => parseGoogleMapsLink(locationName), [locationName]);
+  const hasGoogleMapsUrlInput = /(?:google\.[a-z.]+\/maps|maps\.app\.goo\.gl|goo\.gl\/maps)/i.test(locationName);
 
   useEffect(() => {
     defaultLocationNameRef.current = defaultLocationName;
@@ -150,6 +153,13 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   useEffect(() => {
     const query = locationName.trim();
 
+    if (parsedGoogleMapsLocation) {
+      setSuggestions([]);
+      setSearchStatus('idle');
+      setIsSearching(false);
+      return;
+    }
+
     if (query.length < 2 || query === selectedSuggestionNameRef.current) {
       setSuggestions([]);
       setSearchStatus('idle');
@@ -189,7 +199,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [getSearchCenter, language, locationName]);
+  }, [getSearchCenter, language, locationName, parsedGoogleMapsLocation]);
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -287,6 +297,23 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   const pickSuggestion = useCallback((suggestion: PlaceSuggestion) => {
     applySuggestion(suggestion);
   }, [applySuggestion]);
+
+  const applyParsedGoogleMapsLocation = useCallback(() => {
+    if (!parsedGoogleMapsLocation) return;
+
+    const nextName = parsedGoogleMapsLocation.name ?? locationName.trim() ?? defaultLocationName;
+    pickedManualCoordinateRef.current = true;
+    selectedSuggestionNameRef.current = nextName;
+    setLocationName(nextName);
+    setSuggestions([]);
+    setSearchStatus('idle');
+    setMarkerAt(parsedGoogleMapsLocation.lat, parsedGoogleMapsLocation.lng);
+    mapRef.current?.easeTo({
+      center: [parsedGoogleMapsLocation.lng, parsedGoogleMapsLocation.lat],
+      zoom: 16,
+      duration: 800,
+    });
+  }, [defaultLocationName, locationName, parsedGoogleMapsLocation, setMarkerAt]);
 
   const handleFullAddressSearch = useCallback(async () => {
     const query = locationName.trim();
@@ -521,6 +548,31 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
               ) : null}
             </div>
           </label>
+
+          {parsedGoogleMapsLocation ? (
+            <div className="mt-3 rounded-2xl border border-[#2f5fb3]/20 bg-[#d9ecff]/70 px-3 py-3">
+              <p className="text-xs font-black text-[#2f5fb3]">
+                {language === 'zh' ? '已讀取 Google Maps 位置' : 'Google Maps location detected'}
+              </p>
+              <p className="mt-1 text-xs font-bold leading-5 text-cat-text-secondary">
+                {parsedGoogleMapsLocation.name ??
+                  `${parsedGoogleMapsLocation.lat.toFixed(5)}, ${parsedGoogleMapsLocation.lng.toFixed(5)}`}
+              </p>
+              <button
+                type="button"
+                onClick={applyParsedGoogleMapsLocation}
+                className="mt-2 inline-flex min-h-9 items-center justify-center rounded-full border border-[#221915]/18 bg-[#fffdf2] px-3 py-1.5 text-xs font-black text-[#221915] shadow-[2px_2px_0_rgba(47,95,179,0.12)]"
+              >
+                {language === 'zh' ? '套用 Google Maps 位置' : 'Use Google Maps location'}
+              </button>
+            </div>
+          ) : hasGoogleMapsUrlInput ? (
+            <p className="mt-3 rounded-2xl border border-[#221915]/12 bg-white/75 px-3 py-2 text-xs font-bold leading-5 text-cat-text-secondary">
+              {language === 'zh'
+                ? '這個 Google Maps 連結沒有可直接讀取的座標。如果是短連結，請在 Google Maps 打開後複製完整網址，或直接點地圖選位置。'
+                : 'This Google Maps link does not expose coordinates. Open it in Google Maps and copy the full URL, or tap the map directly.'}
+            </p>
+          ) : null}
         </div>
 
         <div ref={mapContainerRef} className="flex-1 min-h-[300px] w-full" />
