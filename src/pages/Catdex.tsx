@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import CatActionNav from '../components/catdex/CatActionNav';
 import CatdexLabel from '../components/catdex/CatdexLabel';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import { useScrapbookStore } from '../store/useScrapbookStore';
@@ -60,7 +61,7 @@ export default function Catdex() {
         closeLabel="關閉回首頁"
       />
 
-      <main className="min-h-0 flex-1 overflow-y-auto px-5 pb-8 scrollbar-hide">
+      <main className="mb-[calc(4.25rem+env(safe-area-inset-bottom))] min-h-0 flex-1 overflow-y-auto px-5 pb-5 scrollbar-hide">
         <section className="mx-auto mb-5 max-w-sm">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#2f5fb3]">
             FOUND CATS ARCHIVE
@@ -143,6 +144,15 @@ export default function Catdex() {
           </div>
         )}
       </main>
+
+      <CatActionNav
+        labels={{
+          nav: language === 'zh' ? '主要操作' : 'Primary actions',
+          myCatCards: t.myCatCards,
+          capture: language === 'zh' ? '拍貓' : 'Capture cat',
+          map: t.map,
+        }}
+      />
     </div>
   );
 }

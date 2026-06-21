@@ -44,6 +44,19 @@ describe('Catdex page', () => {
     expect(screen.getByRole('heading', { name: '我的貓卡' })).toBeInTheDocument();
   });
 
+  it('keeps the primary app navigation available from my cat cards', () => {
+    render(
+      <MemoryRouter initialEntries={['/catdex']}>
+        <Catdex />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('navigation', { name: '主要操作' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '我的貓卡' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: '拍貓' })).toHaveAttribute('href', '/create');
+    expect(screen.getByRole('link', { name: '貓咪地圖' })).toHaveAttribute('href', '/map?mode=public');
+  });
+
   it('shows custom cat names in the archive cards', () => {
     useScrapbookStore.setState({
       items: [
