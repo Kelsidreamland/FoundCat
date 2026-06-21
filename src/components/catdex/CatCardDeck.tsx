@@ -59,6 +59,7 @@ export default function CatCardDeck({
   onCollectCard,
 }: CatCardDeckProps) {
   const cards = useMemo(() => sortCatCards(items), [items]);
+  const cardSourceSignature = useMemo(() => cards.map((card) => card.id).join('|'), [cards]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState<SwipeDirection | null>(null);
   const [isSwipeHintDismissed, setIsSwipeHintDismissed] = useState(hasSeenSwipeHint);
@@ -77,6 +78,24 @@ export default function CatCardDeck({
       if (collectFeedbackTimerRef.current) clearTimeout(collectFeedbackTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (swipeTimerRef.current) {
+      clearTimeout(swipeTimerRef.current);
+      swipeTimerRef.current = null;
+    }
+
+    isSwipeAnimatingRef.current = false;
+    setSwipeDirection(null);
+    setActiveIndex(0);
+  }, [cardSourceSignature]);
+
+  useEffect(() => {
+    setActiveIndex((current) => {
+      if (cards.length === 0) return 0;
+      return Math.min(current, cards.length - 1);
+    });
+  }, [cards.length]);
 
   const completeMove = () => {
     setActiveIndex((current) => (cards.length > 0 ? (current + 1) % cards.length : 0));

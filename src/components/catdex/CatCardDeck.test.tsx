@@ -272,6 +272,49 @@ describe('CatCardDeck', () => {
     expect(screen.queryByText('No.003')).not.toBeInTheDocument();
   });
 
+  it('resets an in-flight swipe when the card source changes underneath the deck', () => {
+    vi.useFakeTimers();
+    const { rerender } = render(
+      <CatCardDeck
+        items={[
+          makeItem({ id: 'local-cat-1', catdexNumber: 1 }),
+          makeItem({ id: 'local-cat-2', catdexNumber: 2 }),
+          makeItem({ id: 'local-cat-3', catdexNumber: 3 }),
+        ]}
+        language="zh"
+        labels={{
+          empty: '還沒有貓卡',
+          previous: '上一張',
+          next: '下一張',
+          shareCard: '分享這張卡與地址',
+        }}
+        onShareCard={vi.fn()}
+      />
+    );
+
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+    expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-swipe-exit', 'left');
+
+    rerender(
+      <CatCardDeck
+        items={[
+          makeItem({ id: 'public-cat-9', catdexNumber: 9 }),
+        ]}
+        language="zh"
+        labels={{
+          empty: '還沒有貓卡',
+          previous: '上一張',
+          next: '下一張',
+          shareCard: '分享這張卡與地址',
+        }}
+        onShareCard={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('No.009')).toBeInTheDocument();
+    expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-swipe-exit', 'none');
+  });
+
   it('skips without collecting on a left swipe and then advances', () => {
     vi.useFakeTimers();
     const onCollectCard = vi.fn();

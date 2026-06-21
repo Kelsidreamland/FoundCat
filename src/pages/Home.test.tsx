@@ -25,6 +25,15 @@ vi.mock('../lib/sharePoster', () => ({
   shareCatCardPoster: vi.fn(async () => 'shared-file'),
 }));
 
+const createDeferredPublicCards = () => {
+  let resolve!: (value: Awaited<ReturnType<typeof loadPublicCatCards>>) => void;
+  const promise = new Promise<Awaited<ReturnType<typeof loadPublicCatCards>>>((innerResolve) => {
+    resolve = innerResolve;
+  });
+
+  return { promise, resolve };
+};
+
 const makeItem = (overrides: Partial<ScrapbookItem> = {}): ScrapbookItem => ({
   id: 'cat-1',
   type: 'sticker',
@@ -90,7 +99,9 @@ describe('Home page', () => {
     );
   });
 
-  it('renders collected cats as swipe cards instead of the latest-cat hero', () => {
+  it('does not flash stale local cat cards while the world deck is still loading', () => {
+    const deferred = createDeferredPublicCards();
+    vi.mocked(loadPublicCatCards).mockReturnValue(deferred.promise);
     useScrapbookStore.setState({
       items: [
         makeItem({
@@ -109,9 +120,9 @@ describe('Home page', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('No.029')).toBeInTheDocument();
-    expect(screen.getByText('巷口咖啡店')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '分享這張貓卡海報' })).toBeInTheDocument();
+    expect(screen.getByText('正在載入大家遇見的貓')).toBeInTheDocument();
+    expect(screen.queryByText('No.029')).not.toBeInTheDocument();
+    expect(screen.queryByText('巷口咖啡店')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '備份' })).toBeInTheDocument();
     expect(screen.queryByText('1 隻貓目前保存在這台裝置')).not.toBeInTheDocument();
     expect(screen.queryByText('最新遇見')).not.toBeInTheDocument();
@@ -167,14 +178,14 @@ describe('Home page', () => {
     });
   });
 
-  it('shows the card deck empty state when no cats have been added', () => {
+  it('shows the card deck empty state when no public cats have been added', async () => {
     render(
       <MemoryRouter>
         <Home />
       </MemoryRouter>
     );
 
-    expect(screen.getByText('全世界地圖等第一批貓點')).toBeInTheDocument();
+    expect(await screen.findByText('全世界地圖等第一批貓點')).toBeInTheDocument();
     expect(screen.getByText('先拍下你遇到的貓，公開後朋友就能在地圖上找到牠。')).toBeInTheDocument();
   });
 
