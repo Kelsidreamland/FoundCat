@@ -17,6 +17,21 @@ type PixelCrop = { x: number; y: number; width: number; height: number };
 
 const PENDING_LOCATION_STORAGE_KEY = 'found-cat-pending-location-id';
 
+const readPendingLocationId = () => (
+  window.sessionStorage.getItem(PENDING_LOCATION_STORAGE_KEY)
+  ?? window.localStorage.getItem(PENDING_LOCATION_STORAGE_KEY)
+);
+
+const persistPendingLocationId = (stickerId: string) => {
+  window.sessionStorage.setItem(PENDING_LOCATION_STORAGE_KEY, stickerId);
+  window.localStorage.setItem(PENDING_LOCATION_STORAGE_KEY, stickerId);
+};
+
+const clearPendingLocationId = () => {
+  window.sessionStorage.removeItem(PENDING_LOCATION_STORAGE_KEY);
+  window.localStorage.removeItem(PENDING_LOCATION_STORAGE_KEY);
+};
+
 const resizeBlobToMaxSize = async (blob: Blob, maxWidthOrHeight: number): Promise<Blob> => {
   if (maxWidthOrHeight <= 0) return blob;
 
@@ -126,14 +141,14 @@ export default function Create() {
   useEffect(() => {
     if (createdStickerId || imageSrc || previewMode) return;
 
-    const pendingId = window.sessionStorage.getItem(PENDING_LOCATION_STORAGE_KEY);
+    const pendingId = readPendingLocationId();
     if (!pendingId) return;
 
     if (isLoading) return;
 
     const pendingItem = items.find((item) => item.id === pendingId);
     if (!pendingItem || pendingItem.location) {
-      window.sessionStorage.removeItem(PENDING_LOCATION_STORAGE_KEY);
+      clearPendingLocationId();
       return;
     }
 
@@ -156,7 +171,7 @@ export default function Create() {
   }, [navigate, setTargetDate, targetDate]);
 
   const beginPostCreateFlow = useCallback((stickerId: string) => {
-    window.sessionStorage.setItem(PENDING_LOCATION_STORAGE_KEY, stickerId);
+    persistPendingLocationId(stickerId);
     setCreatedStickerId(stickerId);
     setImageSrc(null);
     setPreviewImage(null);
@@ -204,7 +219,7 @@ export default function Create() {
       setTargetDate(null);
       setCreatedStickerId(null);
       setShowLocationPicker(false);
-      window.sessionStorage.removeItem(PENDING_LOCATION_STORAGE_KEY);
+      clearPendingLocationId();
       navigate(`/map?cat=${encodeURIComponent(catId)}&publishHint=1`);
       return;
     }
@@ -212,7 +227,7 @@ export default function Create() {
   }, [createdStickerId, finishCreateFlow, isCloudConfigured, navigate, setTargetDate, updateItem, user]);
 
   const handleLocationSkipped = useCallback(() => {
-    window.sessionStorage.removeItem(PENDING_LOCATION_STORAGE_KEY);
+    clearPendingLocationId();
     finishCreateFlow();
   }, [finishCreateFlow]);
 
