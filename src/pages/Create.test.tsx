@@ -244,6 +244,50 @@ describe('Create page', () => {
     expect(screen.getByRole('button', { name: /存入我的貓卡/ })).toBeInTheDocument();
   });
 
+  it('does not create a duplicate cat card from an already saved preview draft', async () => {
+    const existingCat = {
+      id: 'existing-cat-id',
+      type: 'sticker' as const,
+      imageData: 'data:image/jpeg;base64,recovered-cat-card',
+      heroImageData: 'data:image/jpeg;base64,recovered-hero',
+      catdexNumber: 3,
+      date: new Date().toISOString(),
+      x: 0,
+      y: 0,
+      rotation: 0,
+      scale: 1,
+      zIndex: 1,
+    };
+    useScrapbookStore.setState({
+      items: [existingCat],
+      isLoading: false,
+      language: 'zh',
+      targetDate: null,
+    });
+    window.localStorage.setItem('found-cat-create-preview-draft', JSON.stringify({
+      previewImage: existingCat.imageData,
+      previewHeroImageData: existingCat.heroImageData,
+    }));
+
+    render(
+      <MemoryRouter initialEntries={['/create']}>
+        <RouteDisplay />
+        <Routes>
+          <Route path="/create" element={<Create />} />
+          <Route path="/map" element={<div>Map page</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByAltText('預覽貓卡')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /存入我的貓卡/ }));
+    await userEvent.click(await screen.findByRole('button', { name: '確認測試地點' }));
+
+    expect(useScrapbookStore.getState().items).toHaveLength(1);
+    expect(useScrapbookStore.getState().items[0].id).toBe('existing-cat-id');
+    expect(await screen.findByTestId('current-route')).toHaveTextContent('/map?cat=existing-cat-id&publishHint=1');
+  });
+
   it('uses the shared moodboard brand header with logo and close navigation', () => {
     render(
       <MemoryRouter>

@@ -338,6 +338,19 @@ export default function Create() {
     if (!previewImage) return;
     setIsProcessing(true);
     try {
+      const existingItem = items.find((item) => item.imageData === previewImage);
+      if (existingItem) {
+        clearCreatePreviewDraft();
+        if (existingItem.location) {
+          setTargetDate(null);
+          navigate(`/map?cat=${encodeURIComponent(existingItem.id)}&publishHint=1`);
+          return;
+        }
+
+        beginPostCreateFlow(existingItem.id);
+        return;
+      }
+
       const createdItem = await addItem(buildStickerDraft({
         imageData: previewImage,
         heroImageData: previewHeroImageData ?? undefined,
