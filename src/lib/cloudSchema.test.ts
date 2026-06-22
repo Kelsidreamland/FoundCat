@@ -31,4 +31,16 @@ describe('FOUND CAT Supabase schema', () => {
     const publicViewSql = schemaSql.split(/create\s+or\s+replace\s+view\s+public\.public_cat_cards/i)[1] ?? '';
     expect(publicViewSql).toMatch(/\bpublic_number\b/i);
   });
+
+  it('keeps launch rescue uploads in a temporary public table instead of opening anonymous writes to private backups', () => {
+    expect(schemaSql).toMatch(/create\s+table\s+if\s+not\s+exists\s+public\.launch_rescue_cat_cards/i);
+    expect(schemaSql).toMatch(/alter\s+table\s+public\.launch_rescue_cat_cards\s+enable\s+row\s+level\s+security/i);
+    expect(schemaSql).toMatch(/on\s+public\.launch_rescue_cat_cards\s+for\s+insert\s+to\s+anon,\s*authenticated/i);
+    expect(schemaSql).toMatch(/grant\s+insert\s+on\s+public\.launch_rescue_cat_cards\s+to\s+anon,\s*authenticated/i);
+    expect(schemaSql).not.toMatch(/grant\s+insert\s+on\s+public\.cat_cards\s+to\s+anon/i);
+
+    const publicViewSql = schemaSql.split(/create\s+or\s+replace\s+view\s+public\.public_cat_cards/i)[1] ?? '';
+    expect(publicViewSql).toMatch(/union\s+all/i);
+    expect(publicViewSql).toMatch(/from\s+public\.launch_rescue_cat_cards/i);
+  });
 });

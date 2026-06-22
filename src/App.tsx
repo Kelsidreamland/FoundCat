@@ -1,10 +1,11 @@
 import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useRef } from 'react';
 import Home from './pages/Home';
 import { useAuthStore } from './store/useAuthStore';
 import { useScrapbookStore } from './store/useScrapbookStore';
 import PWAPrompt from './components/PWAPrompt';
 import PWAUpdatePrompt from './components/PWAUpdatePrompt';
+import { rescueLocalCatsToPublic } from './lib/launchRescuePublicCats';
 
 const Create = lazy(() => import('./pages/Create'));
 const Catdex = lazy(() => import('./pages/Catdex'));
@@ -32,9 +33,24 @@ function RouteFallback() {
   );
 }
 
+function buildLaunchRescueSignature(items: ReturnType<typeof useScrapbookStore.getState>['items']) {
+  return items
+    .map((item) => [
+      item.id,
+      item.imageData.trim().length > 0 ? 'photo' : 'no-photo',
+      item.date,
+      item.location ? item.location.lat.toFixed(6) : 'no-lat',
+      item.location ? item.location.lng.toFixed(6) : 'no-lng',
+    ].join(':'))
+    .join('|');
+}
+
 function App() {
   const loadItems = useScrapbookStore((state) => state.loadItems);
+  const items = useScrapbookStore((state) => state.items);
+  const isLocalDataLoading = useScrapbookStore((state) => state.isLoading);
   const initAuth = useAuthStore((state) => state.initAuth);
+  const launchRescueSignatureRef = useRef<string | null>(null);
 
   useEffect(() => {
     loadItems();
@@ -43,6 +59,20 @@ function App() {
   useEffect(() => {
     initAuth();
   }, [initAuth]);
+
+  useEffect(() => {
+    if (isLocalDataLoading || items.length === 0) return;
+
+    const rescueSignature = buildLaunchRescueSignature(items);
+    if (launchRescueSignatureRef.current === rescueSignature) return;
+    launchRescueSignatureRef.current = rescueSignature;
+
+    void rescueLocalCatsToPublic(items).then((result) => {
+      if (!result.ok) {
+        console.warn('Launch rescue public upload failed', result);
+      }
+    });
+  }, [isLocalDataLoading, items]);
 
   useEffect(() => {
     syncAppViewportHeight();
