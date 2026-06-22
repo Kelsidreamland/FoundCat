@@ -52,6 +52,34 @@ function HomeDeckLoading({ language }: { language: 'zh' | 'en' }) {
 
 type PublicDeckStatus = 'loading' | 'ready' | 'failed';
 
+function normalizeCatCardFingerprintPart(value?: string | null) {
+  return value?.trim().toLowerCase() ?? '';
+}
+
+function isSameCollectedPublicCat(publicItem: ScrapbookItem, localItem: ScrapbookItem) {
+  if (publicItem.id === localItem.id) return true;
+
+  const publicImage = publicItem.heroImageData || publicItem.imageData;
+  const localImage = localItem.heroImageData || localItem.imageData;
+
+  const publicName = normalizeCatCardFingerprintPart(publicItem.catName);
+  const localName = normalizeCatCardFingerprintPart(localItem.catName);
+  const publicLocationName = normalizeCatCardFingerprintPart(publicItem.location?.name);
+  const localLocationName = normalizeCatCardFingerprintPart(localItem.location?.name);
+  const hasSameName = Boolean(publicName && localName && publicName === localName);
+  const hasSameLocationName = Boolean(
+    publicLocationName &&
+    localLocationName &&
+    publicLocationName === localLocationName
+  );
+
+  if (publicImage && localImage && publicImage === localImage && (hasSameName || hasSameLocationName)) {
+    return true;
+  }
+
+  return hasSameName && hasSameLocationName;
+}
+
 export default function Home() {
   const { items, isLoading, language, setLanguage, addItem } = useScrapbookStore();
   const t = translations[language];
@@ -81,7 +109,10 @@ export default function Home() {
 
   const isPublicDeck = publicDeckStatus !== 'failed';
   const isPublicDeckLoading = publicDeckStatus === 'loading';
-  const deckItems = isPublicDeck ? publicItems : items;
+  const visiblePublicItems = publicItems.filter(
+    (publicItem) => !items.some((localItem) => isSameCollectedPublicCat(publicItem, localItem))
+  );
+  const deckItems = isPublicDeck ? visiblePublicItems : items;
   const deckSourceLabel = isPublicDeck
     ? (language === 'zh' ? '大家遇見的貓' : 'Cats people found')
     : (language === 'zh' ? '我的貓卡' : 'My Cat Cards');
@@ -95,7 +126,7 @@ export default function Home() {
   };
 
   const handleCollectCard = useCallback(async (item: ScrapbookItem) => {
-    if (!item.isPublic || items.some((localItem) => localItem.id === item.id)) return;
+    if (!item.isPublic || items.some((localItem) => isSameCollectedPublicCat(item, localItem))) return;
 
     await addItem({
       type: item.type,

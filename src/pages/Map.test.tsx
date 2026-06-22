@@ -304,6 +304,37 @@ describe('Map page', () => {
     expect(await screen.findByRole('button', { name: '曼谷街角咖啡' })).toBeInTheDocument();
   });
 
+  it('does not show a central world-map empty prompt while public cats are still loading', async () => {
+    let resolvePublicCats!: (value: Awaited<ReturnType<typeof loadPublicCatCards>>) => void;
+    vi.mocked(loadPublicCatCards).mockReturnValue(new Promise((resolve) => {
+      resolvePublicCats = resolve;
+    }));
+
+    render(
+      <MemoryRouter>
+        <Map />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('button', { name: '全世界地圖' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByText('正在載入全世界貓咪地圖...')).not.toBeInTheDocument();
+    expect(screen.queryByText('全世界地圖等第一批貓點')).not.toBeInTheDocument();
+
+    resolvePublicCats({
+      ok: true,
+      items: [
+        makeItem({
+          id: 'public-cat-late',
+          catName: '晚點出現的貓',
+          location: { lat: 13.7563, lng: 100.5018, name: '晚點咖啡店' },
+          isPublic: true,
+        }),
+      ],
+    });
+
+    expect(await screen.findByRole('button', { name: '晚點咖啡店' })).toBeInTheDocument();
+  });
+
   it('opens the world cat map directly from the public map query', async () => {
     render(
       <MemoryRouter initialEntries={['/map?mode=public']}>

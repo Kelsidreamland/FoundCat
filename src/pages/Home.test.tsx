@@ -313,7 +313,7 @@ describe('Home page', () => {
 
     await screen.findByText('首爾店長貓');
     vi.useFakeTimers();
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
 
     expect(screen.getByRole('status')).toHaveTextContent('已收藏到我的貓卡');
 
@@ -328,6 +328,53 @@ describe('Home page', () => {
         location: expect.objectContaining({ name: '首爾咖啡店' }),
       }),
     ]);
+  });
+
+  it('hides public cat cards that were already collected into my local cat cards', async () => {
+    vi.mocked(loadPublicCatCards).mockResolvedValue({
+      ok: true,
+      items: [
+        makeItem({
+          id: 'public-cat-88',
+          catdexNumber: 88,
+          catName: '首爾店長貓',
+          imageData: 'data:image/png;base64,seoul-cat',
+          location: { lat: 37.5665, lng: 126.978, name: '首爾咖啡店' },
+          isPublic: true,
+        }),
+        makeItem({
+          id: 'public-cat-89',
+          catdexNumber: 89,
+          catName: '曼谷小橘',
+          imageData: 'data:image/png;base64,bangkok-cat',
+          location: { lat: 13.7563, lng: 100.5018, name: '曼谷街角咖啡' },
+          isPublic: true,
+        }),
+      ],
+    });
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          id: 'local-copy-of-public-cat-88',
+          catdexNumber: 1,
+          catName: '首爾店長貓',
+          imageData: 'data:image/png;base64,seoul-cat',
+          location: { lat: 37.5665, lng: 126.978, name: '首爾咖啡店' },
+          isPublic: false,
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('曼谷小橘')).toBeInTheDocument();
+    expect(screen.queryByText('首爾店長貓')).not.toBeInTheDocument();
   });
 
   it('moves the cat card deck closer to the visual center without over-reserving bottom space', () => {

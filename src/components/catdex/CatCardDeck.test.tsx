@@ -151,10 +151,10 @@ describe('CatCardDeck', () => {
       />
     );
 
-    expect(screen.getByText('右滑收藏，左滑看下一隻')).toBeInTheDocument();
+    expect(screen.getByText('左滑收藏，右滑看下一隻')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '關閉左右滑動提示' }));
 
-    expect(screen.queryByText('右滑收藏，左滑看下一隻')).not.toBeInTheDocument();
+    expect(screen.queryByText('左滑收藏，右滑看下一隻')).not.toBeInTheDocument();
     expect(window.localStorage.getItem('corner-cat-swipe-hint-seen')).toBe('true');
   });
 
@@ -178,7 +178,7 @@ describe('CatCardDeck', () => {
     );
 
     expect(screen.getByText('No.001')).toBeInTheDocument();
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
     act(() => {
       vi.advanceTimersByTime(260);
@@ -206,9 +206,9 @@ describe('CatCardDeck', () => {
       />
     );
 
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
 
-    expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-swipe-exit', 'right');
+    expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-swipe-exit', 'left');
     expect(screen.getByText('No.001')).toBeInTheDocument();
 
     act(() => {
@@ -218,7 +218,7 @@ describe('CatCardDeck', () => {
     expect(screen.getByText('No.002')).toBeInTheDocument();
   });
 
-  it('collects the active card on a right swipe and then advances', () => {
+  it('collects the active card on a left swipe and then advances', () => {
     vi.useFakeTimers();
     const onCollectCard = vi.fn();
 
@@ -241,11 +241,11 @@ describe('CatCardDeck', () => {
       />
     );
 
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
 
     expect(onCollectCard).toHaveBeenCalledWith(expect.objectContaining({ id: 'cat-1' }));
     expect(screen.getByRole('status')).toHaveTextContent('已收藏到我的貓卡');
-    expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-swipe-exit', 'right');
+    expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-swipe-exit', 'left');
 
     act(() => {
       vi.advanceTimersByTime(260);
@@ -286,8 +286,8 @@ describe('CatCardDeck', () => {
 
     const activeCard = screen.getByTestId('active-cat-card');
     act(() => {
-      activeCard.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
-      activeCard.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      activeCard.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+      activeCard.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
     });
 
     expect(onCollectCard).toHaveBeenCalledTimes(1);
@@ -344,7 +344,7 @@ describe('CatCardDeck', () => {
     expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-swipe-exit', 'none');
   });
 
-  it('skips without collecting on a left swipe and then advances', () => {
+  it('skips without collecting on a right swipe and then advances', () => {
     vi.useFakeTimers();
     const onCollectCard = vi.fn();
 
@@ -367,10 +367,10 @@ describe('CatCardDeck', () => {
       />
     );
 
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
     expect(onCollectCard).not.toHaveBeenCalled();
-    expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-swipe-exit', 'left');
+    expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-swipe-exit', 'right');
 
     act(() => {
       vi.advanceTimersByTime(260);

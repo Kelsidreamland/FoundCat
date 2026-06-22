@@ -113,7 +113,7 @@ export default function CatCardDeck({
     if (cards.length <= 1 || swipeDirection || isSwipeAnimatingRef.current) return;
     isSwipeAnimatingRef.current = true;
     if (showSwipeHint) dismissSwipeHint();
-    if (direction === 1 && active) {
+    if (direction === -1 && active) {
       onCollectCard?.(active);
       setCollectFeedback(labels.collectFeedback ?? (language === 'zh' ? '已收藏到我的貓卡' : 'Saved to My Cat Cards'));
       if (collectFeedbackTimerRef.current) clearTimeout(collectFeedbackTimerRef.current);
@@ -129,11 +129,11 @@ export default function CatCardDeck({
   };
 
   const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const shouldGoNext = info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -SWIPE_VELOCITY_THRESHOLD;
-    const shouldCollect = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > SWIPE_VELOCITY_THRESHOLD;
+    const shouldCollect = info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -SWIPE_VELOCITY_THRESHOLD;
+    const shouldGoNext = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > SWIPE_VELOCITY_THRESHOLD;
 
-    if (shouldGoNext) move(-1);
-    if (shouldCollect) move(1);
+    if (shouldCollect) move(-1);
+    if (shouldGoNext) move(1);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
@@ -178,7 +178,7 @@ export default function CatCardDeck({
       <div className="relative mt-2 h-[min(390px,calc(100dvh-240px))] min-h-[320px]">
         {showSwipeHint ? (
           <div className="absolute right-4 top-4 z-30 flex items-center gap-2 rounded-full border-2 border-[#1d1714] bg-[#fff2cf]/95 px-3 py-2 text-[11px] font-black text-[#1d1714] shadow-[3px_3px_0_rgba(29,23,20,0.72)] backdrop-blur-sm">
-            <span>{language === 'zh' ? '右滑收藏，左滑看下一隻' : 'Swipe right to collect, left for next'}</span>
+            <span>{language === 'zh' ? '左滑收藏，右滑看下一隻' : 'Swipe left to collect, right for next'}</span>
             <button
               type="button"
               onClick={dismissSwipeHint}

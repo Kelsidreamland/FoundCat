@@ -663,6 +663,9 @@ export default function Map() {
     ...selectedPersonalityLabels,
     ...selectedCareStatusLabels,
   ];
+  const shouldShowMapEmptyState = mapReady
+    && itemsWithLocation.length === 0
+    && !(isPublicMapMode && publicLoadStatus === 'loading');
 
   if (mapError) {
     return (
@@ -745,7 +748,7 @@ export default function Map() {
         </div>
       </div>
 
-      {mapReady && itemsWithLocation.length === 0 ? (
+      {shouldShowMapEmptyState ? (
         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
           <div className="mx-4 max-w-xs rounded-[24px] border-2 border-[#221915] bg-[#fffdf2]/92 p-6 text-center shadow-[8px_8px_0_rgba(47,95,179,0.22)] backdrop-blur-sm pointer-events-auto">
             <MapTreasureBrandMark className="mx-auto mb-3 h-32 w-36 object-contain" />
