@@ -1,5 +1,6 @@
 import type { CatCareStatusTag, CatPersonalityTag, ScrapbookItem } from '../store/useScrapbookStore';
 import { formatCatCardNumberForItem } from './catdexDeck';
+import { hasReadableLocationName } from './locationDisplay';
 
 export const SINGLE_CAT_SHARE_VERSION = 1;
 
@@ -131,7 +132,7 @@ export const buildGoogleMapsSearchUrl = ({
 }) => {
   const readablePlace = [name, address]
     .map((part) => part?.trim())
-    .filter(Boolean)
+    .filter((part): part is string => Boolean(part && hasReadableLocationName(part)))
     .join(' ');
   const query = encodeURIComponent(readablePlace || `${lat},${lng}`);
   return `https://www.google.com/maps/search/?api=1&query=${query}`;

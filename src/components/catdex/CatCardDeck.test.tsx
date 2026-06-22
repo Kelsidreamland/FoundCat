@@ -19,6 +19,7 @@ const makeItem = (overrides: Partial<ScrapbookItem>): ScrapbookItem => ({
   location: overrides.location,
   catName: overrides.catName,
   isPublic: overrides.isPublic,
+  collectedFromPublicId: overrides.collectedFromPublicId,
 });
 
 describe('CatCardDeck', () => {
@@ -82,6 +83,33 @@ describe('CatCardDeck', () => {
 
     expect(screen.getByText('W-001')).toBeInTheDocument();
     expect(screen.queryByText('No.004')).not.toBeInTheDocument();
+  });
+
+  it('keeps collected world cards on their public W-number instead of a private number', () => {
+    render(
+      <CatCardDeck
+        items={[
+          makeItem({
+            id: 'saved-public-cat-88',
+            catdexNumber: undefined,
+            publicNumber: 88,
+            collectedFromPublicId: 'public-cat-88',
+            location: { lat: 25, lng: 121, name: '首爾咖啡店' },
+          }),
+        ]}
+        language="zh"
+        labels={{
+          empty: '還沒有貓卡',
+          previous: '上一張',
+          next: '下一張',
+          shareCard: '分享這張卡與地址',
+        }}
+        onShareCard={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('W-088')).toBeInTheDocument();
+    expect(screen.queryByText('No.088')).not.toBeInTheDocument();
   });
 
   it('uses the custom cat name as the active card title when available', () => {
@@ -367,6 +395,55 @@ describe('CatCardDeck', () => {
 
     expect(screen.getByText('No.009')).toBeInTheDocument();
     expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-swipe-exit', 'none');
+  });
+
+  it('preserves the active card when the deck removes the card that was just collected', () => {
+    vi.useFakeTimers();
+    const { rerender } = render(
+      <CatCardDeck
+        items={[
+          makeItem({ id: 'cat-1', catdexNumber: 1 }),
+          makeItem({ id: 'cat-2', catdexNumber: 2 }),
+          makeItem({ id: 'cat-3', catdexNumber: 3 }),
+        ]}
+        language="zh"
+        labels={{
+          empty: '還沒有貓卡',
+          previous: '上一張',
+          next: '下一張',
+          shareCard: '分享這張卡與地址',
+        }}
+        onShareCard={vi.fn()}
+      />
+    );
+
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+
+    act(() => {
+      vi.advanceTimersByTime(260);
+    });
+
+    expect(screen.getByText('No.002')).toBeInTheDocument();
+
+    rerender(
+      <CatCardDeck
+        items={[
+          makeItem({ id: 'cat-2', catdexNumber: 2 }),
+          makeItem({ id: 'cat-3', catdexNumber: 3 }),
+        ]}
+        language="zh"
+        labels={{
+          empty: '還沒有貓卡',
+          previous: '上一張',
+          next: '下一張',
+          shareCard: '分享這張卡與地址',
+        }}
+        onShareCard={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('No.002')).toBeInTheDocument();
+    expect(screen.queryByText('No.003')).not.toBeInTheDocument();
   });
 
   it('skips without collecting on a right swipe and then advances', () => {

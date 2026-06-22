@@ -91,11 +91,13 @@ export default function Catdex() {
   const renderCollectionSection = ({
     title,
     eyebrow,
+    description,
     groups,
     isWorldSaved,
   }: {
     title: string;
     eyebrow: string;
+    description: string;
     groups: CatdexPlaceGroup[];
     isWorldSaved: boolean;
   }) => {
@@ -113,6 +115,9 @@ export default function Catdex() {
           >
             {title}
           </h2>
+          <p className="mt-1 text-sm font-bold leading-6 text-[#6d5f52]">
+            {description}
+          </p>
         </div>
 
         <div className="space-y-6">
@@ -172,6 +177,11 @@ export default function Catdex() {
                           {item.catName.trim()}
                         </p>
                       ) : null}
+                      {isWorldSaved ? (
+                        <p className="mt-2 text-center text-[11px] font-black text-[#2f5fb3]">
+                          {language === 'zh' ? '收藏自全世界地圖' : 'Saved from World Map'}
+                        </p>
+                      ) : null}
                       {item.location ? (
                         <p className="mt-1 truncate text-center text-[11px] font-bold text-[#76665a]">
                           {getReadableLocationName(item, language)}
@@ -225,12 +235,18 @@ export default function Catdex() {
             {renderCollectionSection({
               title: language === 'zh' ? '我拍到的貓' : 'Cats I Found',
               eyebrow: 'MY FOUND CATS',
+              description: language === 'zh'
+                ? '自己拍到、自己編號的貓咪圖鑑。'
+                : 'Cats you photographed yourself, with your own private numbers.',
               groups: selfFoundPlaceGroups,
               isWorldSaved: false,
             })}
             {renderCollectionSection({
               title: language === 'zh' ? '收藏的世界貓卡' : 'Saved World Cats',
               eyebrow: 'SAVED FROM WORLD MAP',
+              description: language === 'zh'
+                ? '從全世界地圖收藏回來，保留原本的 W 編號。'
+                : 'Cats saved from the World Map, keeping their original W-numbers.',
               groups: worldSavedPlaceGroups,
               isWorldSaved: true,
             })}

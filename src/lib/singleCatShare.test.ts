@@ -83,6 +83,16 @@ describe('single cat share helpers', () => {
     );
   });
 
+  it('does not use unreadable map links as the Google Maps search query', () => {
+    expect(buildGoogleMapsSearchUrl({
+      lat: 25.033,
+      lng: 121.565,
+      name: 'https://maps.app.goo.gl/abc123',
+    })).toBe(
+      'https://www.google.com/maps/search/?api=1&query=25.033%2C121.565'
+    );
+  });
+
   it('uses mystery copy when no share tags are present', () => {
     expect(getShareTagLabels({ personalityTags: [], careStatusTags: [] }, 'zh')).toEqual([CAT_MYSTERY_COPY.zh]);
     expect(getShareTagLabels({ personalityTags: [], careStatusTags: [] }, 'en')).toEqual([CAT_MYSTERY_COPY.en]);

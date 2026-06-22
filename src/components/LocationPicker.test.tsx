@@ -385,7 +385,7 @@ describe('LocationPicker', () => {
     });
   });
 
-  it('does not save an unexpanded Google Maps short link as a raw place name', async () => {
+  it('lets unexpanded Google Maps short links save an approximate cat spot without storing the raw URL', async () => {
     const onPicked = vi.fn();
 
     render(
@@ -403,8 +403,14 @@ describe('LocationPicker', () => {
 
     await waitFor(() => {
       expect(searchPlaces).not.toHaveBeenCalled();
-      expect(onPicked).not.toHaveBeenCalled();
-      expect(screen.getByText('這個連結讀不到地點名稱。請補上店名或地址，再按確認地點。')).toBeInTheDocument();
+      expect(onPicked).toHaveBeenCalledWith({
+        lat: 25.033,
+        lng: 121.565,
+        name: '貓咪出沒點',
+      });
+      expect(onPicked).not.toHaveBeenCalledWith(expect.objectContaining({
+        name: 'https://maps.app.goo.gl/abc123',
+      }));
     });
   });
 

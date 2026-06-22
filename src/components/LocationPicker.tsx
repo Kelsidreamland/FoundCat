@@ -375,7 +375,14 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
     if (hasUnresolvedUrlInput) {
       setSuggestions([]);
       setSearchStatus('idle');
-      setLinkInputError(true);
+      const fallbackCoordinate = getFallbackCoordinate();
+      setLinkInputError(false);
+      setMarkerAt(fallbackCoordinate.lat, fallbackCoordinate.lng);
+      onPicked({
+        lat: fallbackCoordinate.lat,
+        lng: fallbackCoordinate.lng,
+        name: defaultLocationName,
+      });
       return;
     }
 

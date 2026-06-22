@@ -36,6 +36,31 @@ describe('catdex deck helpers', () => {
     expect(cards.map((card) => card.id)).toEqual(['cat-2', 'cat-10', 'cat-new']);
   });
 
+  it('sorts public and collected world cards by their public W-number', () => {
+    const cards = sortCatCards([
+      makeItem({
+        id: 'public-cat-20',
+        catdexNumber: 2,
+        publicNumber: 20,
+        isPublic: true,
+      }),
+      makeItem({
+        id: 'public-cat-3',
+        catdexNumber: 99,
+        publicNumber: 3,
+        isPublic: true,
+      }),
+      makeItem({
+        id: 'saved-public-cat-8',
+        catdexNumber: undefined,
+        publicNumber: 8,
+        collectedFromPublicId: 'public-cat-8',
+      }),
+    ]);
+
+    expect(cards.map((card) => card.id)).toEqual(['public-cat-3', 'saved-public-cat-8', 'public-cat-20']);
+  });
+
   it('returns circular previous and next deck neighbors', () => {
     const cards = [
       makeItem({ id: 'cat-1', catdexNumber: 1 }),

@@ -162,10 +162,13 @@ describe('Catdex page', () => {
 
     expect(screen.getByRole('heading', { name: '我拍到的貓' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '收藏的世界貓卡' })).toBeInTheDocument();
+    expect(screen.getByText('自己拍到、自己編號的貓咪圖鑑。')).toBeInTheDocument();
+    expect(screen.getByText('從全世界地圖收藏回來，保留原本的 W 編號。')).toBeInTheDocument();
     expect(screen.getByText('我拍到的小虎')).toBeInTheDocument();
     expect(screen.getByText('收藏的首爾店長')).toBeInTheDocument();
     expect(screen.getByText('FOUND CAT 001')).toBeInTheDocument();
     expect(screen.getByText('W-088')).toBeInTheDocument();
+    expect(screen.getByText('收藏自全世界地圖')).toBeInTheDocument();
     expect(screen.queryByText('FOUND CAT 088')).not.toBeInTheDocument();
   });
 

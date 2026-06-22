@@ -399,7 +399,7 @@ describe('Map page', () => {
     expect(screen.getByText('巷口咖啡店')).toBeInTheDocument();
     expect(screen.queryByText('台北市信義區')).not.toBeInTheDocument();
     expect(screen.getByText('虎斑貓 · 橘虎斑')).toBeInTheDocument();
-    expect(screen.getByText('2026年5月11日')).toBeInTheDocument();
+    expect(screen.queryByText('2026年5月11日')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('幫這張貓咪圖鑑卡片取名字')).not.toBeInTheDocument();
     expect(screen.getByTestId('map-cat-detail-sheet')).toHaveStyle({
       maxHeight: 'min(calc(100dvh - 6.75rem - env(safe-area-inset-bottom)), 620px)',
@@ -555,6 +555,7 @@ describe('Map page', () => {
     await user.click(await screen.findByRole('button', { name: '巷口咖啡店' }));
 
     expect(screen.queryByText('25.03300, 121.56500')).not.toBeInTheDocument();
+    expect(screen.getByText('出發去找這隻貓')).toBeInTheDocument();
     expect(await screen.findByRole('link', { name: '在 Google Maps 打開' })).toHaveAttribute(
       'href',
       buildGoogleMapsSearchUrl({
@@ -564,6 +565,37 @@ describe('Map page', () => {
         address: '台北市信義區',
       })
     );
+  });
+
+  it('shows a readable find-cat CTA instead of an unreadable map-link location name', async () => {
+    const user = userEvent.setup();
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          id: 'cat-short-link',
+          catdexNumber: 31,
+          catName: undefined,
+          location: {
+            lat: 25.033,
+            lng: 121.565,
+            name: 'https://maps.app.goo.gl/abc123',
+          },
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    await user.click(await screen.findByRole('button', { name: '去找這隻貓' }));
+
+    expect(await screen.findByRole('heading', { name: '去找這隻貓' })).toBeInTheDocument();
+    expect(screen.queryByText('https://maps.app.goo.gl/abc123')).not.toBeInTheDocument();
   });
 
   it('updates a mapped cat location from the map detail card', async () => {

@@ -68,6 +68,7 @@ export default function CatCardDeck({
   const swipeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const collectFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSwipeAnimatingRef = useRef(false);
+  const activeIdRef = useRef<string | null>(null);
   const { previous, active, next } = getDeckNeighbors(cards, activeIndex);
   const formatter = dateFormatter(language);
   const hasMultipleCards = cards.length > 1;
@@ -86,10 +87,19 @@ export default function CatCardDeck({
       swipeTimerRef.current = null;
     }
 
+    const previousActiveId = activeIdRef.current;
     isSwipeAnimatingRef.current = false;
     setSwipeDirection(null);
-    setActiveIndex(0);
-  }, [cardSourceSignature]);
+    setActiveIndex(() => {
+      if (!previousActiveId) return 0;
+      const nextActiveIndex = cards.findIndex((card) => card.id === previousActiveId);
+      return nextActiveIndex >= 0 ? nextActiveIndex : 0;
+    });
+  }, [cardSourceSignature, cards]);
+
+  useEffect(() => {
+    activeIdRef.current = active?.id ?? null;
+  }, [active?.id]);
 
   useEffect(() => {
     setActiveIndex((current) => {

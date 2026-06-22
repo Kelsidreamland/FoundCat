@@ -8,13 +8,13 @@ import {
   type ScrapbookItem,
   useScrapbookStore,
 } from '../store/useScrapbookStore';
-import { formatDate, translations } from '../translations';
-import { ArrowLeft, ArrowRight, CalendarDays, Check, ExternalLink, MapPin, Maximize2, Navigation, PencilLine, Plus, Share2, X } from 'lucide-react';
+import { translations } from '../translations';
+import { ArrowLeft, ArrowRight, Check, ExternalLink, MapPin, Maximize2, Navigation, PencilLine, Plus, Share2, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CAT_BREEDS } from '../data/catBreeds';
 import { CAT_COLORS } from '../data/catColors';
 import { formatCatCardNumberForItem } from '../lib/catdexDeck';
-import { getReadableLocationName } from '../lib/locationDisplay';
+import { getFindCatCta, getReadableLocationName, hasReadableLocationName } from '../lib/locationDisplay';
 import { MapTreasureBrandMark } from '../components/brand/BrandMarks';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import CloudBackupPrompt from '../components/cloud/CloudBackupPrompt';
@@ -414,11 +414,12 @@ export default function Map() {
 
       const markerElement = document.createElement('button');
       const catCount = group.items.length;
+      const groupLocationName = getReadableLocationName(primaryItem, language);
       const markerLabel = catCount > 1
         ? (language === 'zh'
-            ? `${group.location.name || t.map}，${catCount} 隻貓`
-            : `${group.location.name || t.map}, ${catCount} cats`)
-        : (group.location.name || t.map);
+            ? `${groupLocationName}，${catCount} 隻貓`
+            : `${groupLocationName}, ${catCount} cats`)
+        : groupLocationName;
       markerElement.type = 'button';
       markerElement.setAttribute('aria-label', markerLabel);
       markerElement.style.position = 'relative';
@@ -548,13 +549,13 @@ export default function Map() {
 
   const selectedBreedLabel = getBreedLabel(selectedItem?.catBreed);
   const selectedColorLabel = getColorLabel(selectedItem?.catColor);
-  const selectedDateLabel = selectedItem
-    ? formatDate(new Date(selectedItem.date), language, { year: 'numeric', month: 'long', day: 'numeric' })
-    : null;
   const selectedCardNumber = selectedItem ? formatCatCardNumberForItem(selectedItem) : null;
   const selectedImage = selectedItem?.heroImageData || selectedItem?.imageData;
+  const selectedLocationDisplayName = selectedItem ? getReadableLocationName(selectedItem, language) : '';
+  const selectedFindCatCta = getFindCatCta(language);
+  const shouldShowSelectedFindCatCta = Boolean(selectedItem?.location && hasReadableLocationName(selectedItem.location.name));
   const selectedDisplayName = selectedItem
-    ? selectedItem.catName?.trim() || getReadableLocationName(selectedItem, language)
+    ? selectedItem.catName?.trim() || selectedLocationDisplayName
     : '';
   const selectedGoogleMapsUrl = selectedItem?.location
     ? buildGoogleMapsSearchUrl({
@@ -834,12 +835,11 @@ export default function Map() {
                   ) : null}
                   <h2 className="mt-1 truncate text-lg font-black text-[#221915]">{selectedDisplayName}</h2>
                   {selectedItem.catName ? (
-                    <p className="mt-1 truncate text-xs font-black text-[#221915]/75">{getReadableLocationName(selectedItem, language)}</p>
+                    <p className="mt-1 truncate text-xs font-black text-[#221915]/75">{selectedLocationDisplayName}</p>
                   ) : null}
-                  {selectedDateLabel ? (
-                    <p className="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-cat-text-tertiary">
-                      <CalendarDays size={12} className="shrink-0 text-[#2f5fb3]" />
-                      <span>{selectedDateLabel}</span>
+                  {shouldShowSelectedFindCatCta ? (
+                    <p className="mt-1 text-xs font-black text-[#2f5fb3]">
+                      {selectedFindCatCta}
                     </p>
                   ) : null}
                 </div>

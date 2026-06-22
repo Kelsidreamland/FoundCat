@@ -1,9 +1,13 @@
 import type { ScrapbookItem } from '../store/useScrapbookStore';
 
-export const sortCatCards = <T extends Pick<ScrapbookItem, 'catdexNumber' | 'date'>>(items: T[]) => {
+export const sortCatCards = <T extends Pick<ScrapbookItem, 'catdexNumber' | 'publicNumber' | 'isPublic' | 'collectedFromPublicId' | 'date'>>(items: T[]) => {
   return [...items].sort((a, b) => {
-    const aNumber = a.catdexNumber ?? Number.POSITIVE_INFINITY;
-    const bNumber = b.catdexNumber ?? Number.POSITIVE_INFINITY;
+    const aNumber = (a.isPublic || a.collectedFromPublicId)
+      ? a.publicNumber ?? Number.POSITIVE_INFINITY
+      : a.catdexNumber ?? Number.POSITIVE_INFINITY;
+    const bNumber = (b.isPublic || b.collectedFromPublicId)
+      ? b.publicNumber ?? Number.POSITIVE_INFINITY
+      : b.catdexNumber ?? Number.POSITIVE_INFINITY;
     if (aNumber !== bNumber) return aNumber - bNumber;
     return new Date(a.date).getTime() - new Date(b.date).getTime();
   });
