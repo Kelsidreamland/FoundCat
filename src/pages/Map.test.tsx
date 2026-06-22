@@ -272,8 +272,7 @@ describe('Map page', () => {
     expect(screen.getByRole('img', { name: '轉角遇到貓 FOUND CAT Logo' })).toBeInTheDocument();
   });
 
-  it('guides users from an unconfigured world map back to cloud backup setup', async () => {
-    const user = userEvent.setup();
+  it('shows an unconfigured world map as a non-blocking top status', async () => {
     vi.mocked(loadPublicCatCards).mockResolvedValue({ ok: false, reason: 'cloud_not_configured' });
 
     useScrapbookStore.setState({
@@ -288,8 +287,8 @@ describe('Map page', () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('全世界地圖準備中')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '備份我的貓咪地圖' })).toBeInTheDocument();
+    expect(await screen.findByTestId('public-map-status-chip')).toHaveTextContent('全世界地圖準備中');
+    expect(screen.queryByRole('button', { name: '備份我的貓咪地圖' })).not.toBeInTheDocument();
   });
 
   it('opens the world cat map by default', async () => {
@@ -317,7 +316,7 @@ describe('Map page', () => {
     );
 
     expect(await screen.findByRole('button', { name: '全世界地圖' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.queryByText('正在載入全世界貓咪地圖...')).not.toBeInTheDocument();
+    expect(screen.getByTestId('public-map-status-chip')).toHaveTextContent('正在載入全世界貓咪地圖...');
     expect(screen.queryByText('全世界地圖等第一批貓點')).not.toBeInTheDocument();
 
     resolvePublicCats({
@@ -333,6 +332,28 @@ describe('Map page', () => {
     });
 
     expect(await screen.findByRole('button', { name: '晚點咖啡店' })).toBeInTheDocument();
+  });
+
+  it('keeps the public map empty state as a non-blocking top status instead of a central dialog', async () => {
+    vi.mocked(loadPublicCatCards).mockResolvedValue({
+      ok: true,
+      items: [],
+    });
+    useScrapbookStore.setState({
+      items: [],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/map?mode=public']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByTestId('public-map-status-chip')).toHaveTextContent('全世界地圖等第一批貓點');
+    expect(screen.queryByRole('img', { name: 'AI Moodboard V1 L4 貓咪地圖圖標' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '回我的地圖公開第一隻貓' })).not.toBeInTheDocument();
   });
 
   it('opens the world cat map directly from the public map query', async () => {
@@ -717,8 +738,10 @@ describe('Map page', () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('全世界地圖暫時載入失敗')).toBeInTheDocument();
-    expect(screen.getByText('可能是網路或雲端暫時不穩，可以重新載入或先回到我的地圖。')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId('public-map-status-chip')).toHaveTextContent('全世界地圖暫時載入失敗');
+    });
+    expect(screen.queryByText('可能是網路或雲端暫時不穩，可以重新載入或先回到我的地圖。')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '重新載入全世界地圖' })).toBeInTheDocument();
   });
 
@@ -763,7 +786,6 @@ describe('Map page', () => {
   });
 
   it('guides users to publish the first shared cat when the world map is empty', async () => {
-    const user = userEvent.setup();
     vi.mocked(loadPublicCatCards).mockResolvedValue({
       ok: true,
       items: [],
@@ -775,16 +797,12 @@ describe('Map page', () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('全世界地圖等第一批貓點')).toBeInTheDocument();
-    expect(screen.getByText('把你遇到的貓公開出去，朋友就能在同一張地圖上看到。')).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: '回我的地圖公開第一隻貓' }));
-
-    expect(screen.getByRole('button', { name: '我的地圖' })).toHaveAttribute('aria-pressed', 'true');
+    expect(await screen.findByTestId('public-map-status-chip')).toHaveTextContent('全世界地圖等第一批貓點');
+    expect(screen.queryByText('把你遇到的貓公開出去，朋友就能在同一張地圖上看到。')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '全世界地圖' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('explains that the world map is preparing when cloud is not configured yet', async () => {
-    const user = userEvent.setup();
     vi.mocked(loadPublicCatCards).mockResolvedValue({
       ok: false,
       reason: 'cloud_not_configured',
@@ -796,13 +814,12 @@ describe('Map page', () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('全世界地圖準備中')).toBeInTheDocument();
-    expect(screen.getByText('雲端地圖還在準備。你仍然可以先把遇到的貓存在我的地圖，之後再公開到全世界地圖。')).toBeInTheDocument();
+    expect(await screen.findByTestId('public-map-status-chip')).toHaveTextContent('全世界地圖準備中');
+    expect(screen.queryByText('雲端地圖還在準備。你仍然可以先把遇到的貓存在我的地圖，之後再公開到全世界地圖。')).not.toBeInTheDocument();
     expect(screen.queryByText('全世界地圖暫時載入失敗')).not.toBeInTheDocument();
   });
 
   it('uses World Map copy in English public-map states', async () => {
-    const user = userEvent.setup();
     vi.mocked(loadPublicCatCards).mockResolvedValue({
       ok: false,
       reason: 'cloud_not_configured',
@@ -819,8 +836,8 @@ describe('Map page', () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('World Map is preparing')).toBeInTheDocument();
-    expect(screen.getByText('The cloud map is still preparing. You can save cats in My Map now and publish them later.')).toBeInTheDocument();
+    expect(await screen.findByTestId('public-map-status-chip')).toHaveTextContent('World Map is preparing');
+    expect(screen.queryByText('The cloud map is still preparing. You can save cats in My Map now and publish them later.')).not.toBeInTheDocument();
     expect(screen.queryByText(/Shared map/i)).not.toBeInTheDocument();
   });
 

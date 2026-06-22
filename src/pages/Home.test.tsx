@@ -221,7 +221,7 @@ describe('Home page', () => {
     );
 
     expect(await screen.findByText('首爾店長貓')).toBeInTheDocument();
-    expect(screen.getByText('大家遇見的貓')).toBeInTheDocument();
+    expect(screen.queryByText('大家遇見的貓')).not.toBeInTheDocument();
     expect(screen.queryByText('全世界貓卡')).not.toBeInTheDocument();
     expect(screen.getByText('首爾咖啡店')).toBeInTheDocument();
     expect(screen.queryByText('巷口咖啡店')).not.toBeInTheDocument();
@@ -251,7 +251,7 @@ describe('Home page', () => {
     );
 
     expect(await screen.findByText('巷口咖啡店')).toBeInTheDocument();
-    expect(screen.getByText('我的貓卡')).toBeInTheDocument();
+    expect(screen.queryByText('我的貓卡')).not.toBeInTheDocument();
     expect(loadPublicCatCards).toHaveBeenCalledTimes(1);
   });
 
@@ -279,7 +279,7 @@ describe('Home page', () => {
     );
 
     expect(await screen.findByText('全世界地圖等第一批貓點')).toBeInTheDocument();
-    expect(screen.getByText('大家遇見的貓')).toBeInTheDocument();
+    expect(screen.queryByText('大家遇見的貓')).not.toBeInTheDocument();
     expect(screen.queryByText('全世界貓卡')).not.toBeInTheDocument();
     expect(screen.queryByText('巷口咖啡店')).not.toBeInTheDocument();
   });
