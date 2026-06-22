@@ -14,6 +14,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { CAT_BREEDS } from '../data/catBreeds';
 import { CAT_COLORS } from '../data/catColors';
 import { formatCatCardNumberForItem } from '../lib/catdexDeck';
+import { getReadableLocationName } from '../lib/locationDisplay';
 import { MapTreasureBrandMark } from '../components/brand/BrandMarks';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import CloudBackupPrompt from '../components/cloud/CloudBackupPrompt';
@@ -552,7 +553,9 @@ export default function Map() {
     : null;
   const selectedCardNumber = selectedItem ? formatCatCardNumberForItem(selectedItem) : null;
   const selectedImage = selectedItem?.heroImageData || selectedItem?.imageData;
-  const selectedDisplayName = selectedItem?.catName?.trim() || selectedItem?.location?.name || '';
+  const selectedDisplayName = selectedItem
+    ? selectedItem.catName?.trim() || getReadableLocationName(selectedItem, language)
+    : '';
   const selectedGoogleMapsUrl = selectedItem?.location
     ? buildGoogleMapsSearchUrl({
         lat: selectedItem.location.lat,
@@ -831,7 +834,7 @@ export default function Map() {
                   ) : null}
                   <h2 className="mt-1 truncate text-lg font-black text-[#221915]">{selectedDisplayName}</h2>
                   {selectedItem.catName ? (
-                    <p className="mt-1 truncate text-xs font-black text-[#221915]/75">{selectedItem.location.name}</p>
+                    <p className="mt-1 truncate text-xs font-black text-[#221915]/75">{getReadableLocationName(selectedItem, language)}</p>
                   ) : null}
                   {selectedDateLabel ? (
                     <p className="mt-1 flex items-center gap-1.5 text-[11px] font-bold text-cat-text-tertiary">

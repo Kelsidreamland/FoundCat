@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { PanInfo } from 'framer-motion';
 import { formatCatCardNumberForItem, getDeckNeighbors, sortCatCards } from '../../lib/catdexDeck';
+import { getReadableLocationName } from '../../lib/locationDisplay';
 import type { ScrapbookItem } from '../../store/useScrapbookStore';
 
 interface CatCardDeckProps {
@@ -170,7 +171,7 @@ export default function CatCardDeck({
 
   const activeImage = active.heroImageData || active.imageData;
   const activeDate = formatter.format(new Date(active.date));
-  const activeLocation = active.location?.name ?? (language === 'zh' ? '未記錄地點' : 'No location');
+  const activeLocation = getReadableLocationName(active, language);
   const activeCatName = active.catName?.trim();
 
   return (

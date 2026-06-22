@@ -168,4 +168,29 @@ describe('Catdex page', () => {
     expect(screen.getByText('W-088')).toBeInTheDocument();
     expect(screen.queryByText('FOUND CAT 088')).not.toBeInTheDocument();
   });
+
+  it('shows a find-cat group instead of unreadable map URLs', () => {
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          id: 'cat-with-short-link',
+          catdexNumber: 5,
+          catName: '短連結貓',
+          location: { lat: 25.033, lng: 121.565, name: 'https://maps.app.goo.gl/abc123' },
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter>
+        <Catdex />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('heading', { name: '去找這隻貓' })).toBeInTheDocument();
+    expect(screen.getByText('短連結貓')).toBeInTheDocument();
+    expect(screen.queryByText('https://maps.app.goo.gl/abc123')).not.toBeInTheDocument();
+  });
 });

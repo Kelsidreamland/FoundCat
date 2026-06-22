@@ -9,6 +9,7 @@ import { CAT_BREEDS } from '../data/catBreeds';
 import { CAT_COLORS } from '../data/catColors';
 import LocationPicker from '../components/LocationPicker';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
+import { getFindCatCta, getReadableLocationName, hasReadableLocationName } from '../lib/locationDisplay';
 import { shareCatCardPoster } from '../lib/sharePoster';
 
 const PERSONALITY_LABELS: Record<CatPersonalityTag, { zh: string; en: string }> = {
@@ -83,6 +84,9 @@ export default function Detail() {
     .map((tag) => CARE_LABELS[tag]?.[language])
     .filter(Boolean);
   const hasCatDetails = personalityLabels.length > 0 || careLabels.length > 0 || Boolean(item.spotNote?.trim()) || Boolean(breedLabel || colorLabel);
+  const locationDisplayName = item.location ? getReadableLocationName(item, language) : '';
+  const findCatCta = getFindCatCta(language);
+  const shouldShowFindCatCta = item.location ? hasReadableLocationName(item.location.name) : false;
 
   return (
     <div className="absolute inset-0 flex flex-col bg-[#fff7e8] overflow-hidden">
@@ -184,13 +188,15 @@ export default function Detail() {
                   <MapPin size={18} className="text-cat-brand" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-cat-text-main font-bold text-sm">{item.location.name}</p>
-                  {item.location.address ? (
+                  <p className="text-cat-text-main font-bold text-sm">{locationDisplayName}</p>
+                  {item.location.address && hasReadableLocationName(item.location.address) ? (
                     <p className="text-cat-text-tertiary text-xs mt-1 break-words">{item.location.address}</p>
                   ) : null}
-                  <p className="mt-2 text-xs font-black text-[#2f5fb3]">
-                    {language === 'zh' ? '出發去找這隻貓' : 'Go find this cat'}
-                  </p>
+                  {shouldShowFindCatCta ? (
+                    <p className="mt-2 text-xs font-black text-[#2f5fb3]">
+                      {findCatCta}
+                    </p>
+                  ) : null}
                 </div>
               </div>
             </button>

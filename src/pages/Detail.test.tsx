@@ -120,4 +120,35 @@ describe('Detail page', () => {
     expect(screen.getByText('傍晚常在門口紙箱睡覺')).toBeInTheDocument();
     expect(screen.queryByText(/2026/)).not.toBeInTheDocument();
   });
+
+  it('does not show raw map URLs as the cat location', () => {
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          id: 'cat-1',
+          catName: '短連結貓',
+          location: {
+            lat: 25.033,
+            lng: 121.565,
+            name: 'https://maps.app.goo.gl/abc123',
+            address: 'https://maps.app.goo.gl/abc123',
+          },
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/detail/cat-1']}>
+        <Routes>
+          <Route path="/detail/:id" element={<Detail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('去找這隻貓')).toBeInTheDocument();
+    expect(screen.queryByText('出發去找這隻貓')).not.toBeInTheDocument();
+    expect(screen.queryByText('https://maps.app.goo.gl/abc123')).not.toBeInTheDocument();
+  });
 });

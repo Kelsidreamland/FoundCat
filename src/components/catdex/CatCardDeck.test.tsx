@@ -110,6 +110,31 @@ describe('CatCardDeck', () => {
     expect(screen.getByText('巷口咖啡店')).toBeInTheDocument();
   });
 
+  it('shows a find-cat CTA instead of unreadable map URLs on the card', () => {
+    render(
+      <CatCardDeck
+        items={[
+          makeItem({
+            id: 'cat-with-short-link',
+            catdexNumber: 29,
+            location: { lat: 25, lng: 121, name: 'https://maps.app.goo.gl/abc123' },
+          }),
+        ]}
+        language="zh"
+        labels={{
+          empty: '還沒有貓卡',
+          previous: '上一張',
+          next: '下一張',
+          shareCard: '分享這張卡與地址',
+        }}
+        onShareCard={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('去找這隻貓')).toBeInTheDocument();
+    expect(screen.queryByText('https://maps.app.goo.gl/abc123')).not.toBeInTheDocument();
+  });
+
   it('does not render the old bottom arrow controls or swipe caption', () => {
     render(
       <CatCardDeck

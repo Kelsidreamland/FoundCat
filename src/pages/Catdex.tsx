@@ -4,6 +4,7 @@ import CatActionNav from '../components/catdex/CatActionNav';
 import CatdexLabel from '../components/catdex/CatdexLabel';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import { formatPublicCatCardNumber } from '../lib/catdexDeck';
+import { getReadableLocationName, hasReadableLocationName } from '../lib/locationDisplay';
 import type { ScrapbookItem } from '../store/useScrapbookStore';
 import { useScrapbookStore } from '../store/useScrapbookStore';
 import { translations } from '../translations';
@@ -18,9 +19,11 @@ const paperTexture = {
   backgroundSize: '28px 28px, 100% 18px, 100% 100%, 100% 100%',
 };
 
-const getPlaceGroupName = (locationName: string | undefined, language: 'zh' | 'en') => (
-  locationName?.trim() || (language === 'zh' ? '未記錄地點' : 'No location yet')
-);
+const getPlaceGroupName = (location: ScrapbookItem['location'], language: 'zh' | 'en') => {
+  if (!location) return language === 'zh' ? '未記錄地點' : 'No location yet';
+  if (hasReadableLocationName(location.name)) return location.name.trim();
+  return language === 'zh' ? '去找這隻貓' : 'Go find this cat';
+};
 
 type CatdexPlaceGroup = {
   name: string;
@@ -45,7 +48,7 @@ const buildPlaceGroups = (items: ScrapbookItem[], language: 'zh' | 'en') => {
   const groups: CatdexPlaceGroup[] = [];
 
   items.forEach((item) => {
-    const groupName = getPlaceGroupName(item.location?.name, language);
+    const groupName = getPlaceGroupName(item.location, language);
     const existingGroup = groups.find((group) => group.name === groupName);
     if (existingGroup) {
       existingGroup.items.push(item);
@@ -169,9 +172,9 @@ export default function Catdex() {
                           {item.catName.trim()}
                         </p>
                       ) : null}
-                      {item.location?.name ? (
+                      {item.location ? (
                         <p className="mt-1 truncate text-center text-[11px] font-bold text-[#76665a]">
-                          {item.location.name}
+                          {getReadableLocationName(item, language)}
                         </p>
                       ) : null}
                     </Link>
