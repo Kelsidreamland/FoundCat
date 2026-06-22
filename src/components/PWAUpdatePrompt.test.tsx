@@ -81,9 +81,12 @@ describe('PWAUpdatePrompt', () => {
     expect(screen.getByTestId('version-check-chip')).toHaveClass('top-[calc(env(safe-area-inset-top)+3.05rem)]');
     expect(screen.getByTestId('version-check-chip')).toHaveClass('right-4');
     expect(screen.getByTestId('version-check-chip')).not.toHaveClass('bottom-[calc(env(safe-area-inset-bottom)+5.75rem)]');
+    const updateButton = screen.getByRole('button', { name: /版本/ });
+    expect(updateButton).toHaveTextContent(/^v/);
+    expect(updateButton).not.toHaveTextContent('·');
     const automaticChecks = registration.update.mock.calls.length;
 
-    await userEvent.click(screen.getByRole('button', { name: /版本/ }));
+    await userEvent.click(updateButton);
 
     await waitFor(() => {
       expect(registration.update.mock.calls.length).toBeGreaterThan(automaticChecks);
