@@ -1,15 +1,34 @@
 import { useCallback, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import type { CatCareStatusTag, CatPersonalityTag } from '../store/useScrapbookStore';
 import { useScrapbookStore } from '../store/useScrapbookStore';
 import { Undo2, Trash2, Share2, MapPin } from 'lucide-react';
-import { translations, formatDate } from '../translations';
-import { ScrapbookElement } from '../components/ScrapbookElement';
+import { translations } from '../translations';
 import { motion } from 'framer-motion';
 import { CAT_BREEDS } from '../data/catBreeds';
 import { CAT_COLORS } from '../data/catColors';
 import LocationPicker from '../components/LocationPicker';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import { shareCatCardPoster } from '../lib/sharePoster';
+
+const PERSONALITY_LABELS: Record<CatPersonalityTag, { zh: string; en: string }> = {
+  friendly: { zh: '親人', en: 'Friendly' },
+  shy: { zh: '怕人', en: 'Shy' },
+  indifferent: { zh: '不理人', en: 'Keeps distance' },
+  aloof: { zh: '高冷', en: 'Aloof' },
+  foodie: { zh: '貪吃', en: 'Foodie' },
+  clingy: { zh: '撒嬌', en: 'Cuddly' },
+  alert: { zh: '警戒中', en: 'Alert' },
+};
+
+const CARE_LABELS: Record<CatCareStatusTag, { zh: string; en: string }> = {
+  tnr: { zh: '已剪耳 / TNR', en: 'Ear-tipped / TNR' },
+  collar: { zh: '有項圈', en: 'Has collar' },
+  owned: { zh: '疑似有人養', en: 'Likely owned' },
+  fed: { zh: '固定餵養', en: 'Fed regularly' },
+  injured: { zh: '疑似受傷', en: 'May be injured' },
+  unknown: { zh: '不確定', en: 'Not sure' },
+};
 
 export default function Detail() {
   const { id } = useParams();
@@ -57,6 +76,13 @@ export default function Detail() {
       navigate('/');
     }
   };
+  const personalityLabels = (item.personalityTags ?? [])
+    .map((tag) => PERSONALITY_LABELS[tag]?.[language])
+    .filter(Boolean);
+  const careLabels = (item.careStatusTags ?? [])
+    .map((tag) => CARE_LABELS[tag]?.[language])
+    .filter(Boolean);
+  const hasCatDetails = personalityLabels.length > 0 || careLabels.length > 0 || Boolean(item.spotNote?.trim()) || Boolean(breedLabel || colorLabel);
 
   return (
     <div className="absolute inset-0 flex flex-col bg-[#fff7e8] overflow-hidden">
@@ -87,29 +113,48 @@ export default function Detail() {
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center p-8 pt-4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-3">
         <motion.div 
           initial={{ scale: 0.8, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          className="relative w-full max-w-sm aspect-square flex items-center justify-center"
+          className="relative mx-auto flex aspect-square w-full max-w-sm items-center justify-center overflow-hidden rounded-[26px] border-2 border-[#1d1714] bg-[#fffdf2] p-3 shadow-[8px_8px_0_rgba(29,23,20,0.88)]"
         >
-          <div style={{ transform: 'scale(1.5)', transformOrigin: 'center' }}>
-            <ScrapbookElement item={{...item, x: 0, y: 0, rotation: 0, scale: 1}} isPhysicsMode={true} />
-          </div>
+          <img
+            src={item.heroImageData || item.imageData}
+            alt={item.catName?.trim() || (language === 'zh' ? '貓咪照片' : 'Cat photo')}
+            className="h-full w-full rounded-[18px] object-cover"
+            draggable={false}
+          />
         </motion.div>
         
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="mt-8 w-full max-w-sm space-y-3 text-center"
+          className="mx-auto mt-5 w-full max-w-sm space-y-3 text-center"
         >
-          {(breedLabel || colorLabel) && (
+          {item.catName?.trim() ? (
+            <h1 className="text-2xl font-black leading-tight text-[#1d1714]">
+              {item.catName.trim()}
+            </h1>
+          ) : null}
+
+          {hasCatDetails ? (
             <div className="bg-cat-card rounded-2xl shadow-cat-whisper border border-cat-border-light p-4 text-left">
               <p className="text-cat-text-tertiary text-xs font-bold tracking-widest uppercase mb-3">
                 {t.detail}
               </p>
               <div className="flex flex-wrap gap-2">
+                {personalityLabels.map((label) => (
+                  <span key={`personality-${label}`} className="px-3 py-1.5 rounded-full bg-[#fff2cf] text-cat-text-main text-sm font-black border border-[#221915]/15">
+                    {label}
+                  </span>
+                ))}
+                {careLabels.map((label) => (
+                  <span key={`care-${label}`} className="px-3 py-1.5 rounded-full bg-[#eaf1ff] text-cat-text-main text-sm font-black border border-[#2f5fb3]/20">
+                    {label}
+                  </span>
+                ))}
                 {breedLabel ? (
                   <span className="px-3 py-1.5 rounded-full bg-cat-bg text-cat-text-main text-sm font-semibold border border-cat-border-light">
                     {t.catBreed}: {breedLabel}
@@ -121,8 +166,13 @@ export default function Detail() {
                   </span>
                 ) : null}
               </div>
+              {item.spotNote?.trim() ? (
+                <p className="mt-3 rounded-[16px] border border-[#221915]/10 bg-[#fffdf2] px-3 py-2 text-sm font-bold leading-6 text-[#4d4038]">
+                  {item.spotNote.trim()}
+                </p>
+              ) : null}
             </div>
-          )}
+          ) : null}
 
           {item.location ? (
             <button
@@ -138,6 +188,9 @@ export default function Detail() {
                   {item.location.address ? (
                     <p className="text-cat-text-tertiary text-xs mt-1 break-words">{item.location.address}</p>
                   ) : null}
+                  <p className="mt-2 text-xs font-black text-[#2f5fb3]">
+                    {language === 'zh' ? '出發去找這隻貓' : 'Go find this cat'}
+                  </p>
                 </div>
               </div>
             </button>
@@ -157,17 +210,6 @@ export default function Detail() {
               </div>
             </button>
           )}
-
-          <div className="inline-block px-6 py-3 bg-cat-card rounded-2xl shadow-cat-whisper border border-cat-border-light">
-            <p className="text-cat-text-secondary text-sm font-bold tracking-widest uppercase">
-              {formatDate(new Date(item.date), language, { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                weekday: 'long'
-              })}
-            </p>
-          </div>
 
         </motion.div>
       </div>

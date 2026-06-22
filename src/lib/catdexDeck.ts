@@ -36,9 +36,9 @@ export const formatPublicCatCardNumber = (publicNumber: number | undefined) => {
 };
 
 export const formatCatCardNumberForItem = (
-  item: Pick<ScrapbookItem, 'catdexNumber' | 'publicNumber' | 'isPublic'>
+  item: Pick<ScrapbookItem, 'catdexNumber' | 'publicNumber' | 'isPublic' | 'collectedFromPublicId'>
 ) => {
-  if (item.isPublic && item.publicNumber) return formatPublicCatCardNumber(item.publicNumber);
+  if ((item.isPublic || item.collectedFromPublicId) && item.publicNumber) return formatPublicCatCardNumber(item.publicNumber);
   return formatCatCardNumber(item.catdexNumber);
 };
 

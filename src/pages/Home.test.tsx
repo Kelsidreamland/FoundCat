@@ -39,7 +39,7 @@ const makeItem = (overrides: Partial<ScrapbookItem> = {}): ScrapbookItem => ({
   type: 'sticker',
   imageData: 'data:image/png;base64,cutout-cat',
   heroImageData: 'data:image/png;base64,base-photo',
-  catdexNumber: 28,
+  catdexNumber: 'catdexNumber' in overrides ? overrides.catdexNumber : 28,
   date: new Date().toISOString(),
   x: 0,
   y: 0,
@@ -291,6 +291,7 @@ describe('Home page', () => {
         makeItem({
           id: 'public-cat-88',
           catdexNumber: 88,
+          publicNumber: 88,
           catName: '首爾店長貓',
           location: { lat: 37.5665, lng: 126.978, name: '首爾咖啡店' },
           isPublic: true,
@@ -298,6 +299,7 @@ describe('Home page', () => {
         makeItem({
           id: 'public-cat-89',
           catdexNumber: 89,
+          publicNumber: 89,
           catName: '曼谷小橘',
           location: { lat: 13.7563, lng: 100.5018, name: '曼谷街角咖啡' },
           isPublic: true,
@@ -326,8 +328,60 @@ describe('Home page', () => {
         imageData: 'data:image/png;base64,cutout-cat',
         catName: '首爾店長貓',
         location: expect.objectContaining({ name: '首爾咖啡店' }),
+        publicNumber: 88,
+        collectedFromPublicId: 'public-cat-88',
+        catdexNumber: undefined,
       }),
     ]);
+  });
+
+  it('recognizes an already-collected world cat by its public source id', async () => {
+    vi.mocked(loadPublicCatCards).mockResolvedValue({
+      ok: true,
+      items: [
+        makeItem({
+          id: 'public-cat-88',
+          publicNumber: 88,
+          catName: '首爾店長貓',
+          imageData: 'data:image/png;base64:changed-public-image',
+          location: { lat: 37.5665, lng: 126.978, name: '首爾咖啡店' },
+          isPublic: true,
+        }),
+        makeItem({
+          id: 'public-cat-89',
+          publicNumber: 89,
+          catName: '曼谷小橘',
+          imageData: 'data:image/png;base64,bangkok-cat',
+          location: { lat: 13.7563, lng: 100.5018, name: '曼谷街角咖啡' },
+          isPublic: true,
+        }),
+      ],
+    });
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          id: 'local-copy-of-public-cat-88',
+          catdexNumber: undefined,
+          publicNumber: 88,
+          collectedFromPublicId: 'public-cat-88',
+          catName: '首爾店長貓',
+          imageData: 'data:image/png;base64:old-public-image',
+          location: { lat: 37.5665, lng: 126.978, name: '首爾咖啡店' },
+          isPublic: false,
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('曼谷小橘')).toBeInTheDocument();
+    expect(screen.queryByText('首爾店長貓')).not.toBeInTheDocument();
   });
 
   it('hides public cat cards that were already collected into my local cat cards', async () => {

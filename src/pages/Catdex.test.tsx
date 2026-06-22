@@ -9,7 +9,10 @@ const makeItem = (overrides: Partial<ScrapbookItem> = {}): ScrapbookItem => ({
   id: overrides.id ?? 'cat-29',
   type: 'sticker',
   imageData: overrides.imageData ?? 'data:image/png;base64,cat',
-  catdexNumber: overrides.catdexNumber ?? 29,
+  catdexNumber: 'catdexNumber' in overrides ? overrides.catdexNumber : 29,
+  publicNumber: overrides.publicNumber,
+  collectedFromPublicId: overrides.collectedFromPublicId,
+  collectedAt: overrides.collectedAt,
   date: overrides.date ?? '2026-05-11T08:00:00.000Z',
   x: 0,
   y: 0,
@@ -126,5 +129,43 @@ describe('Catdex page', () => {
     expect(screen.getByText('便利商店貓')).toBeInTheDocument();
     expect(screen.getByText('曼谷小橘')).toBeInTheDocument();
     expect(screen.getByText('還沒標地點的貓')).toBeInTheDocument();
+  });
+
+  it('separates self-found cat cards from world cats saved into my collection', () => {
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          id: 'local-cat-1',
+          catdexNumber: 1,
+          publicNumber: 18,
+          catName: '我拍到的小虎',
+          location: { lat: 25.033, lng: 121.565, name: '台北信義區' },
+        }),
+        makeItem({
+          id: 'saved-world-cat-88',
+          catdexNumber: undefined,
+          publicNumber: 88,
+          collectedFromPublicId: 'public-cat-88',
+          catName: '收藏的首爾店長',
+          location: { lat: 37.5665, lng: 126.978, name: '首爾咖啡店', address: 'Seoul, South Korea' },
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter>
+        <Catdex />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('heading', { name: '我拍到的貓' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '收藏的世界貓卡' })).toBeInTheDocument();
+    expect(screen.getByText('我拍到的小虎')).toBeInTheDocument();
+    expect(screen.getByText('收藏的首爾店長')).toBeInTheDocument();
+    expect(screen.getByText('FOUND CAT 001')).toBeInTheDocument();
+    expect(screen.getByText('W-088')).toBeInTheDocument();
+    expect(screen.queryByText('FOUND CAT 088')).not.toBeInTheDocument();
   });
 });

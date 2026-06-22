@@ -22,6 +22,7 @@ const makeItem = (overrides: Partial<ScrapbookItem>): ScrapbookItem => ({
   location: overrides.location,
   publicNumber: overrides.publicNumber,
   isPublic: overrides.isPublic,
+  collectedFromPublicId: overrides.collectedFromPublicId,
 });
 
 describe('catdex deck helpers', () => {
@@ -77,5 +78,10 @@ describe('catdex deck helpers', () => {
       publicNumber: 1,
       isPublic: true,
     }))).toBe('W-001');
+    expect(formatCatCardNumberForItem(makeItem({
+      catdexNumber: undefined,
+      publicNumber: 88,
+      collectedFromPublicId: 'public-cat-88',
+    }))).toBe('W-088');
   });
 });

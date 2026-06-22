@@ -34,6 +34,8 @@ export interface ScrapbookItem {
   spotNote?: string;
   careStatusTags?: CatCareStatusTag[];
   isPublic?: boolean;
+  collectedFromPublicId?: string;
+  collectedAt?: string;
 }
 
 interface ScrapbookState {
@@ -97,7 +99,9 @@ export const useScrapbookStore = create<ScrapbookState>((setStore, getStore) => 
     const newItem: ScrapbookItem = {
       ...item,
       id: uuidv4(),
-      catdexNumber: item.catdexNumber ?? getNextCatdexNumber(currentItems),
+      catdexNumber: item.collectedFromPublicId
+        ? item.catdexNumber
+        : item.catdexNumber ?? getNextCatdexNumber(currentItems),
       zIndex: maxZIndex + 1,
     };
     

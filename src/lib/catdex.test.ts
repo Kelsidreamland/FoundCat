@@ -38,6 +38,30 @@ describe('catdex helpers', () => {
     expect(normalized.map((item) => item.catdexNumber)).toEqual([7, 8, 9]);
   });
 
+  it('does not assign private numbers to world cats saved into my collection', () => {
+    const normalized = normalizeCatdexNumbers([
+      makeItem({ id: 'a', catdexNumber: 7 }),
+      makeItem({
+        id: 'world-cat-88',
+        catdexNumber: undefined,
+        publicNumber: 88,
+        collectedFromPublicId: 'public-cat-88',
+      }),
+      makeItem({ id: 'b' }),
+    ]);
+
+    expect(normalized).toEqual([
+      expect.objectContaining({ id: 'a', catdexNumber: 7 }),
+      expect.objectContaining({
+        id: 'world-cat-88',
+        catdexNumber: undefined,
+        publicNumber: 88,
+        collectedFromPublicId: 'public-cat-88',
+      }),
+      expect.objectContaining({ id: 'b', catdexNumber: 8 }),
+    ]);
+  });
+
   it('does not change existing catdex numbers during normalization', () => {
     const normalized = normalizeCatdexNumbers([
       makeItem({ id: 'a', catdexNumber: 12 }),

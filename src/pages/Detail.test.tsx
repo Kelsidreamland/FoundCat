@@ -29,6 +29,10 @@ const makeItem = (overrides: Partial<ScrapbookItem> = {}): ScrapbookItem => ({
   scale: 1,
   zIndex: 1,
   location: overrides.location,
+  catName: overrides.catName,
+  personalityTags: overrides.personalityTags,
+  spotNote: overrides.spotNote,
+  careStatusTags: overrides.careStatusTags,
 });
 
 describe('Detail page', () => {
@@ -75,5 +79,45 @@ describe('Detail page', () => {
 
     expect(screen.queryByRole('button', { name: '一鍵公開到全世界地圖' })).not.toBeInTheDocument();
     expect(screen.queryByText('貼文公開')).not.toBeInTheDocument();
+  });
+
+  it('prioritizes the cat location CTA, personality tags, and notes over the collection date', () => {
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          id: 'cat-1',
+          catName: '巷口店長',
+          location: {
+            lat: 25.033,
+            lng: 121.565,
+            name: '巷口咖啡店',
+            address: '台北市信義區貓咪路 1 號',
+          },
+          personalityTags: ['friendly', 'foodie'],
+          careStatusTags: ['fed'],
+          spotNote: '傍晚常在門口紙箱睡覺',
+          date: '2026-05-11T08:00:00.000Z',
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/detail/cat-1']}>
+        <Routes>
+          <Route path="/detail/:id" element={<Detail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('巷口店長')).toBeInTheDocument();
+    expect(screen.getByText('台北市信義區貓咪路 1 號')).toBeInTheDocument();
+    expect(screen.getByText('出發去找這隻貓')).toBeInTheDocument();
+    expect(screen.getByText('親人')).toBeInTheDocument();
+    expect(screen.getByText('貪吃')).toBeInTheDocument();
+    expect(screen.getByText('固定餵養')).toBeInTheDocument();
+    expect(screen.getByText('傍晚常在門口紙箱睡覺')).toBeInTheDocument();
+    expect(screen.queryByText(/2026/)).not.toBeInTheDocument();
   });
 });

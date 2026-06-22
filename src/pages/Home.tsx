@@ -57,6 +57,7 @@ function normalizeCatCardFingerprintPart(value?: string | null) {
 }
 
 function isSameCollectedPublicCat(publicItem: ScrapbookItem, localItem: ScrapbookItem) {
+  if (localItem.collectedFromPublicId && localItem.collectedFromPublicId === publicItem.id) return true;
   if (publicItem.id === localItem.id) return true;
 
   const publicImage = publicItem.heroImageData || publicItem.imageData;
@@ -135,6 +136,9 @@ export default function Home() {
       rotation: item.rotation,
       scale: item.scale,
       location: item.location,
+      publicNumber: item.publicNumber,
+      collectedFromPublicId: item.id,
+      collectedAt: new Date().toISOString(),
       catName: item.catName,
       catBreed: item.catBreed,
       catColor: item.catColor,

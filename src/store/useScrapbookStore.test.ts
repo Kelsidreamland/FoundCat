@@ -70,6 +70,51 @@ describe('useScrapbookStore catdex display name', () => {
     );
   });
 
+  it('does not assign a private catdex number to world cats saved into my collection', async () => {
+    useScrapbookStore.setState({
+      items: [
+        {
+          id: 'local-cat-1',
+          type: 'sticker',
+          imageData: 'data:image/png;base64,local-cat',
+          catdexNumber: 1,
+          date: '2026-05-15T08:00:00.000Z',
+          x: 0,
+          y: 0,
+          rotation: 0,
+          scale: 1,
+          zIndex: 1,
+        },
+      ],
+    });
+
+    const savedWorldCat = await useScrapbookStore.getState().addItem({
+      type: 'sticker',
+      imageData: 'data:image/png;base64,world-cat',
+      publicNumber: 88,
+      collectedFromPublicId: 'public-cat-88',
+      collectedAt: '2026-06-23T08:00:00.000Z',
+      date: '2026-06-01T08:00:00.000Z',
+      x: 0,
+      y: 0,
+      rotation: 0,
+      scale: 1,
+      isPublic: false,
+    });
+
+    expect(savedWorldCat.catdexNumber).toBeUndefined();
+    expect(savedWorldCat.publicNumber).toBe(88);
+    expect(useScrapbookStore.getState().items).toEqual([
+      expect.objectContaining({ id: 'local-cat-1', catdexNumber: 1 }),
+      expect.objectContaining({
+        imageData: 'data:image/png;base64,world-cat',
+        catdexNumber: undefined,
+        publicNumber: 88,
+        collectedFromPublicId: 'public-cat-88',
+      }),
+    ]);
+  });
+
   it('merges restored cloud cats without overwriting cats already on this device', async () => {
     useScrapbookStore.setState({
       items: [

@@ -5,8 +5,9 @@ export const formatCatdexNumber = (catdexNumber: number | undefined) => {
   return `FOUND CAT ${String(catdexNumber).padStart(3, '0')}`;
 };
 
-export const getNextCatdexNumber = (items: Pick<ScrapbookItem, 'catdexNumber'>[]) => {
+export const getNextCatdexNumber = (items: Pick<ScrapbookItem, 'catdexNumber' | 'collectedFromPublicId'>[]) => {
   const maxNumber = items.reduce((max, item) => {
+    if (item.collectedFromPublicId) return max;
     return Math.max(max, item.catdexNumber ?? 0);
   }, 0);
 
@@ -17,6 +18,7 @@ export const normalizeCatdexNumbers = <T extends ScrapbookItem>(items: T[]): T[]
   let nextNumber = getNextCatdexNumber(items);
 
   return items.map((item) => {
+    if (item.collectedFromPublicId) return item;
     if (item.catdexNumber && item.catdexNumber > 0) return item;
     const normalized = { ...item, catdexNumber: nextNumber };
     nextNumber += 1;
