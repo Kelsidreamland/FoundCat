@@ -37,6 +37,7 @@ describe('FOUND CAT Supabase schema', () => {
     expect(schemaSql).toMatch(/alter\s+table\s+public\.launch_rescue_cat_cards\s+enable\s+row\s+level\s+security/i);
     expect(schemaSql).toMatch(/on\s+public\.launch_rescue_cat_cards\s+for\s+insert\s+to\s+anon,\s*authenticated/i);
     expect(schemaSql).toMatch(/grant\s+insert\s+on\s+public\.launch_rescue_cat_cards\s+to\s+anon,\s*authenticated/i);
+    expect(schemaSql).toMatch(/grant\s+usage\s+on\s+sequence\s+public\.public_cat_cards_number_seq\s+to\s+anon,\s*authenticated/i);
     expect(schemaSql).not.toMatch(/grant\s+insert\s+on\s+public\.cat_cards\s+to\s+anon/i);
 
     const publicViewSql = schemaSql.split(/create\s+or\s+replace\s+view\s+public\.public_cat_cards/i)[1] ?? '';

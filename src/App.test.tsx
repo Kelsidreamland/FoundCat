@@ -127,7 +127,7 @@ describe('App viewport shell', () => {
     });
   });
 
-  it('starts the temporary public rescue upload after local cat cards are loaded', async () => {
+  it('does not publish local cat cards automatically on app startup', async () => {
     const localCat = makeCat();
     useScrapbookStore.setState({
       items: [localCat],
@@ -138,34 +138,9 @@ describe('App viewport shell', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(rescueLocalCatsToPublic).toHaveBeenCalledWith([localCat]);
+      expect(mockInitAuth).toHaveBeenCalledTimes(1);
     });
-  });
-
-  it('retries the temporary public rescue upload when a local cat gains map coordinates', async () => {
-    const localCatWithoutLocation = makeCat({ location: undefined });
-    const localCatWithLocation = makeCat();
-    useScrapbookStore.setState({
-      items: [localCatWithoutLocation],
-      isLoading: false,
-      language: 'zh',
-    });
-
-    render(<App />);
-
-    await waitFor(() => {
-      expect(rescueLocalCatsToPublic).toHaveBeenCalledWith([localCatWithoutLocation]);
-    });
-
-    useScrapbookStore.setState({
-      items: [localCatWithLocation],
-      isLoading: false,
-      language: 'zh',
-    });
-
-    await waitFor(() => {
-      expect(rescueLocalCatsToPublic).toHaveBeenLastCalledWith([localCatWithLocation]);
-    });
+    expect(rescueLocalCatsToPublic).not.toHaveBeenCalled();
   });
 
   it('serves the my cat cards page at /catdex', async () => {

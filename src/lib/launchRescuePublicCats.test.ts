@@ -5,8 +5,8 @@ import {
   rescueLocalCatsToPublic,
 } from './launchRescuePublicCats';
 
-const upsert = vi.fn();
-const from = vi.fn(() => ({ upsert }));
+const insert = vi.fn();
+const from = vi.fn(() => ({ insert }));
 const getSupabaseClient = vi.fn();
 
 vi.mock('./supabaseClient', () => ({
@@ -42,7 +42,7 @@ describe('rescueLocalCatsToPublic', () => {
     window.localStorage.clear();
     getSupabaseClient.mockReset();
     from.mockClear();
-    upsert.mockReset();
+    insert.mockReset();
   });
 
   it('returns cloud_not_configured when Supabase is unavailable', async () => {
@@ -57,7 +57,7 @@ describe('rescueLocalCatsToPublic', () => {
 
   it('uploads only local cats that have a photo and map coordinates', async () => {
     getSupabaseClient.mockResolvedValue({ from });
-    upsert.mockResolvedValue({ error: null });
+    insert.mockResolvedValue({ error: null });
 
     await expect(rescueLocalCatsToPublic([
       makeCat(),
@@ -70,7 +70,7 @@ describe('rescueLocalCatsToPublic', () => {
     });
 
     expect(from).toHaveBeenCalledWith('launch_rescue_cat_cards');
-    expect(upsert).toHaveBeenCalledWith([
+    expect(insert).toHaveBeenCalledWith(
       expect.objectContaining({
         local_item_id: 'local-cat-1',
         source_fingerprint: 'found-cat-launch-rescue-v1:local-cat-1:2026-06-21T08:00:00.000Z:13.756300:100.501800',
@@ -84,23 +84,20 @@ describe('rescueLocalCatsToPublic', () => {
         lng: 100.5018,
         personality_tags: ['friendly'],
         care_status_tags: ['fed'],
-      }),
-    ], {
-      onConflict: 'source_fingerprint',
-      ignoreDuplicates: true,
-    });
+      })
+    );
   });
 
   it('marks rescued local ids after a successful upload and does not resend them', async () => {
     getSupabaseClient.mockResolvedValue({ from });
-    upsert.mockResolvedValue({ error: null });
+    insert.mockResolvedValue({ error: null });
 
     await rescueLocalCatsToPublic([makeCat()]);
 
     expect(JSON.parse(window.localStorage.getItem(LAUNCH_RESCUE_SUBMITTED_IDS_KEY) ?? '[]')).toEqual(['local-cat-1']);
 
     from.mockClear();
-    upsert.mockClear();
+    insert.mockClear();
 
     await expect(rescueLocalCatsToPublic([makeCat()])).resolves.toEqual({
       ok: true,
@@ -110,9 +107,27 @@ describe('rescueLocalCatsToPublic', () => {
     expect(from).not.toHaveBeenCalled();
   });
 
+  it('treats duplicate rescue rows as already public and marks them locally', async () => {
+    getSupabaseClient.mockResolvedValue({ from });
+    insert.mockResolvedValue({
+      error: {
+        code: '23505',
+        message: 'duplicate key value violates unique constraint "launch_rescue_cat_cards_source_fingerprint_key"',
+      },
+    });
+
+    await expect(rescueLocalCatsToPublic([makeCat()])).resolves.toEqual({
+      ok: true,
+      uploadedCount: 0,
+      skippedCount: 0,
+    });
+
+    expect(JSON.parse(window.localStorage.getItem(LAUNCH_RESCUE_SUBMITTED_IDS_KEY) ?? '[]')).toEqual(['local-cat-1']);
+  });
+
   it('does not mark local ids when the rescue upload fails', async () => {
     getSupabaseClient.mockResolvedValue({ from });
-    upsert.mockResolvedValue({ error: { message: 'permission denied' } });
+    insert.mockResolvedValue({ error: { message: 'permission denied' } });
 
     await expect(rescueLocalCatsToPublic([makeCat()])).resolves.toEqual({
       ok: false,

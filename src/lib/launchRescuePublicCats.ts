@@ -38,6 +38,13 @@ const emptyToNull = (value: string | undefined) => {
   return trimmed ? trimmed : null;
 };
 
+const isDuplicateError = (error: unknown) => (
+  Boolean(error)
+  && typeof error === 'object'
+  && 'code' in error
+  && error.code === '23505'
+);
+
 const hasBrowserStorage = () => typeof window !== 'undefined' && Boolean(window.localStorage);
 
 function readSubmittedIds() {
@@ -131,20 +138,25 @@ export async function rescueLocalCatsToPublic(items: ScrapbookItem[]): Promise<R
     };
   }
 
-  const rows = candidates.map(toLaunchRescueRow);
+  let uploadedCount = 0;
+  const rescuedIds = new Set<string>();
 
   try {
-    const { error } = await client.from('launch_rescue_cat_cards').upsert(rows, {
-      onConflict: 'source_fingerprint',
-      ignoreDuplicates: true,
-    });
+    for (const item of candidates) {
+      const { error } = await client.from('launch_rescue_cat_cards').insert(toLaunchRescueRow(item));
 
-    if (error) {
-      return {
-        ok: false,
-        reason: 'rescue_failed',
-        message: error.message,
-      };
+      if (error && !isDuplicateError(error)) {
+        return {
+          ok: false,
+          reason: 'rescue_failed',
+          message: error.message,
+        };
+      }
+
+      if (!error) {
+        uploadedCount += 1;
+      }
+      rescuedIds.add(item.id);
     }
   } catch (error) {
     return {
@@ -154,14 +166,14 @@ export async function rescueLocalCatsToPublic(items: ScrapbookItem[]): Promise<R
     };
   }
 
-  for (const item of candidates) {
-    submittedIds.add(item.id);
+  for (const id of rescuedIds) {
+    submittedIds.add(id);
   }
   writeSubmittedIds(submittedIds);
 
   return {
     ok: true,
-    uploadedCount: rows.length,
+    uploadedCount,
     skippedCount,
   };
 }

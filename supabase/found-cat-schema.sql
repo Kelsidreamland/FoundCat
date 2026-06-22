@@ -218,3 +218,4 @@ from public.launch_rescue_cat_cards;
 
 grant select on public.public_cat_cards to anon, authenticated;
 grant insert on public.launch_rescue_cat_cards to anon, authenticated;
+grant usage on sequence public.public_cat_cards_number_seq to anon, authenticated;
