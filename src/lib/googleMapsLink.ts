@@ -48,6 +48,30 @@ const extractNameFromPath = (url: URL) => {
   return cleanName(parts[markerIndex + 1]);
 };
 
+const toGoogleMapsUrl = (rawInput: string) => {
+  const input = rawInput.trim();
+  if (!input) return null;
+
+  try {
+    const url = new URL(input);
+    return GOOGLE_MAPS_HOST_PATTERN.test(url.hostname) ? url : null;
+  } catch {
+    return null;
+  }
+};
+
+export const parseGoogleMapsSearchText = (rawInput: string): string | null => {
+  const url = toGoogleMapsUrl(rawInput);
+  if (!url) return null;
+
+  const readableText = cleanName(url.searchParams.get('query')) ??
+    cleanName(url.searchParams.get('q')) ??
+    cleanName(url.searchParams.get('destination')) ??
+    extractNameFromPath(url);
+
+  return readableText ?? null;
+};
+
 export const parseGoogleMapsLink = (rawInput: string): ParsedGoogleMapsLink | null => {
   const input = rawInput.trim();
   if (!input) return null;
@@ -57,14 +81,10 @@ export const parseGoogleMapsLink = (rawInput: string): ParsedGoogleMapsLink | nu
     return directCoordinates;
   }
 
-  let url: URL;
-  try {
-    url = new URL(input);
-  } catch {
-    return directCoordinates;
+  const url = toGoogleMapsUrl(input);
+  if (!url) {
+    return /^https?:\/\//i.test(input) ? null : directCoordinates;
   }
-
-  if (!GOOGLE_MAPS_HOST_PATTERN.test(url.hostname)) return null;
 
   const pathCoordinates = parseCoordinateText(url.pathname);
   const queryCoordinateSource = [
@@ -81,9 +101,6 @@ export const parseGoogleMapsLink = (rawInput: string): ParsedGoogleMapsLink | nu
 
   return {
     ...coordinates,
-    name: cleanName(url.searchParams.get('query')) ??
-      cleanName(url.searchParams.get('q')) ??
-      cleanName(url.searchParams.get('destination')) ??
-      extractNameFromPath(url),
+    name: parseGoogleMapsSearchText(input) ?? undefined,
   };
 };

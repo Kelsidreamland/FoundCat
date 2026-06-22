@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseGoogleMapsLink } from './googleMapsLink';
+import { parseGoogleMapsLink, parseGoogleMapsSearchText } from './googleMapsLink';
 
 describe('parseGoogleMapsLink', () => {
   it('parses raw latitude and longitude text', () => {
@@ -38,5 +38,11 @@ describe('parseGoogleMapsLink', () => {
 
   it('returns null for unsupported Google Maps short links without expanded coordinates', () => {
     expect(parseGoogleMapsLink('https://maps.app.goo.gl/abc123')).toBeNull();
+  });
+
+  it('extracts readable place text from Google Maps URLs without coordinates', () => {
+    expect(parseGoogleMapsSearchText('https://www.google.com/maps/search/G%20Nimman%20Chiang%20Mai')).toBe('G Nimman Chiang Mai');
+    expect(parseGoogleMapsSearchText('https://www.google.com/maps/place/Cat+Cafe+Bangkok')).toBe('Cat Cafe Bangkok');
+    expect(parseGoogleMapsSearchText('https://www.google.com/maps/dir/?api=1&destination=%E6%9B%BC%E8%B0%B7%E8%B2%93%E5%92%96%E5%95%A1')).toBe('曼谷貓咖啡');
   });
 });

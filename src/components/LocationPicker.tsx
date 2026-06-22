@@ -4,7 +4,7 @@ import { Loader2, LocateFixed, MapPin, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { translations } from '../translations';
 import { reverseGeocodePlace, searchPlaces, type PlaceSuggestion } from '../lib/placeSearch';
-import { parseGoogleMapsLink } from '../lib/googleMapsLink';
+import { parseGoogleMapsLink, parseGoogleMapsSearchText } from '../lib/googleMapsLink';
 
 const OPEN_FREE_MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 const DEFAULT_CENTER: [number, number] = [114.1694, 22.3193];
@@ -52,6 +52,8 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
 
   const defaultLocationName = language === 'zh' ? '貓咪出沒點' : 'Cat Spot';
   const parsedGoogleMapsLocation = useMemo(() => parseGoogleMapsLink(locationName), [locationName]);
+  const googleMapsSearchText = useMemo(() => parseGoogleMapsSearchText(locationName), [locationName]);
+  const searchQuery = googleMapsSearchText ?? locationName.trim();
   const hasGoogleMapsUrlInput = /(?:google\.[a-z.]+\/maps|maps\.app\.goo\.gl|goo\.gl\/maps)/i.test(locationName);
 
   useEffect(() => {
@@ -151,7 +153,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   }, [canReplaceLocationName, setMarkerAt]);
 
   useEffect(() => {
-    const query = locationName.trim();
+    const query = searchQuery;
 
     if (parsedGoogleMapsLocation) {
       setSuggestions([]);
@@ -199,7 +201,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [getSearchCenter, language, locationName, parsedGoogleMapsLocation]);
+  }, [getSearchCenter, language, parsedGoogleMapsLocation, searchQuery]);
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -316,7 +318,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   }, [defaultLocationName, locationName, parsedGoogleMapsLocation, setMarkerAt]);
 
   const handleFullAddressSearch = useCallback(async () => {
-    const query = locationName.trim();
+    const query = searchQuery;
     if (query.length < 2) return;
 
     setIsResolvingAddress(true);
@@ -339,7 +341,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
     } finally {
       setIsResolvingAddress(false);
     }
-  }, [getSearchCenter, language, locationName]);
+  }, [getSearchCenter, language, searchQuery]);
 
   const buildLocationResult = useCallback((suggestion: PlaceSuggestion): LocationResult => {
     const location: LocationResult = {
@@ -366,9 +368,9 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   }, [selectedLocation]);
 
   const handleConfirm = useCallback(async () => {
-    const query = locationName.trim();
+    const query = searchQuery;
     const shouldResolveTypedQuery = !pickedManualCoordinateRef.current &&
-      !hasGoogleMapsUrlInput &&
+      (!hasGoogleMapsUrlInput || Boolean(googleMapsSearchText)) &&
       query.length >= 2 &&
       query !== selectedSuggestionNameRef.current;
 
@@ -409,7 +411,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
     const location: LocationResult = {
       lat: fallbackCoordinate.lat,
       lng: fallbackCoordinate.lng,
-      name: locationName.trim() || defaultLocationName,
+      name: query || defaultLocationName,
     };
 
     if (selectedLocation) {
@@ -426,10 +428,11 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
     defaultLocationName,
     getFallbackCoordinate,
     getSearchCenter,
+    googleMapsSearchText,
     hasGoogleMapsUrlInput,
     language,
-    locationName,
     onPicked,
+    searchQuery,
     selectedAddress,
     selectedLocation,
     selectedPlaceId,

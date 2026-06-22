@@ -411,6 +411,42 @@ describe('LocationPicker', () => {
     });
   });
 
+  it('uses readable Google Maps search text to resolve pasted map URLs without coordinates', async () => {
+    const onPicked = vi.fn();
+
+    render(
+      <LocationPicker
+        language="zh"
+        onPicked={onPicked}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText('地點名稱'), {
+      target: { value: 'https://www.google.com/maps/search/G%20Nimman%20Chiang%20Mai' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '確認地點' }));
+
+    await waitFor(() => {
+      expect(searchPlaces).toHaveBeenCalledWith(
+        'G Nimman Chiang Mai',
+        expect.objectContaining({
+          language: 'zh',
+          includeAddressFallback: true,
+          forceAddressFallback: true,
+          limit: 5,
+        })
+      );
+      expect(onPicked).toHaveBeenCalledWith({
+        lat: 25.033,
+        lng: 121.5645,
+        name: 'Taipei 101',
+        address: '信義區, 台北市, 台灣',
+        placeId: 'N:12345',
+      });
+    });
+  });
+
   it('keeps the same map instance after typing and choosing a suggestion', async () => {
     render(
       <LocationPicker
