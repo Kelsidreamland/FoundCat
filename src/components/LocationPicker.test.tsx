@@ -350,6 +350,67 @@ describe('LocationPicker', () => {
     });
   });
 
+  it('saves the typed place name at the map center when search providers cannot find it', async () => {
+    const onPicked = vi.fn();
+    vi.mocked(searchPlaces).mockResolvedValue([]);
+
+    render(
+      <LocationPicker
+        language="zh"
+        onPicked={onPicked}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText('地點名稱'), {
+      target: { value: '成都貓咪咖啡館' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '確認地點' }));
+
+    await waitFor(() => {
+      expect(searchPlaces).toHaveBeenCalledWith(
+        '成都貓咪咖啡館',
+        expect.objectContaining({
+          language: 'zh',
+          includeAddressFallback: true,
+          forceAddressFallback: true,
+          limit: 5,
+        })
+      );
+      expect(onPicked).toHaveBeenCalledWith({
+        lat: 25.033,
+        lng: 121.565,
+        name: '成都貓咪咖啡館',
+      });
+    });
+  });
+
+  it('saves an unexpanded Google Maps short link as typed text when no coordinates can be parsed', async () => {
+    const onPicked = vi.fn();
+
+    render(
+      <LocationPicker
+        language="zh"
+        onPicked={onPicked}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText('地點名稱'), {
+      target: { value: 'https://maps.app.goo.gl/abc123' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '確認地點' }));
+
+    await waitFor(() => {
+      expect(searchPlaces).not.toHaveBeenCalled();
+      expect(onPicked).toHaveBeenCalledWith({
+        lat: 25.033,
+        lng: 121.565,
+        name: 'https://maps.app.goo.gl/abc123',
+      });
+    });
+  });
+
   it('keeps the same map instance after typing and choosing a suggestion', async () => {
     render(
       <LocationPicker

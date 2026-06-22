@@ -354,9 +354,21 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
     return location;
   }, []);
 
+  const getFallbackCoordinate = useCallback(() => {
+    if (selectedLocation) return selectedLocation;
+
+    const center = mapRef.current?.getCenter();
+    if (center) {
+      return { lat: center.lat, lng: center.lng };
+    }
+
+    return { lat: DEFAULT_CENTER[1], lng: DEFAULT_CENTER[0] };
+  }, [selectedLocation]);
+
   const handleConfirm = useCallback(async () => {
     const query = locationName.trim();
     const shouldResolveTypedQuery = !pickedManualCoordinateRef.current &&
+      !hasGoogleMapsUrlInput &&
       query.length >= 2 &&
       query !== selectedSuggestionNameRef.current;
 
@@ -387,32 +399,41 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
       }
     }
 
-    if (!selectedLocation) {
+    const fallbackCoordinate = query.length >= 2 ? getFallbackCoordinate() : selectedLocation;
+
+    if (!fallbackCoordinate) {
       window.alert(t.noLocationPicked);
       return;
     }
 
     const location: LocationResult = {
-      lat: selectedLocation.lat,
-      lng: selectedLocation.lng,
+      lat: fallbackCoordinate.lat,
+      lng: fallbackCoordinate.lng,
       name: locationName.trim() || defaultLocationName,
     };
 
-    if (selectedAddress) location.address = selectedAddress;
-    if (selectedPlaceId) location.placeId = selectedPlaceId;
+    if (selectedLocation) {
+      if (selectedAddress) location.address = selectedAddress;
+      if (selectedPlaceId) location.placeId = selectedPlaceId;
+    } else {
+      setMarkerAt(fallbackCoordinate.lat, fallbackCoordinate.lng);
+    }
 
     onPicked(location);
   }, [
     applySuggestion,
     buildLocationResult,
     defaultLocationName,
+    getFallbackCoordinate,
     getSearchCenter,
+    hasGoogleMapsUrlInput,
     language,
     locationName,
     onPicked,
     selectedAddress,
     selectedLocation,
     selectedPlaceId,
+    setMarkerAt,
     t.noLocationPicked,
   ]);
 
