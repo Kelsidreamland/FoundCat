@@ -39,6 +39,7 @@ describe('loadPublicCatCards', () => {
         {
           id: 'public-cat-1',
           catdex_number: 12,
+          public_number: 1,
           cat_name: '曼谷小橘',
           image_data: 'data:image/jpeg;base64,cat',
           hero_image_data: null,
@@ -59,6 +60,7 @@ describe('loadPublicCatCards', () => {
         expect.objectContaining({
           id: 'public-cat-1',
           catdexNumber: 12,
+          publicNumber: 1,
           catName: '曼谷小橘',
           imageData: 'data:image/jpeg;base64,cat',
           isPublic: true,

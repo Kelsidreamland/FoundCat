@@ -39,14 +39,8 @@ const copy = {
     sendMagicLink: '寄送登入信',
     sending: '寄送中',
     sentTitle: '已寄出登入信',
-    sentBody: '請不要點 Email 裡的登入連結。請回到這個 App，輸入信裡的 6 位數驗證碼完成登入。',
-    sentStorageHint: '這樣可以避免手機跳到另一個瀏覽器空間，造成原本存在這台裝置裡的貓卡無法一起備份。',
-    otpLabel: 'Email 驗證碼',
-    otpPlaceholder: '123456',
-    verifyOtp: '驗證並登入',
-    verifyingOtp: '驗證中',
-    otpVerified: '驗證完成，正在保留這台裝置上的貓卡。',
-    otpFailed: '驗證碼無法使用，請確認是否過期，或重新寄送登入信。',
+    sentBody: '請到信箱點登入連結，完成後回到轉角遇到貓繼續備份。',
+    sentStorageHint: '如果手機打開了另一個空白版本，請回到原本有貓卡資料的 App，再用同一個 Email 重新登入備份。',
     resendEmail: '重新寄送登入信',
     signInFailed: '登入信寄送失敗，請稍後再試。',
     signInFailedDetail: (message: string) => `登入信寄送失敗：${message}`,
@@ -92,14 +86,8 @@ const copy = {
     sendMagicLink: 'Send Sign-In Link',
     sending: 'Sending',
     sentTitle: 'Sign-in link sent',
-    sentBody: 'Do not tap the sign-in link in the email. Come back to this app and enter the 6-digit code from the email.',
-    sentStorageHint: 'This keeps you in the same browser/app storage so the cat cards saved on this device can be backed up.',
-    otpLabel: 'Email verification code',
-    otpPlaceholder: '123456',
-    verifyOtp: 'Verify and Sign In',
-    verifyingOtp: 'Verifying',
-    otpVerified: 'Verified. Keeping the cat cards saved on this device.',
-    otpFailed: 'The code could not be verified. Check if it expired, or send a new sign-in email.',
+    sentBody: 'Open the sign-in link in your inbox, then come back to FOUND CAT to continue backing up.',
+    sentStorageHint: 'If your phone opens a blank browser copy, return to the app that still has your cat cards and sign in again with the same email.',
     resendEmail: 'Send a New Sign-In Email',
     signInFailed: 'Could not send the sign-in link. Please try again later.',
     signInFailedDetail: (message: string) => `Could not send the sign-in email: ${message}`,
@@ -141,7 +129,6 @@ export default function CloudBackupPrompt({
   const error = useAuthStore((state) => state.error);
   const errorMessage = useAuthStore((state) => state.errorMessage);
   const signInWithEmail = useAuthStore((state) => state.signInWithEmail);
-  const verifyEmailOtp = useAuthStore((state) => state.verifyEmailOtp);
   const signOut = useAuthStore((state) => state.signOut);
   const latestBackupStatus = useCloudBackupStatusStore((state) => state.status);
   const latestBackedUpCount = useCloudBackupStatusStore((state) => state.backedUpCount);
@@ -153,10 +140,7 @@ export default function CloudBackupPrompt({
   const mergeRestoredItems = useScrapbookStore((state) => state.mergeRestoredItems);
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState('');
-  const [sentEmail, setSentEmail] = useState('');
-  const [otp, setOtp] = useState('');
   const [isSent, setIsSent] = useState(false);
-  const [isOtpVerified, setIsOtpVerified] = useState(false);
   const [backupStatus, setBackupStatus] = useState<BackupStatus>('idle');
   const [backedUpCount, setBackedUpCount] = useState(0);
   const [restoreStatus, setRestoreStatus] = useState<RestoreStatus>('idle');
@@ -219,30 +203,12 @@ export default function CloudBackupPrompt({
       redirectTo: redirectTo ?? window.location.href,
     });
     if (!useAuthStore.getState().error) {
-      setSentEmail(normalizedEmail);
       setIsSent(true);
-      setIsOtpVerified(false);
-      setOtp('');
-    }
-  };
-
-  const handleOtpSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!isConfigured || isLoading) return;
-
-    const normalizedOtp = otp.trim();
-    if (!sentEmail || !normalizedOtp) return;
-
-    await verifyEmailOtp(sentEmail, normalizedOtp);
-    if (!useAuthStore.getState().error) {
-      setIsOtpVerified(true);
     }
   };
 
   const handleResend = () => {
     setIsSent(false);
-    setIsOtpVerified(false);
-    setOtp('');
   };
 
   const handleBackup = async () => {
@@ -419,7 +385,7 @@ export default function CloudBackupPrompt({
             </div>
           </div>
         ) : isSent ? (
-          <form onSubmit={handleOtpSubmit} className="mt-4 rounded-[20px] border-2 border-[#1d1714]/70 bg-[#fffdf2] p-4 shadow-[4px_4px_0_rgba(47,95,179,0.18)]">
+          <div className="mt-4 rounded-[20px] border-2 border-[#1d1714]/70 bg-[#fffdf2] p-4 shadow-[4px_4px_0_rgba(47,95,179,0.18)]">
             <div className="flex items-start gap-3">
               <CheckCircle2 size={22} strokeWidth={2.7} className="mt-0.5 text-[#2f5fb3]" aria-hidden="true" />
               <div>
@@ -430,38 +396,6 @@ export default function CloudBackupPrompt({
                 </p>
               </div>
             </div>
-            <label className="mt-3 block">
-              <span className="mb-1 block text-[11px] font-black uppercase tracking-[0.12em] text-[#2f5fb3]">
-                {t.otpLabel}
-              </span>
-              <input
-                value={otp}
-                onChange={(event) => {
-                  setIsOtpVerified(false);
-                  setOtp(event.target.value.replace(/\s+/g, ''));
-                }}
-                placeholder={t.otpPlaceholder}
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                aria-label={t.otpLabel}
-                className="h-12 w-full rounded-[16px] border-2 border-[#1d1714] bg-[#fffdf2] px-3 text-center text-lg font-black tracking-[0.2em] shadow-[3px_3px_0_rgba(29,23,20,0.55)] outline-none focus:border-[#2f5fb3]"
-              />
-            </label>
-            {error === 'otp_verify_failed' ? (
-              <p className="mt-2 text-xs font-black leading-5 text-[#9f3a2f]">{t.otpFailed}</p>
-            ) : null}
-            {isOtpVerified ? (
-              <p className="mt-2 text-xs font-black leading-5 text-[#2f5fb3]">{t.otpVerified}</p>
-            ) : null}
-            <button
-              type="submit"
-              disabled={isLoading || !otp.trim()}
-              className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-[16px] border-2 border-[#1d1714] bg-[#2f5fb3] px-4 text-sm font-black text-[#fffdf2] shadow-[4px_4px_0_rgba(29,23,20,0.78)] disabled:cursor-not-allowed disabled:bg-[#8fa7d6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
-            >
-              <Mail size={16} strokeWidth={2.7} aria-hidden="true" />
-              {isLoading ? t.verifyingOtp : t.verifyOtp}
-            </button>
             <button
               type="button"
               onClick={handleResend}
@@ -469,7 +403,7 @@ export default function CloudBackupPrompt({
             >
               {t.resendEmail}
             </button>
-          </form>
+          </div>
         ) : (
           <form onSubmit={handleSubmit} className="mt-4">
             <p className="text-xs font-bold leading-5 text-[#6d5f52]">{t.subtitle}</p>

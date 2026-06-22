@@ -8,6 +8,7 @@ export type CloudCatCardRow = {
   id: string;
   owner_id: string;
   catdex_number: number | null;
+  public_number: number | null;
   cat_name: string | null;
   image_data: string;
   hero_image_data: string | null;
@@ -25,9 +26,12 @@ export type CloudCatCardRow = {
   updated_at?: string;
 };
 
+export type CloudCatCardUpsertRow = Omit<CloudCatCardRow, 'public_number'>;
+
 export type PublicCloudCatCard = {
   id: string;
   catdexNumber: number | null;
+  publicNumber: number | null;
   catName: string | null;
   imageData: string;
   heroImageData: string | null;
@@ -52,7 +56,7 @@ export function toCloudCatCardUpsert(
   item: ScrapbookItem,
   ownerId: string,
   options: CloudCatCardUpsertOptions = {}
-): CloudCatCardRow {
+): CloudCatCardUpsertRow {
   return {
     id: item.id,
     owner_id: ownerId,
@@ -81,6 +85,7 @@ export function toPublicCloudCatCard(row: CloudCatCardRow): PublicCloudCatCard {
   return {
     id: row.id,
     catdexNumber: row.catdex_number,
+    publicNumber: row.public_number,
     catName: row.cat_name,
     imageData: row.image_data,
     heroImageData: row.hero_image_data,

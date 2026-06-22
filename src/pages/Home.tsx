@@ -101,7 +101,6 @@ export default function Home() {
       type: item.type,
       imageData: item.imageData,
       heroImageData: item.heroImageData,
-      catdexNumber: item.catdexNumber,
       date: item.date,
       x: item.x,
       y: item.y,

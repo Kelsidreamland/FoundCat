@@ -8,6 +8,7 @@ import { getSupabaseClient } from './supabaseClient';
 type PublicCatCardViewRow = {
   id: string;
   catdex_number: number | null;
+  public_number: number | null;
   cat_name: string | null;
   image_data: string;
   hero_image_data: string | null;
@@ -36,6 +37,7 @@ const publicRowToScrapbookItem = (row: PublicCatCardViewRow): ScrapbookItem => (
   imageData: row.image_data,
   heroImageData: row.hero_image_data ?? undefined,
   catdexNumber: row.catdex_number ?? undefined,
+  publicNumber: row.public_number ?? undefined,
   date: row.encountered_at,
   x: 0,
   y: 0,

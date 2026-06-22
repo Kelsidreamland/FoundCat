@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FOUND CAT Supabase OTP 延後方案</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #211915;
+        --muted: #6b5d52;
+        --paper: #fff7e8;
+        --card: #fffdf2;
+        --blue: #2f5fb3;
+        --blue-soft: #d9ecff;
+        --yellow: #f7c948;
+        --line: rgba(33, 25, 21, 0.18);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          linear-gradient(105deg, rgba(47, 95, 179, 0.055) 0 1px, transparent 1px 100%),
+          linear-gradient(0deg, rgba(17, 17, 17, 0.04) 0 1px, transparent 1px 100%),
+          repeating-linear-gradient(96deg, rgba(0, 0, 0, 0.022) 0 1px, transparent 1px 11px),
+          var(--paper);
+        background-size: 28px 28px, 100% 18px, 100% 100%, 100% 100%;
+        color: var(--ink);
+        font-family: ui-rounded, "Hiragino Maru Gothic ProN", "PingFang TC", "Noto Sans TC", sans-serif;
+      }
+
+      main {
+        width: min(920px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 32px 0 56px;
+      }
+
+      header {
+        display: grid;
+        gap: 12px;
+        padding: 24px 0 18px;
+      }
+
+      .stamp {
+        display: inline-flex;
+        width: fit-content;
+        rotate: -2deg;
+        border: 2px solid var(--ink);
+        background: var(--yellow);
+        padding: 7px 12px;
+        box-shadow: 4px 4px 0 rgba(33, 25, 21, 0.78);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+      }
+
+      h1 {
+        max-width: 780px;
+        margin: 0;
+        font-size: clamp(32px, 7vw, 64px);
+        line-height: 0.95;
+        letter-spacing: 0;
+      }
+
+      .lead {
+        max-width: 680px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 17px;
+        font-weight: 800;
+        line-height: 1.75;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 18px;
+      }
+
+      .card,
+      .code-card {
+        border: 2px solid var(--ink);
+        border-radius: 18px;
+        background: rgba(255, 253, 242, 0.92);
+        box-shadow: 7px 8px 0 rgba(33, 25, 21, 0.9);
+      }
+
+      .card {
+        padding: 18px;
+      }
+
+      .card strong {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--blue);
+        font-size: 12px;
+        font-weight: 950;
+        letter-spacing: 0.13em;
+      }
+
+      .card p,
+      li {
+        color: var(--muted);
+        font-size: 15px;
+        font-weight: 750;
+        line-height: 1.75;
+      }
+
+      section {
+        margin-top: 28px;
+      }
+
+      h2 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 14px;
+        font-size: 24px;
+        line-height: 1.2;
+      }
+
+      h2 span {
+        display: grid;
+        width: 34px;
+        height: 34px;
+        place-items: center;
+        border: 2px solid var(--ink);
+        border-radius: 50%;
+        background: var(--blue-soft);
+        color: var(--blue);
+        box-shadow: 3px 3px 0 rgba(47, 95, 179, 0.22);
+        font-size: 14px;
+        font-weight: 950;
+      }
+
+      ol {
+        margin: 0;
+        padding-left: 24px;
+      }
+
+      a {
+        color: var(--blue);
+        font-weight: 950;
+      }
+
+      .callout {
+        margin-top: 14px;
+        border: 2px solid var(--ink);
+        border-radius: 18px;
+        background: var(--blue-soft);
+        padding: 14px 16px;
+        color: var(--blue);
+        font-size: 15px;
+        font-weight: 950;
+        line-height: 1.7;
+        box-shadow: 4px 4px 0 rgba(47, 95, 179, 0.24);
+      }
+
+      .code-card {
+        overflow: hidden;
+      }
+
+      .code-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 2px solid var(--ink);
+        background: var(--yellow);
+        padding: 10px 14px;
+        font-size: 12px;
+        font-weight: 950;
+        letter-spacing: 0.12em;
+      }
+
+      pre {
+        margin: 0;
+        overflow-x: auto;
+        padding: 18px;
+        background: #17120f;
+        color: #fff7e8;
+        font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+        font-size: 13px;
+        line-height: 1.65;
+      }
+
+      code {
+        font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+      }
+
+      .copy-button {
+        border: 2px solid var(--ink);
+        border-radius: 999px;
+        background: var(--card);
+        padding: 7px 12px;
+        color: var(--ink);
+        cursor: pointer;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 950;
+        box-shadow: 2px 2px 0 rgba(33, 25, 21, 0.45);
+      }
+
+      .checklist {
+        display: grid;
+        gap: 10px;
+        padding: 0;
+        list-style: none;
+      }
+
+      .checklist li {
+        border-left: 5px solid var(--blue);
+        background: rgba(255, 253, 242, 0.8);
+        padding: 10px 12px;
+      }
+
+      @media (max-width: 760px) {
+        main {
+          width: min(100% - 24px, 560px);
+          padding-top: 20px;
+        }
+
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .card,
+        .code-card {
+          box-shadow: 5px 6px 0 rgba(33, 25, 21, 0.9);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="stamp">FOUND CAT CLOUD</div>
+        <h1>Supabase 6 位數驗證碼延後方案</h1>
+        <p class="lead">
+          目前第一版上線流程已改回 Email 登入連結，這份文件只保留給未來如果要改成 6 位數驗證碼登入時參考。正確順序仍然是：先設定 Supabase Custom SMTP，才能穩定調整 Email 模板並寄出可用的驗證碼。
+        </p>
+      </header>
+
+      <div class="grid" aria-label="重點摘要">
+        <div class="card">
+          <strong>WHY</strong>
+          <p>這是未來替代方案：如果 Magic link 對本機資料救援造成太多問題，可以再評估 OTP。</p>
+        </div>
+        <div class="card">
+          <strong>STEP 0</strong>
+          <p>先設定 Custom SMTP。沒有 SMTP 時，後台可能不能完整自訂模板，也不適合正式測試。</p>
+        </div>
+        <div class="card">
+          <strong>OTP</strong>
+          <p>Email Template 必須顯示 <code>{{ .Token }}</code>，這就是 6 位數驗證碼。</p>
+        </div>
+      </div>
+
+      <section>
+        <h2><span>0</span> 先設定 Custom SMTP</h2>
+        <ol>
+          <li>先選一個 SMTP 服務，例如 Resend、Postmark、SendGrid、Brevo、AWS SES 等。</li>
+          <li>在該服務建立寄信用帳號，取得 SMTP host、port、username、password。</li>
+          <li>回到 Supabase 專案後台，打開 <strong>Authentication</strong>。</li>
+          <li>進入 <strong>Settings / SMTP Settings</strong> 或 <strong>Auth / SMTP</strong> 相關區域。</li>
+          <li>填入 SMTP host、port、user、password、寄件者名稱與寄件 Email。</li>
+          <li>儲存後，再繼續修改 Email Template。</li>
+        </ol>
+        <div class="callout">
+          沒有 Custom SMTP 時，Supabase 預設寄信服務有很低的限制，也可能無法照我們要的方式自訂模板。先完成 SMTP，才適合正式讓朋友測試登入與備份。
+        </div>
+      </section>
+
+      <div class="grid" aria-label="測試摘要">
+        <div class="card">
+          <strong>TEST</strong>
+          <p>寄信後不要點連結，回到原本 App，輸入信裡的 6 位數碼。</p>
+        </div>
+      </div>
+
+      <section>
+        <h2><span>1</span> 打開 Supabase Email Template</h2>
+        <ol>
+          <li>進入你的 Supabase 專案。</li>
+          <li>左側選單打開 <strong>Authentication</strong>。</li>
+          <li>進入 <strong>Email Templates</strong>。</li>
+          <li>找到登入用的模板，通常是 <strong>Magic Link</strong> 或 <strong>Confirm signup</strong>，依你目前專案寄出的信件類型調整。</li>
+        </ol>
+        <div class="callout">
+          如果你不確定是哪一個模板，先改 Magic Link。因為我們目前 App 呼叫的是 Supabase 的 email OTP 登入，預設常會用 Magic Link 模板寄信。
+        </div>
+      </section>
+
+      <section>
+        <h2><span>2</span> 貼上這段 Email Template</h2>
+        <div class="code-card">
+          <div class="code-head">
+            <span>SUPABASE EMAIL TEMPLATE</span>
+            <button class="copy-button" type="button" data-copy>複製模板</button>
+          </div>
+          <pre><code id="template">&lt;h2&gt;轉角遇到貓 FOUND CAT&lt;/h2&gt;
+&lt;p&gt;請回到原本的 App，輸入這組 6 位數驗證碼：&lt;/p&gt;
+&lt;p style="font-size: 28px; font-weight: 800; letter-spacing: 0.18em;"&gt;{{ .Token }}&lt;/p&gt;
+&lt;p&gt;請不要點登入連結，以免手機打開另一個瀏覽器空間，導致原本存在這台裝置裡的貓卡無法一起備份。&lt;/p&gt;</code></pre>
+        </div>
+        <div class="callout">
+          最重要的是 <code>{{ .Token }}</code>。沒有這個，使用者就看不到 6 位數驗證碼。
+        </div>
+      </section>
+
+      <section>
+        <h2><span>3</span> 儲存後測試</h2>
+        <ul class="checklist">
+          <li>打開 <a href="https://found-cat.vercel.app/" target="_blank" rel="noreferrer">https://found-cat.vercel.app/</a></li>
+          <li>在原本有本機貓卡的 App 或瀏覽器裡打開「備份」。</li>
+          <li>輸入 Email，送出登入信。</li>
+          <li>到信箱看 6 位數驗證碼，但不要點登入連結。</li>
+          <li>回到原本 App，輸入 6 位數驗證碼。</li>
+          <li>登入成功後，按「立即備份」。</li>
+        </ul>
+      </section>
+    </main>
+
+    <script>
+      const button = document.querySelector('[data-copy]');
+      const template = document.getElementById('template');
+
+      button?.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(template.textContent.trim());
+          button.textContent = '已複製';
+          window.setTimeout(() => {
+            button.textContent = '複製模板';
+          }, 1500);
+        } catch {
+          button.textContent = '請手動複製';
+        }
+      });
+    </script>
+  </body>
+</html>

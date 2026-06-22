@@ -53,10 +53,10 @@ This command checks committed Supabase migrations, the legacy schema reference, 
 
 ## 3. Configure Supabase Auth
 
-Use email OTP for the first public test. The app expects users to stay in the
-same installed app or browser tab, then enter the 6-digit email code in FOUND
-CAT. This avoids magic-link redirects opening a separate browser storage space
-that cannot see the user's existing local cat cards.
+Use Supabase email magic links for the first public launch. The app sends a
+sign-in email; the user opens the link, returns to FOUND CAT, then backs up
+local cat cards. This keeps launch setup light and avoids blocking release on
+custom SMTP or email template work.
 
 Set the production site URL:
 
@@ -78,20 +78,17 @@ Keep the email copy simple and brand-safe:
 - `FOUND CAT`
 - `轉角遇到貓`
 
-Configure the Supabase auth email template so the 6-digit OTP is visible in the
-message body. The template must include `{{ .Token }}`. A minimal production
-template:
+Optional email template copy:
 
 ```html
 <h2>轉角遇到貓 FOUND CAT</h2>
-<p>請回到原本的 App，輸入這組 6 位數驗證碼：</p>
-<p style="font-size: 28px; font-weight: 800; letter-spacing: 0.18em;">{{ .Token }}</p>
-<p>請不要點登入連結，以免手機打開另一個瀏覽器空間，導致原本存在這台裝置裡的貓卡無法一起備份。</p>
+<p>請點下方登入連結，回到轉角遇到貓備份你的貓咪地圖。</p>
+<p><a href="{{ .ConfirmationURL }}">登入 FOUND CAT</a></p>
 ```
 
-The default Supabase email may still contain a magic link depending on project
-settings. For FOUND CAT launch testing, the visible 6-digit `{{ .Token }}` is
-the required path.
+The deferred OTP/SMTP path is documented in
+`docs/deployment/supabase-otp-guide.html`, but it is not required for the first
+launch.
 
 ## 4. Add Vercel Environment Variables
 
@@ -131,8 +128,8 @@ Run these checks on a phone after production deploy.
 1. Open `https://found-cat.vercel.app`.
 2. Confirm the app still works without forcing login.
 3. Open cloud backup from the home flow.
-4. Enter an email and receive the OTP email.
-5. Do not open the email link. Return to the same FOUND CAT app/browser and enter the 6-digit code.
+4. Enter an email and receive the sign-in email.
+5. Open the sign-in link, then return to FOUND CAT.
 6. Back up local cat cards.
 7. Open a cat on `我的地圖`.
 8. Publish the cat to `大家的地圖`.

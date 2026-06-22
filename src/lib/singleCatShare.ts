@@ -1,5 +1,5 @@
 import type { CatCareStatusTag, CatPersonalityTag, ScrapbookItem } from '../store/useScrapbookStore';
-import { formatCatCardNumber } from './catdexDeck';
+import { formatCatCardNumberForItem } from './catdexDeck';
 
 export const SINGLE_CAT_SHARE_VERSION = 1;
 
@@ -79,7 +79,7 @@ export const buildSingleCatSharePayload = (
     v: SINGLE_CAT_SHARE_VERSION,
     id: item.id,
     n: item.catdexNumber,
-    numberLabel: formatCatCardNumber(item.catdexNumber),
+    numberLabel: formatCatCardNumberForItem(item),
     catName: catName || undefined,
     date: item.date,
     locationName: item.location.name,

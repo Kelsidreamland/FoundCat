@@ -30,8 +30,20 @@ export const formatCatCardNumber = (catdexNumber: number | undefined) => {
   return `No.${String(catdexNumber).padStart(3, '0')}`;
 };
 
+export const formatPublicCatCardNumber = (publicNumber: number | undefined) => {
+  if (!publicNumber || publicNumber < 1) return 'W----';
+  return `W-${String(publicNumber).padStart(3, '0')}`;
+};
+
+export const formatCatCardNumberForItem = (
+  item: Pick<ScrapbookItem, 'catdexNumber' | 'publicNumber' | 'isPublic'>
+) => {
+  if (item.isPublic && item.publicNumber) return formatPublicCatCardNumber(item.publicNumber);
+  return formatCatCardNumber(item.catdexNumber);
+};
+
 export const buildSingleCatShareText = (item: ScrapbookItem, language: 'zh' | 'en') => {
-  const number = formatCatCardNumber(item.catdexNumber);
+  const number = formatCatCardNumberForItem(item);
   const locationName = item.location?.name;
   const address = item.location?.address;
 

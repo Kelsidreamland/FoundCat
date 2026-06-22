@@ -76,6 +76,7 @@ describe('cloud cat card mapping', () => {
   it('removes private note fields from the public map card', () => {
     const publicCard = toPublicCloudCatCard({
       ...toCloudCatCardUpsert(localCat, 'user-1', { isPublic: true }),
+      public_number: 9,
       created_at: '2026-06-02T08:00:00.000Z',
       updated_at: '2026-06-02T08:00:00.000Z',
     });
@@ -83,6 +84,7 @@ describe('cloud cat card mapping', () => {
     expect(publicCard).toEqual({
       id: 'cat-1',
       catdexNumber: 12,
+      publicNumber: 9,
       catName: '巷口小橘',
       imageData: 'data:image/jpeg;base64,cat',
       heroImageData: 'data:image/jpeg;base64,hero',
@@ -99,16 +101,19 @@ describe('cloud cat card mapping', () => {
   it('filters public map cards to published cats with coordinates', () => {
     const privateRow = {
       ...toCloudCatCardUpsert(localCat, 'user-1'),
+      public_number: null,
       created_at: '2026-06-02T08:00:00.000Z',
       updated_at: '2026-06-02T08:00:00.000Z',
     };
     const publicRow = {
       ...toCloudCatCardUpsert(localCat, 'user-1', { isPublic: true }),
+      public_number: 9,
       created_at: '2026-06-02T08:00:00.000Z',
       updated_at: '2026-06-02T08:00:00.000Z',
     };
     const publicWithoutLocation = {
       ...toCloudCatCardUpsert({ ...localCat, id: 'cat-2', location: undefined }, 'user-1', { isPublic: true }),
+      public_number: 10,
       created_at: '2026-06-02T08:00:00.000Z',
       updated_at: '2026-06-02T08:00:00.000Z',
     };

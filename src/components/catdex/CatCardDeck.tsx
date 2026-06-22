@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { PanInfo } from 'framer-motion';
-import { formatCatCardNumber, getDeckNeighbors, sortCatCards } from '../../lib/catdexDeck';
+import { formatCatCardNumberForItem, getDeckNeighbors, sortCatCards } from '../../lib/catdexDeck';
 import type { ScrapbookItem } from '../../store/useScrapbookStore';
 
 interface CatCardDeckProps {
@@ -263,7 +263,7 @@ export default function CatCardDeck({
 
           <div className={`${activeCatName ? 'mt-2' : 'mt-[15px]'} flex items-end justify-between gap-3`}>
             <strong className="block text-[38px] font-black leading-[0.9]">
-              {formatCatCardNumber(active.catdexNumber)}
+              {formatCatCardNumberForItem(active)}
             </strong>
             <span className="block text-right text-[11px] font-black leading-[1.42] text-[#76665a]">
               <span className="block">{activeLocation}</span>

@@ -13,6 +13,7 @@ export interface ScrapbookItem {
   imageData: string; // Base64 or Blob URL
   heroImageData?: string;
   catdexNumber?: number;
+  publicNumber?: number;
   date: string;
   x: number;
   y: number;

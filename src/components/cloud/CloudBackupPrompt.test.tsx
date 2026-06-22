@@ -81,7 +81,7 @@ describe('CloudBackupPrompt', () => {
     expect(screen.getByText('不會影響目前手機裡的貓卡。')).toBeInTheDocument();
   });
 
-  it('sends a sign-in email and keeps the user in the app for the 6-digit OTP', async () => {
+  it('sends a magic-link sign-in email for the fast launch backup flow', async () => {
     const user = userEvent.setup();
     const signInWithEmail = vi.fn(async () => undefined);
     useAuthStore.setState({
@@ -101,20 +101,18 @@ describe('CloudBackupPrompt', () => {
       });
     });
     expect(screen.getByText('已寄出登入信')).toBeInTheDocument();
-    expect(screen.getByText('請不要點 Email 裡的登入連結。請回到這個 App，輸入信裡的 6 位數驗證碼完成登入。')).toBeInTheDocument();
-    expect(screen.getByText('這樣可以避免手機跳到另一個瀏覽器空間，造成原本存在這台裝置裡的貓卡無法一起備份。')).toBeInTheDocument();
-    expect(screen.getByLabelText('Email 驗證碼')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '驗證並登入' })).toBeDisabled();
+    expect(screen.getByText('請到信箱點登入連結，完成後回到轉角遇到貓繼續備份。')).toBeInTheDocument();
+    expect(screen.getByText('如果手機打開了另一個空白版本，請回到原本有貓卡資料的 App，再用同一個 Email 重新登入備份。')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Email 驗證碼')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '驗證並登入' })).not.toBeInTheDocument();
   });
 
-  it('verifies the OTP without opening a separate browser storage space', async () => {
+  it('lets users return to the email form to send a new sign-in link', async () => {
     const user = userEvent.setup();
     const signInWithEmail = vi.fn(async () => undefined);
-    const verifyEmailOtp = vi.fn(async () => undefined);
     useAuthStore.setState({
       isConfigured: true,
       signInWithEmail,
-      verifyEmailOtp,
     });
 
     render(<CloudBackupPrompt language="zh" items={[localCat]} />);
@@ -122,28 +120,20 @@ describe('CloudBackupPrompt', () => {
     await user.click(screen.getByRole('button', { name: '備份我的貓咪地圖' }));
     await user.type(screen.getByLabelText('Email'), 'cat@example.com');
     await user.click(screen.getByRole('button', { name: '寄送登入信' }));
-    await user.type(await screen.findByLabelText('Email 驗證碼'), ' 123456 ');
-    await user.click(screen.getByRole('button', { name: '驗證並登入' }));
 
-    await waitFor(() => {
-      expect(verifyEmailOtp).toHaveBeenCalledWith('cat@example.com', '123456');
-    });
-    expect(screen.getByText('驗證完成，正在保留這台裝置上的貓卡。')).toBeInTheDocument();
+    expect(await screen.findByText('已寄出登入信')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '重新寄送登入信' }));
+
+    expect(screen.getByLabelText('Email')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '寄送登入信' })).toBeInTheDocument();
   });
 
-  it('shows a retryable message when the OTP cannot be verified', async () => {
+  it('does not show OTP verification controls in the magic-link launch flow', async () => {
     const user = userEvent.setup();
     const signInWithEmail = vi.fn(async () => undefined);
-    const verifyEmailOtp = vi.fn(async () => {
-      useAuthStore.setState({
-        error: 'otp_verify_failed',
-        errorMessage: 'Token has expired or is invalid',
-      });
-    });
     useAuthStore.setState({
       isConfigured: true,
       signInWithEmail,
-      verifyEmailOtp,
     });
 
     render(<CloudBackupPrompt language="zh" items={[localCat]} />);
@@ -151,10 +141,10 @@ describe('CloudBackupPrompt', () => {
     await user.click(screen.getByRole('button', { name: '備份我的貓咪地圖' }));
     await user.type(screen.getByLabelText('Email'), 'cat@example.com');
     await user.click(screen.getByRole('button', { name: '寄送登入信' }));
-    await user.type(await screen.findByLabelText('Email 驗證碼'), '000000');
-    await user.click(screen.getByRole('button', { name: '驗證並登入' }));
 
-    expect(await screen.findByText('驗證碼無法使用，請確認是否過期，或重新寄送登入信。')).toBeInTheDocument();
+    expect(await screen.findByText('已寄出登入信')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Email 驗證碼')).not.toBeInTheDocument();
+    expect(screen.queryByText('驗證碼無法使用')).not.toBeInTheDocument();
   });
 
   it('uses the supplied return URL when sending the sign-in email', async () => {

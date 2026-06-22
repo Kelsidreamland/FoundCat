@@ -9,6 +9,7 @@ const makeItem = (overrides: Partial<ScrapbookItem>): ScrapbookItem => ({
   imageData: overrides.imageData ?? 'data:image/png;base64,cat',
   heroImageData: overrides.heroImageData,
   catdexNumber: overrides.catdexNumber,
+  publicNumber: overrides.publicNumber,
   date: overrides.date ?? '2026-05-11T08:00:00.000Z',
   x: 0,
   y: 0,
@@ -17,6 +18,7 @@ const makeItem = (overrides: Partial<ScrapbookItem>): ScrapbookItem => ({
   zIndex: 1,
   location: overrides.location,
   catName: overrides.catName,
+  isPublic: overrides.isPublic,
 });
 
 describe('CatCardDeck', () => {
@@ -53,6 +55,33 @@ describe('CatCardDeck', () => {
     expect(screen.getByText('No.029')).toBeInTheDocument();
     expect(screen.getByText('巷口咖啡店')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '分享這張卡與地址' })).toBeInTheDocument();
+  });
+
+  it('shows the world-map number for public cat cards', () => {
+    render(
+      <CatCardDeck
+        items={[
+          makeItem({
+            id: 'public-cat-1',
+            catdexNumber: 4,
+            publicNumber: 1,
+            isPublic: true,
+            location: { lat: 25, lng: 121, name: '巷口咖啡店' },
+          }),
+        ]}
+        language="zh"
+        labels={{
+          empty: '還沒有貓卡',
+          previous: '上一張',
+          next: '下一張',
+          shareCard: '分享這張卡與地址',
+        }}
+        onShareCard={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('W-001')).toBeInTheDocument();
+    expect(screen.queryByText('No.004')).not.toBeInTheDocument();
   });
 
   it('uses the custom cat name as the active card title when available', () => {

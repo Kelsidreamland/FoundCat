@@ -1,6 +1,6 @@
 import QRCode from 'qrcode';
 import type { ScrapbookItem } from '../store/useScrapbookStore';
-import { formatCatCardNumber, sortCatCards } from './catdexDeck';
+import { formatCatCardNumberForItem, sortCatCards } from './catdexDeck';
 import { buildMapSharePath, buildMapSharePayload } from './mapShare';
 
 const normalizeAppShareUrl = (value: string | undefined) => {
@@ -326,7 +326,7 @@ const drawBrandFooter = async (ctx: CanvasRenderingContext2D, url = APP_SHARE_UR
 };
 
 export const buildCatCardPosterShareText = (item: ScrapbookItem, language: Language) => {
-  const number = formatCatCardNumber(item.catdexNumber);
+  const number = formatCatCardNumberForItem(item);
   const catName = item.catName?.trim();
   const lines = language === 'zh'
     ? [
@@ -401,7 +401,7 @@ export const createCatCardPosterBlob = async (
   shareUrl = APP_SHARE_URL
 ) => {
   const { canvas, ctx } = createPosterCanvas();
-  const number = formatCatCardNumber(item.catdexNumber);
+  const number = formatCatCardNumberForItem(item);
   const imageSrc = item.heroImageData || item.imageData;
   const catName = item.catName?.trim();
   const locationName = item.location?.name ?? (language === 'zh' ? '未記錄地點' : 'No location');
@@ -583,7 +583,7 @@ export const createCatMapPosterBlob = async ({
     const y = index < 3 ? 394 + (index % 2) * 82 : 650;
     fillRoundRect(ctx, x, y, 126, 104, 28, colors.card);
     strokeRoundRect(ctx, x, y, 126, 104, 28, colors.ink, 5);
-    drawText(ctx, formatCatCardNumber(item.catdexNumber), x + 63, y + 45, {
+    drawText(ctx, formatCatCardNumberForItem(item), x + 63, y + 45, {
       font: '900 26px system-ui, sans-serif',
       color: colors.cobalt,
       align: 'center',
@@ -680,7 +680,7 @@ export const prepareSingleCatPosterShare = async ({
   includeMemo?: boolean;
 }) => {
   const blob = await createCatCardPosterBlob(item, language, shareUrl);
-  const number = formatCatCardNumber(item.catdexNumber).replace('.', '-').toLowerCase();
+  const number = formatCatCardNumberForItem(item).replace('.', '-').toLowerCase();
 
   return {
     blob,

@@ -13,7 +13,7 @@ import { ArrowLeft, ArrowRight, CalendarDays, Check, ExternalLink, MapPin, Maxim
 import { AnimatePresence, motion } from 'framer-motion';
 import { CAT_BREEDS } from '../data/catBreeds';
 import { CAT_COLORS } from '../data/catColors';
-import { formatCatCardNumber } from '../lib/catdexDeck';
+import { formatCatCardNumberForItem } from '../lib/catdexDeck';
 import { MapTreasureBrandMark } from '../components/brand/BrandMarks';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import CloudBackupPrompt from '../components/cloud/CloudBackupPrompt';
@@ -550,7 +550,7 @@ export default function Map() {
   const selectedDateLabel = selectedItem
     ? formatDate(new Date(selectedItem.date), language, { year: 'numeric', month: 'long', day: 'numeric' })
     : null;
-  const selectedCardNumber = selectedItem ? formatCatCardNumber(selectedItem.catdexNumber) : null;
+  const selectedCardNumber = selectedItem ? formatCatCardNumberForItem(selectedItem) : null;
   const selectedImage = selectedItem?.heroImageData || selectedItem?.imageData;
   const selectedDisplayName = selectedItem?.catName?.trim() || selectedItem?.location?.name || '';
   const selectedGoogleMapsUrl = selectedItem?.location

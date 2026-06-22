@@ -24,6 +24,7 @@ create table if not exists public.cat_cards (
   id uuid primary key,
   owner_id uuid not null references auth.users(id) on delete cascade,
   catdex_number integer,
+  public_number integer,
   cat_name text,
   image_data text not null,
   hero_image_data text,
@@ -44,6 +45,9 @@ create table if not exists public.cat_cards (
 create index if not exists cat_cards_owner_id_idx on public.cat_cards(owner_id);
 create index if not exists cat_cards_public_location_idx on public.cat_cards(is_public, lat, lng);
 create index if not exists cat_cards_updated_at_idx on public.cat_cards(updated_at desc);
+create unique index if not exists cat_cards_public_number_unique_idx
+on public.cat_cards(public_number)
+where public_number is not null;
 
 alter table public.cat_cards enable row level security;
 
@@ -85,11 +89,37 @@ before update on public.cat_cards
 for each row
 execute function public.set_updated_at();
 
+create sequence if not exists public.public_cat_cards_number_seq;
+
+create or replace function public.assign_public_cat_number()
+returns trigger
+language plpgsql
+as $$
+begin
+  if tg_op = 'UPDATE' and old.public_number is not null and new.public_number is null then
+    new.public_number := old.public_number;
+  end if;
+
+  if new.is_public = true and new.public_number is null then
+    new.public_number := nextval('public.public_cat_cards_number_seq');
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists assign_public_cat_number_on_publish on public.cat_cards;
+create trigger assign_public_cat_number_on_publish
+before insert or update on public.cat_cards
+for each row
+execute function public.assign_public_cat_number();
+
 drop view if exists public.public_cat_cards;
 create or replace view public.public_cat_cards as
 select
   id,
   catdex_number,
+  public_number,
   cat_name,
   image_data,
   hero_image_data,

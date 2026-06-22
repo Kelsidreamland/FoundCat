@@ -1,5 +1,5 @@
 import type { CatCareStatusTag, CatPersonalityTag, ScrapbookItem } from '../store/useScrapbookStore';
-import { formatCatCardNumber } from './catdexDeck';
+import { formatCatCardNumberForItem } from './catdexDeck';
 
 export const MAP_SHARE_VERSION = 1;
 
@@ -57,7 +57,7 @@ export const buildMapSharePayload = (
 
       return {
         id: item.id,
-        numberLabel: formatCatCardNumber(item.catdexNumber),
+        numberLabel: formatCatCardNumberForItem(item),
         catName: catName || undefined,
         date: item.date,
         locationName: location.name,

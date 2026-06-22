@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { ScrapbookItem } from '../store/useScrapbookStore';
 import {
   buildSingleCatShareText,
+  formatCatCardNumberForItem,
+  formatPublicCatCardNumber,
   getDeckNeighbors,
   sortCatCards,
 } from './catdexDeck';
@@ -18,6 +20,8 @@ const makeItem = (overrides: Partial<ScrapbookItem>): ScrapbookItem => ({
   scale: 1,
   zIndex: 1,
   location: overrides.location,
+  publicNumber: overrides.publicNumber,
+  isPublic: overrides.isPublic,
 });
 
 describe('catdex deck helpers', () => {
@@ -63,5 +67,15 @@ describe('catdex deck helpers', () => {
     expect(text).toContain('No.029');
     expect(text).toContain('巷口咖啡店');
     expect(text).toContain('台北市信義區');
+  });
+
+  it('formats private and public cat card numbers separately', () => {
+    expect(formatCatCardNumberForItem(makeItem({ catdexNumber: 4 }))).toBe('No.004');
+    expect(formatPublicCatCardNumber(1)).toBe('W-001');
+    expect(formatCatCardNumberForItem(makeItem({
+      catdexNumber: 4,
+      publicNumber: 1,
+      isPublic: true,
+    }))).toBe('W-001');
   });
 });

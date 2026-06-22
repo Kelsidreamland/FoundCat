@@ -140,6 +140,7 @@ const makeItem = (overrides: Partial<ScrapbookItem> = {}): ScrapbookItem => ({
   type: 'sticker',
   imageData: overrides.imageData ?? 'data:image/png;base64,cat',
   catdexNumber: overrides.catdexNumber ?? 29,
+  publicNumber: overrides.publicNumber,
   date: overrides.date ?? '2026-05-11T08:00:00.000Z',
   x: 0,
   y: 0,
@@ -193,6 +194,7 @@ describe('Map page', () => {
           id: 'public-cat-1',
           imageData: 'data:image/png;base64,public-cat',
           catdexNumber: 88,
+          publicNumber: 1,
           catName: '曼谷小橘',
           location: {
             lat: 13.7563,
@@ -828,7 +830,8 @@ describe('Map page', () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('No.088')).toBeInTheDocument();
+    expect(await screen.findByText('W-001')).toBeInTheDocument();
+    expect(screen.queryByText('No.088')).not.toBeInTheDocument();
     expect(screen.getByText('曼谷街角咖啡')).toBeInTheDocument();
     expect(screen.queryByText('想讓大家也看到這隻貓？')).not.toBeInTheDocument();
   });
