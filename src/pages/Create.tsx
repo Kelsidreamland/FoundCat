@@ -9,6 +9,7 @@ import LocationPicker from '../components/LocationPicker';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import { imageBlobToHeroDataUrl } from '../lib/imageData';
 import { buildStickerDraft } from '../lib/createStickerDraft';
+import { clearCreatePreviewDraft, loadCreatePreviewDraft, saveCreatePreviewDraft } from '../lib/createDraftRecovery';
 import { useAuthStore } from '../store/useAuthStore';
 import { useCloudBackupStatusStore } from '../store/useCloudBackupStatusStore';
 import { backupLocalCatCards } from '../lib/cloudBackup';
@@ -139,6 +140,17 @@ export default function Create() {
   const [showLocationPicker, setShowLocationPicker] = useState(false);
 
   useEffect(() => {
+    if (createdStickerId || imageSrc || previewImage || showLocationPicker) return;
+
+    const draft = loadCreatePreviewDraft();
+    if (!draft) return;
+
+    setPreviewImage(draft.previewImage);
+    setPreviewHeroImageData(draft.previewHeroImageData ?? null);
+    setPreviewMode(true);
+  }, [createdStickerId, imageSrc, previewImage, showLocationPicker]);
+
+  useEffect(() => {
     if (createdStickerId || imageSrc || previewMode) return;
 
     const pendingId = readPendingLocationId();
@@ -265,6 +277,7 @@ export default function Create() {
 
         // 2. Use ObjectURL instead of Base64 (FileReader) to avoid Out-Of-Memory (OOM) crashes on mobile browsers
         const objectUrl = URL.createObjectURL(compressedFile);
+        clearCreatePreviewDraft();
         setCrop({ x: 0, y: 0 });
         setZoom(1);
         setPreviewImage(null);
@@ -278,6 +291,7 @@ export default function Create() {
         // Fallback: directly create an ObjectURL from the original file
         try {
           const objectUrl = URL.createObjectURL(file);
+          clearCreatePreviewDraft();
           setCrop({ x: 0, y: 0 });
           setZoom(1);
           setPreviewImage(null);
@@ -308,6 +322,10 @@ export default function Create() {
       setPreviewImage(finalImage);
       setPreviewHeroImageData(heroImageData ?? null);
       setPreviewMode(true);
+      saveCreatePreviewDraft({
+        previewImage: finalImage,
+        ...(heroImageData ? { previewHeroImageData: heroImageData } : {}),
+      });
     } catch (e) {
       console.error('Square crop failed', e);
       setToastMessage(t.saveFailed || 'Save failed');
@@ -325,6 +343,7 @@ export default function Create() {
         heroImageData: previewHeroImageData ?? undefined,
         targetDate,
       }));
+      clearCreatePreviewDraft();
       beginPostCreateFlow(createdItem.id);
     } catch (e) {
       console.error('Save failed', e);
@@ -353,7 +372,7 @@ export default function Create() {
 
   const isPostCreateFlow = showLocationPicker;
 
-  if (!imageSrc && !isPostCreateFlow) {
+  if (!imageSrc && !previewMode && !isPostCreateFlow) {
     return (
       <div className="absolute inset-0 flex flex-col overflow-hidden bg-[#F7F2E8]">
         <div
@@ -472,12 +491,13 @@ export default function Create() {
     <div className="absolute inset-0 flex flex-col bg-[#fff7e8]">
       {toastOverlay}
 
-      {imageSrc ? (
+      {imageSrc || previewMode ? (
         <>
           {/* Header */}
           <header className="absolute inset-x-0 top-0 z-50 flex h-20 items-center justify-start bg-gradient-to-b from-[#fff7e8]/95 to-transparent px-5 pt-[max(1rem,env(safe-area-inset-top))]">
             <button
               onClick={() => {
+                clearCreatePreviewDraft();
                 navigate('/');
               }}
               className="grid h-10 w-10 place-items-center rounded-full border-2 border-[#221915] bg-[#fffdf2] text-[#221915] shadow-[3px_3px_0_rgba(47,95,179,0.18)] transition-colors hover:bg-[#fff2cf] disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
@@ -511,6 +531,7 @@ export default function Create() {
                     setPreviewMode(false);
                     setPreviewImage(null);
                     setPreviewHeroImageData(null);
+                    clearCreatePreviewDraft();
                   }}
                   disabled={isProcessing}
                   className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-[16px] border-2 border-[#221915]/25 bg-[#fffaf0] px-4 py-3 font-black text-[#221915] shadow-[2px_2px_0_rgba(34,25,21,0.1)] transition-all active:translate-y-[1px] disabled:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"

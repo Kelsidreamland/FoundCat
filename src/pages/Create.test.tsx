@@ -204,6 +204,46 @@ describe('Create page', () => {
     expect(screen.getByRole('button', { name: '方形貓卡' })).toHaveClass('bg-[#2F5FB3]');
   });
 
+  it('saves the cropped preview as a recoverable draft before the cat card is confirmed', async () => {
+    render(
+      <MemoryRouter>
+        <Create />
+      </MemoryRouter>
+    );
+
+    await userEvent.upload(
+      screen.getByLabelText('Upload from Album'),
+      new File(['cat'], 'cat.jpg', { type: 'image/jpeg' })
+    );
+
+    await screen.findByTestId('cropper');
+    await userEvent.click(screen.getByRole('button', { name: '方形貓卡' }));
+    await screen.findByAltText('預覽貓卡');
+
+    expect(JSON.parse(window.localStorage.getItem('found-cat-create-preview-draft') ?? '{}')).toMatchObject({
+      previewImage: expect.stringMatching(/^data:image\/jpeg;base64,/),
+    });
+  });
+
+  it('restores a cropped preview draft after the app reloads before confirmation', async () => {
+    window.localStorage.setItem('found-cat-create-preview-draft', JSON.stringify({
+      previewImage: 'data:image/jpeg;base64,recovered-cat-card',
+      previewHeroImageData: 'data:image/jpeg;base64,recovered-hero',
+    }));
+
+    render(
+      <MemoryRouter>
+        <Create />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByAltText('預覽貓卡')).toHaveAttribute(
+      'src',
+      'data:image/jpeg;base64,recovered-cat-card'
+    );
+    expect(screen.getByRole('button', { name: /存入我的貓卡/ })).toBeInTheDocument();
+  });
+
   it('uses the shared moodboard brand header with logo and close navigation', () => {
     render(
       <MemoryRouter>
