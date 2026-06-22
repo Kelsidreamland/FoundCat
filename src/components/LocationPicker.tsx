@@ -49,12 +49,14 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   const [isResolvingAddress, setIsResolvingAddress] = useState(false);
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
   const [searchStatus, setSearchStatus] = useState<'idle' | 'no-results' | 'error'>('idle');
+  const [linkInputError, setLinkInputError] = useState(false);
 
   const defaultLocationName = language === 'zh' ? '貓咪出沒點' : 'Cat Spot';
   const parsedGoogleMapsLocation = useMemo(() => parseGoogleMapsLink(locationName), [locationName]);
   const googleMapsSearchText = useMemo(() => parseGoogleMapsSearchText(locationName), [locationName]);
   const searchQuery = googleMapsSearchText ?? locationName.trim();
   const hasGoogleMapsUrlInput = /(?:google\.[a-z.]+\/maps|maps\.app\.goo\.gl|goo\.gl\/maps)/i.test(locationName);
+  const hasUnresolvedUrlInput = /^https?:\/\//i.test(locationName.trim()) && !parsedGoogleMapsLocation && !googleMapsSearchText;
 
   useEffect(() => {
     defaultLocationNameRef.current = defaultLocationName;
@@ -155,7 +157,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   useEffect(() => {
     const query = searchQuery;
 
-    if (parsedGoogleMapsLocation) {
+    if (parsedGoogleMapsLocation || hasUnresolvedUrlInput) {
       setSuggestions([]);
       setSearchStatus('idle');
       setIsSearching(false);
@@ -201,7 +203,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [getSearchCenter, language, parsedGoogleMapsLocation, searchQuery]);
+  }, [getSearchCenter, hasUnresolvedUrlInput, language, parsedGoogleMapsLocation, searchQuery]);
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -275,6 +277,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
 
   const handleLocationNameChange = useCallback((value: string) => {
     selectedSuggestionNameRef.current = null;
+    setLinkInputError(false);
     setLocationName(value);
   }, []);
 
@@ -369,6 +372,13 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
 
   const handleConfirm = useCallback(async () => {
     const query = searchQuery;
+    if (hasUnresolvedUrlInput) {
+      setSuggestions([]);
+      setSearchStatus('idle');
+      setLinkInputError(true);
+      return;
+    }
+
     const shouldResolveTypedQuery = !pickedManualCoordinateRef.current &&
       (!hasGoogleMapsUrlInput || Boolean(googleMapsSearchText)) &&
       query.length >= 2 &&
@@ -430,6 +440,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
     getSearchCenter,
     googleMapsSearchText,
     hasGoogleMapsUrlInput,
+    hasUnresolvedUrlInput,
     language,
     onPicked,
     searchQuery,
@@ -595,6 +606,13 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
               {language === 'zh'
                 ? '這個 Google Maps 連結沒有可直接讀取的座標。如果是短連結，請在 Google Maps 打開後複製完整網址，或直接點地圖選位置。'
                 : 'This Google Maps link does not expose coordinates. Open it in Google Maps and copy the full URL, or tap the map directly.'}
+            </p>
+          ) : null}
+          {linkInputError ? (
+            <p className="mt-2 rounded-2xl border border-[#d97706]/25 bg-[#fff2cf]/75 px-3 py-2 text-xs font-black leading-5 text-[#7a4a08]">
+              {language === 'zh'
+                ? '這個連結讀不到地點名稱。請補上店名或地址，再按確認地點。'
+                : 'This link does not include a readable place name. Add the shop name or address, then confirm.'}
             </p>
           ) : null}
         </div>
