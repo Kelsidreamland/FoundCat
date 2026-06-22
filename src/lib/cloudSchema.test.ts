@@ -32,12 +32,11 @@ describe('FOUND CAT Supabase schema', () => {
     expect(publicViewSql).toMatch(/\bpublic_number\b/i);
   });
 
-  it('keeps launch rescue uploads in a temporary public table instead of opening anonymous writes to private backups', () => {
+  it('keeps rescued launch cats visible but closes anonymous launch rescue writes after rescue is complete', () => {
     expect(schemaSql).toMatch(/create\s+table\s+if\s+not\s+exists\s+public\.launch_rescue_cat_cards/i);
     expect(schemaSql).toMatch(/alter\s+table\s+public\.launch_rescue_cat_cards\s+enable\s+row\s+level\s+security/i);
-    expect(schemaSql).toMatch(/on\s+public\.launch_rescue_cat_cards\s+for\s+insert\s+to\s+anon,\s*authenticated/i);
-    expect(schemaSql).toMatch(/grant\s+insert\s+on\s+public\.launch_rescue_cat_cards\s+to\s+anon,\s*authenticated/i);
-    expect(schemaSql).toMatch(/grant\s+usage\s+on\s+sequence\s+public\.public_cat_cards_number_seq\s+to\s+anon,\s*authenticated/i);
+    expect(schemaSql).not.toMatch(/on\s+public\.launch_rescue_cat_cards\s+for\s+insert\s+to\s+anon,\s*authenticated/i);
+    expect(schemaSql).not.toMatch(/grant\s+insert\s+on\s+public\.launch_rescue_cat_cards\s+to\s+anon/i);
     expect(schemaSql).not.toMatch(/grant\s+insert\s+on\s+public\.cat_cards\s+to\s+anon/i);
 
     const publicViewSql = schemaSql.split(/create\s+or\s+replace\s+view\s+public\.public_cat_cards/i)[1] ?? '';

@@ -10,9 +10,6 @@ import { CAT_COLORS } from '../data/catColors';
 import LocationPicker from '../components/LocationPicker';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import { shareCatCardPoster } from '../lib/sharePoster';
-import { rescueLocalCatsToPublic } from '../lib/launchRescuePublicCats';
-
-type PublicPublishStatus = 'idle' | 'saving' | 'published' | 'error';
 
 export default function Detail() {
   const { id } = useParams();
@@ -20,7 +17,6 @@ export default function Detail() {
   const { items, removeItem, updateItem, language } = useScrapbookStore();
   const t = translations[language];
   const [showLocationPicker, setShowLocationPicker] = useState(false);
-  const [publicPublishStatus, setPublicPublishStatus] = useState<PublicPublishStatus>('idle');
 
   const item = items.find(i => i.id === id);
   const breedMeta = item?.catBreed ? CAT_BREEDS.find((breed) => breed.id === item.catBreed) : undefined;
@@ -62,42 +58,6 @@ export default function Detail() {
     }
   };
 
-  const handleOneTapPublicPublish = async () => {
-    if (!item.location) {
-      setShowLocationPicker(true);
-      return;
-    }
-
-    setPublicPublishStatus('saving');
-    const result = await rescueLocalCatsToPublic([item]);
-
-    if (!result.ok) {
-      setPublicPublishStatus('error');
-      return;
-    }
-
-    await updateItem(item.id, { isPublic: true });
-    setPublicPublishStatus('published');
-  };
-
-  const publishCopy = {
-    action: language === 'zh' ? '一鍵公開到全世界地圖' : 'Publish to World Map',
-    saving: language === 'zh' ? '公開中...' : 'Publishing...',
-    published: language === 'zh' ? '已公開到全世界地圖' : 'Published to the World Map',
-    publishedHint: language === 'zh'
-      ? '這張貓卡已進入公開貓咪地圖。'
-      : 'This cat card is now on the public cat map.',
-    error: language === 'zh'
-      ? '公開失敗。請確認資料庫救援 SQL 已執行，再試一次。'
-      : 'Publish failed. Please confirm the rescue SQL has run, then try again.',
-    missingLocation: language === 'zh'
-      ? '需要先加入遇見地點，才能公開到地圖。'
-      : 'Add an encounter location before publishing to the map.',
-    hint: language === 'zh'
-      ? '臨時救援功能：不需登入，直接把這張貓卡放進公開地圖。'
-      : 'Temporary rescue: publish this card without signing in.',
-  };
-
   return (
     <div className="absolute inset-0 flex flex-col bg-[#fff7e8] overflow-hidden">
       <CatBrandHeader
@@ -127,8 +87,7 @@ export default function Detail() {
         </button>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto px-8 pb-8 pt-4 scrollbar-hide">
-        <div className="flex min-h-full flex-col items-center justify-center">
+      <div className="flex-1 flex flex-col items-center justify-center p-8 pt-4">
         <motion.div 
           initial={{ scale: 0.8, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -210,38 +169,7 @@ export default function Detail() {
             </p>
           </div>
 
-          <div className="w-full rounded-[20px] border-2 border-[#221915]/12 bg-[#fffdf2]/92 p-3 text-left shadow-[5px_5px_0_rgba(47,95,179,0.14)]">
-            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#2f5fb3]">
-              {language === 'zh' ? '貼文公開' : 'Public post'}
-            </p>
-            <p className="mt-1 text-xs font-bold leading-relaxed text-[#6b5b50]">
-              {item.location ? publishCopy.hint : publishCopy.missingLocation}
-            </p>
-            <button
-              type="button"
-              onClick={() => void handleOneTapPublicPublish()}
-              disabled={publicPublishStatus === 'saving' || item.isPublic}
-              className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] border-2 border-[#221915] bg-[#f7c948] px-4 py-2 text-sm font-black text-[#221915] shadow-[4px_4px_0_rgba(47,95,179,0.18)] transition-transform active:translate-x-[1px] active:translate-y-[1px] disabled:cursor-default disabled:bg-[#fff2cf] disabled:text-[#6b5b50]"
-              aria-label={item.isPublic ? publishCopy.published : publishCopy.action}
-            >
-              <MapPin size={16} className="text-[#2f5fb3]" />
-              <span>
-                {publicPublishStatus === 'saving'
-                  ? publishCopy.saving
-                  : item.isPublic
-                    ? publishCopy.published
-                    : publishCopy.action}
-              </span>
-            </button>
-            {(publicPublishStatus === 'published' || item.isPublic) ? (
-              <p className="mt-2 text-xs font-black leading-relaxed text-[#2f5fb3]">{publishCopy.publishedHint}</p>
-            ) : null}
-            {publicPublishStatus === 'error' ? (
-              <p className="mt-2 text-xs font-black leading-relaxed text-[#9f3a2f]">{publishCopy.error}</p>
-            ) : null}
-          </div>
         </motion.div>
-        </div>
       </div>
 
       {showLocationPicker ? (

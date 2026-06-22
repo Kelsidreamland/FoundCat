@@ -75,13 +75,6 @@ where public_number is not null;
 alter table public.launch_rescue_cat_cards enable row level security;
 
 drop policy if exists "launch rescue cat cards insertable during launch" on public.launch_rescue_cat_cards;
-create policy "launch rescue cat cards insertable during launch"
-on public.launch_rescue_cat_cards for insert to anon, authenticated
-with check (
-  image_data <> ''
-  and lat between -90 and 90
-  and lng between -180 and 180
-);
 
 alter table public.cat_cards enable row level security;
 
@@ -217,5 +210,4 @@ select
 from public.launch_rescue_cat_cards;
 
 grant select on public.public_cat_cards to anon, authenticated;
-grant insert on public.launch_rescue_cat_cards to anon, authenticated;
-grant usage on sequence public.public_cat_cards_number_seq to anon, authenticated;
+revoke insert on public.launch_rescue_cat_cards from anon, authenticated;
