@@ -52,33 +52,13 @@ function HomeDeckLoading({ language }: { language: 'zh' | 'en' }) {
 
 type PublicDeckStatus = 'loading' | 'ready' | 'failed';
 
-function normalizeCatCardFingerprintPart(value?: string | null) {
-  return value?.trim().toLowerCase() ?? '';
-}
-
 function isSameCollectedPublicCat(publicItem: ScrapbookItem, localItem: ScrapbookItem) {
   if (localItem.collectedFromPublicId && localItem.collectedFromPublicId === publicItem.id) return true;
-  if (publicItem.id === localItem.id) return true;
-
-  const publicImage = publicItem.heroImageData || publicItem.imageData;
-  const localImage = localItem.heroImageData || localItem.imageData;
-
-  const publicName = normalizeCatCardFingerprintPart(publicItem.catName);
-  const localName = normalizeCatCardFingerprintPart(localItem.catName);
-  const publicLocationName = normalizeCatCardFingerprintPart(publicItem.location?.name);
-  const localLocationName = normalizeCatCardFingerprintPart(localItem.location?.name);
-  const hasSameName = Boolean(publicName && localName && publicName === localName);
-  const hasSameLocationName = Boolean(
-    publicLocationName &&
-    localLocationName &&
-    publicLocationName === localLocationName
+  return Boolean(
+    localItem.publicNumber &&
+    publicItem.publicNumber &&
+    localItem.publicNumber === publicItem.publicNumber
   );
-
-  if (publicImage && localImage && publicImage === localImage && (hasSameName || hasSameLocationName)) {
-    return true;
-  }
-
-  return hasSameName && hasSameLocationName;
 }
 
 export default function Home() {

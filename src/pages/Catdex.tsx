@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import CatActionNav from '../components/catdex/CatActionNav';
 import CatdexLabel from '../components/catdex/CatdexLabel';
@@ -29,6 +29,8 @@ type CatdexPlaceGroup = {
   name: string;
   items: ScrapbookItem[];
 };
+
+type CatdexCollectionTab = 'self' | 'world';
 
 const sortByNumberThenDate = (items: ScrapbookItem[]) => {
   return [...items].sort((a, b) => {
@@ -64,6 +66,7 @@ const buildPlaceGroups = (items: ScrapbookItem[], language: 'zh' | 'en') => {
 export default function Catdex() {
   const { items, language } = useScrapbookStore();
   const t = translations[language];
+  const [activeCollectionTab, setActiveCollectionTab] = useState<CatdexCollectionTab>('self');
 
   const selfFoundItems = useMemo(
     () => sortByNumberThenDate(items.filter((item) => !item.collectedFromPublicId)),
@@ -81,6 +84,15 @@ export default function Catdex() {
     () => buildPlaceGroups(worldSavedItems, language),
     [language, worldSavedItems]
   );
+
+  useEffect(() => {
+    if (activeCollectionTab === 'self' && selfFoundItems.length === 0 && worldSavedItems.length > 0) {
+      setActiveCollectionTab('world');
+    }
+    if (activeCollectionTab === 'world' && worldSavedItems.length === 0 && selfFoundItems.length > 0) {
+      setActiveCollectionTab('self');
+    }
+  }, [activeCollectionTab, selfFoundItems.length, worldSavedItems.length]);
 
   const formatGroupCount = (count: number) => (
     language === 'zh'
@@ -198,6 +210,61 @@ export default function Catdex() {
     );
   };
 
+  const selfTabLabel = language === 'zh' ? '我拍到的貓' : 'Cats I Found';
+  const worldTabLabel = language === 'zh' ? '收藏的世界貓卡' : 'Saved World Cats';
+  const activeCollection = activeCollectionTab === 'world'
+    ? {
+        title: worldTabLabel,
+        eyebrow: 'SAVED FROM WORLD MAP',
+        description: language === 'zh'
+          ? '從全世界地圖收藏回來，保留原本的 W 編號。'
+          : 'Cats saved from the World Map, keeping their original W-numbers.',
+        groups: worldSavedPlaceGroups,
+        isWorldSaved: true,
+      }
+    : {
+        title: selfTabLabel,
+        eyebrow: 'MY FOUND CATS',
+        description: language === 'zh'
+          ? '自己拍到、自己編號的貓咪圖鑑。'
+          : 'Cats you photographed yourself, with your own private numbers.',
+        groups: selfFoundPlaceGroups,
+        isWorldSaved: false,
+      };
+
+  const renderCollectionTab = ({
+    id,
+    label,
+    count,
+  }: {
+    id: CatdexCollectionTab;
+    label: string;
+    count: number;
+  }) => {
+    const isActive = activeCollectionTab === id;
+
+    return (
+      <button
+        type="button"
+        onClick={() => setActiveCollectionTab(id)}
+        aria-label={`${label} ${count}`}
+        aria-pressed={isActive}
+        className={`flex min-w-0 flex-1 items-center justify-between gap-2 rounded-[16px] border-2 px-3 py-2 text-left text-xs font-black transition-colors ${
+          isActive
+            ? 'border-[#221915] bg-[#2f5fb3] text-[#fffdf2] shadow-[3px_3px_0_rgba(29,23,20,0.85)]'
+            : 'border-[#221915]/20 bg-[#fffdf2] text-[#6d5f52]'
+        }`}
+      >
+        <span className="truncate">{label}</span>
+        <span className={`grid h-6 min-w-6 place-items-center rounded-full px-2 text-[11px] ${
+          isActive ? 'bg-[#fffdf2] text-[#2f5fb3]' : 'bg-[#fff2cf] text-[#221915]'
+        }`}>
+          {count}
+        </span>
+      </button>
+    );
+  };
+
   return (
     <div className="absolute inset-0 flex flex-col overflow-hidden bg-[#fff7e8] text-[#1d1714]" style={paperTexture}>
       <CatBrandHeader
@@ -216,6 +283,20 @@ export default function Catdex() {
           <h1 className="mt-1 text-3xl font-black leading-none text-[#1d1714]">
             {t.catdex}
           </h1>
+          {items.length > 0 ? (
+            <div className="mt-4 flex gap-2" aria-label={language === 'zh' ? '貓卡分類' : 'Cat card sections'}>
+              {renderCollectionTab({
+                id: 'self',
+                label: selfTabLabel,
+                count: selfFoundItems.length,
+              })}
+              {renderCollectionTab({
+                id: 'world',
+                label: worldTabLabel,
+                count: worldSavedItems.length,
+              })}
+            </div>
+          ) : null}
         </section>
 
         {items.length === 0 ? (
@@ -232,24 +313,7 @@ export default function Catdex() {
           </div>
         ) : (
           <div className="space-y-6 pb-2">
-            {renderCollectionSection({
-              title: language === 'zh' ? '我拍到的貓' : 'Cats I Found',
-              eyebrow: 'MY FOUND CATS',
-              description: language === 'zh'
-                ? '自己拍到、自己編號的貓咪圖鑑。'
-                : 'Cats you photographed yourself, with your own private numbers.',
-              groups: selfFoundPlaceGroups,
-              isWorldSaved: false,
-            })}
-            {renderCollectionSection({
-              title: language === 'zh' ? '收藏的世界貓卡' : 'Saved World Cats',
-              eyebrow: 'SAVED FROM WORLD MAP',
-              description: language === 'zh'
-                ? '從全世界地圖收藏回來，保留原本的 W 編號。'
-                : 'Cats saved from the World Map, keeping their original W-numbers.',
-              groups: worldSavedPlaceGroups,
-              isWorldSaved: true,
-            })}
+            {renderCollectionSection(activeCollection)}
           </div>
         )}
       </main>

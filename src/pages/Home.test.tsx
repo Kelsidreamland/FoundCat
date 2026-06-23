@@ -384,7 +384,46 @@ describe('Home page', () => {
     expect(screen.queryByText('首爾店長貓')).not.toBeInTheDocument();
   });
 
-  it('hides public cat cards that were already collected into my local cat cards', async () => {
+  it('still shows my published world cats on the default home deck', async () => {
+    vi.mocked(loadPublicCatCards).mockResolvedValue({
+      ok: true,
+      items: [
+        makeItem({
+          id: 'public-copy-of-my-cat',
+          publicNumber: 1,
+          catName: '我公開的小橘',
+          imageData: 'data:image/png;base64,my-public-cat',
+          location: { lat: 13.7563, lng: 100.5018, name: '曼谷街角咖啡' },
+          isPublic: true,
+        }),
+      ],
+    });
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          id: 'local-original-cat',
+          catdexNumber: 1,
+          catName: '我公開的小橘',
+          imageData: 'data:image/png;base64,my-public-cat',
+          location: { lat: 13.7563, lng: 100.5018, name: '曼谷街角咖啡' },
+          isPublic: true,
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('我公開的小橘')).toBeInTheDocument();
+    expect(screen.queryByText('全世界地圖等第一批貓點')).not.toBeInTheDocument();
+  });
+
+  it('does not hide public cats just because a local cat has the same photo and place', async () => {
     vi.mocked(loadPublicCatCards).mockResolvedValue({
       ok: true,
       items: [
@@ -427,8 +466,8 @@ describe('Home page', () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('曼谷小橘')).toBeInTheDocument();
-    expect(screen.queryByText('首爾店長貓')).not.toBeInTheDocument();
+    expect(await screen.findByText('首爾店長貓')).toBeInTheDocument();
+    expect(screen.queryByText('全世界地圖等第一批貓點')).not.toBeInTheDocument();
   });
 
   it('moves the cat card deck closer to the visual center without over-reserving bottom space', () => {

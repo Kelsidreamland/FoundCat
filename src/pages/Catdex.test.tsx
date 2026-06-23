@@ -1,4 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { ScrapbookItem } from '../store/useScrapbookStore';
@@ -131,7 +132,8 @@ describe('Catdex page', () => {
     expect(screen.getByText('還沒標地點的貓')).toBeInTheDocument();
   });
 
-  it('separates self-found cat cards from world cats saved into my collection', () => {
+  it('uses tabs to switch between self-found cat cards and saved world cats', async () => {
+    const user = userEvent.setup();
     useScrapbookStore.setState({
       items: [
         makeItem({
@@ -160,15 +162,24 @@ describe('Catdex page', () => {
       </MemoryRouter>
     );
 
+    const selfTab = screen.getByRole('button', { name: '我拍到的貓 1' });
+    const worldTab = screen.getByRole('button', { name: '收藏的世界貓卡 1' });
+    expect(selfTab).toHaveAttribute('aria-pressed', 'true');
+    expect(worldTab).toHaveAttribute('aria-pressed', 'false');
     expect(screen.getByRole('heading', { name: '我拍到的貓' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '收藏的世界貓卡' })).toBeInTheDocument();
-    expect(screen.getByText('自己拍到、自己編號的貓咪圖鑑。')).toBeInTheDocument();
-    expect(screen.getByText('從全世界地圖收藏回來，保留原本的 W 編號。')).toBeInTheDocument();
     expect(screen.getByText('我拍到的小虎')).toBeInTheDocument();
-    expect(screen.getByText('收藏的首爾店長')).toBeInTheDocument();
     expect(screen.getByText('FOUND CAT 001')).toBeInTheDocument();
+    expect(screen.queryByText('收藏的首爾店長')).not.toBeInTheDocument();
+
+    await user.click(worldTab);
+
+    expect(selfTab).toHaveAttribute('aria-pressed', 'false');
+    expect(worldTab).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('heading', { name: '收藏的世界貓卡' })).toBeInTheDocument();
+    expect(screen.getByText('收藏的首爾店長')).toBeInTheDocument();
     expect(screen.getByText('W-088')).toBeInTheDocument();
     expect(screen.getByText('收藏自全世界地圖')).toBeInTheDocument();
+    expect(screen.queryByText('我拍到的小虎')).not.toBeInTheDocument();
     expect(screen.queryByText('FOUND CAT 088')).not.toBeInTheDocument();
   });
 
