@@ -431,6 +431,46 @@ describe('Home page', () => {
     expect(screen.queryByText('全世界地圖等第一批貓點')).not.toBeInTheDocument();
   });
 
+  it('does not hide my published cat when the local copy already has the same public number', async () => {
+    vi.mocked(loadPublicCatCards).mockResolvedValue({
+      ok: true,
+      items: [
+        makeItem({
+          id: 'public-copy-of-my-cat',
+          publicNumber: 4,
+          catName: '我公開的小橘',
+          imageData: 'data:image/png;base64,my-public-cat',
+          location: { lat: 13.7563, lng: 100.5018, name: '曼谷街角咖啡' },
+          isPublic: true,
+        }),
+      ],
+    });
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          id: 'local-original-cat',
+          catdexNumber: 4,
+          publicNumber: 4,
+          catName: '我公開的小橘',
+          imageData: 'data:image/png;base64,my-public-cat',
+          location: { lat: 13.7563, lng: 100.5018, name: '曼谷街角咖啡' },
+          isPublic: true,
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('我公開的小橘')).toBeInTheDocument();
+    expect(screen.queryByText('全世界地圖等第一批貓點')).not.toBeInTheDocument();
+  });
+
   it('does not hide public cats just because a local cat has the same photo and place', async () => {
     vi.mocked(loadPublicCatCards).mockResolvedValue({
       ok: true,

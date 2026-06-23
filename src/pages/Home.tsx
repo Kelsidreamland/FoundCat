@@ -52,9 +52,21 @@ function HomeDeckLoading({ language }: { language: 'zh' | 'en' }) {
 
 type PublicDeckStatus = 'loading' | 'ready' | 'failed';
 
-function isSameCollectedPublicCat(publicItem: ScrapbookItem, localItem: ScrapbookItem) {
+function isCollectedWorldCopy(publicItem: ScrapbookItem, localItem: ScrapbookItem) {
   if (localItem.collectedFromPublicId && localItem.collectedFromPublicId === publicItem.id) return true;
   return Boolean(
+    localItem.collectedFromPublicId &&
+    localItem.publicNumber &&
+    publicItem.publicNumber &&
+    localItem.publicNumber === publicItem.publicNumber
+  );
+}
+
+function alreadyHasPublicCat(publicItem: ScrapbookItem, localItem: ScrapbookItem) {
+  if (isCollectedWorldCopy(publicItem, localItem)) return true;
+  if (localItem.id === publicItem.id) return true;
+  return Boolean(
+    localItem.isPublic &&
     localItem.publicNumber &&
     publicItem.publicNumber &&
     localItem.publicNumber === publicItem.publicNumber
@@ -91,7 +103,7 @@ export default function Home() {
   const isPublicDeck = publicDeckStatus !== 'failed';
   const isPublicDeckLoading = publicDeckStatus === 'loading';
   const visiblePublicItems = publicItems.filter(
-    (publicItem) => !items.some((localItem) => isSameCollectedPublicCat(publicItem, localItem))
+    (publicItem) => !items.some((localItem) => isCollectedWorldCopy(publicItem, localItem))
   );
   const deckItems = isPublicDeck ? visiblePublicItems : items;
   const emptyDeckLabel = language === 'zh'
@@ -104,7 +116,7 @@ export default function Home() {
   };
 
   const handleCollectCard = useCallback(async (item: ScrapbookItem) => {
-    if (!item.isPublic || items.some((localItem) => isSameCollectedPublicCat(item, localItem))) return;
+    if (!item.isPublic || items.some((localItem) => alreadyHasPublicCat(item, localItem))) return;
 
     await addItem({
       type: item.type,
