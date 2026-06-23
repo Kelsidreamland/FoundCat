@@ -99,6 +99,7 @@ describe('Detail page', () => {
           careStatusTags: ['fed'],
           catFeatureNote: '左耳有一小塊白毛，看到相機會慢慢眨眼',
           spotNote: '傍晚常在門口紙箱睡覺',
+          catColor: 'orange-tabby',
           date: '2026-05-11T08:00:00.000Z',
         }),
       ],
@@ -122,9 +123,14 @@ describe('Detail page', () => {
     expect(screen.queryByText('出發去找這隻貓')).not.toBeInTheDocument();
     expect(screen.getByText('親人')).toBeInTheDocument();
     expect(screen.getByText('貪吃')).toBeInTheDocument();
+    expect(screen.getByText('特徵')).toBeInTheDocument();
+    expect(screen.getByText('出沒線索')).toBeInTheDocument();
+    expect(screen.getByText('照護')).toBeInTheDocument();
+    expect(screen.getByText('其他資料')).toBeInTheDocument();
     expect(screen.getByText('固定餵養')).toBeInTheDocument();
     expect(screen.getByText('左耳有一小塊白毛，看到相機會慢慢眨眼')).toBeInTheDocument();
     expect(screen.getByText('傍晚常在門口紙箱睡覺')).toBeInTheDocument();
+    expect(screen.getByText('貓咪毛色: 橘虎斑')).toBeInTheDocument();
     expect(screen.queryByText(/2026/)).not.toBeInTheDocument();
   });
 
@@ -185,6 +191,7 @@ describe('Detail page', () => {
     await user.click(screen.getByRole('button', { name: '補充貓咪資訊' }));
     await user.click(screen.getByRole('button', { name: '幫我取名' }));
     await user.type(screen.getByLabelText('特徵描述'), '右眼旁邊有一點深色花紋');
+    await user.type(screen.getByLabelText('出沒線索'), '下雨天會躲在店門口');
     await user.click(screen.getByRole('button', { name: '高冷' }));
     await user.click(screen.getByRole('button', { name: '儲存貓咪資訊' }));
 
@@ -192,6 +199,7 @@ describe('Detail page', () => {
       expect(useScrapbookStore.getState().items[0]).toMatchObject({
         catName: '懶散橘貓',
         catFeatureNote: '右眼旁邊有一點深色花紋',
+        spotNote: '躺在咖啡廳門口等飯下雨天會躲在店門口',
         personalityTags: ['foodie', 'aloof'],
       });
     });

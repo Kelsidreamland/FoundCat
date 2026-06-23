@@ -22,6 +22,11 @@ const makeItem = (overrides: Partial<ScrapbookItem> = {}): ScrapbookItem => ({
   zIndex: 1,
   location: overrides.location,
   catName: overrides.catName,
+  catFeatureNote: overrides.catFeatureNote,
+  personalityTags: overrides.personalityTags,
+  spotNote: overrides.spotNote,
+  careStatusTags: overrides.careStatusTags,
+  catColor: overrides.catColor,
 });
 
 describe('Catdex page', () => {
@@ -82,6 +87,36 @@ describe('Catdex page', () => {
     expect(screen.getByText('放鬆的貓咪')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '巷口咖啡店' })).toBeInTheDocument();
     expect(screen.getAllByText('巷口咖啡店')).toHaveLength(2);
+  });
+
+  it('shows a compact cat info summary in archive cards', () => {
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          catName: '窗邊小虎',
+          location: { lat: 25, lng: 121, name: '巷口咖啡店' },
+          catFeatureNote: '左耳白毛，尾巴短短',
+          personalityTags: ['friendly'],
+          spotNote: '下午常在窗邊睡覺',
+          careStatusTags: ['fed'],
+          catColor: 'orange-tabby',
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter>
+        <Catdex />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('親人')).toBeInTheDocument();
+    expect(screen.getByText('固定餵養')).toBeInTheDocument();
+    expect(screen.getByText('橘虎斑')).toBeInTheDocument();
+    expect(screen.getByText('特徵：左耳白毛，尾巴短短')).toBeInTheDocument();
+    expect(screen.getByText('出沒線索：下午常在窗邊睡覺')).toBeInTheDocument();
   });
 
   it('groups saved cat cards by place so travelers can scan their collection', () => {

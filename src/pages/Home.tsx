@@ -120,6 +120,7 @@ export default function Home() {
       collectedFromPublicId: item.id,
       collectedAt: new Date().toISOString(),
       catName: item.catName,
+      catFeatureNote: item.catFeatureNote,
       catBreed: item.catBreed,
       catColor: item.catColor,
       personalityTags: item.personalityTags,

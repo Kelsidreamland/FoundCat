@@ -5,31 +5,18 @@ import { useScrapbookStore } from '../store/useScrapbookStore';
 import { Check, MapPin, Navigation, PencilLine, Share2, Sparkles, Trash2, Undo2 } from 'lucide-react';
 import { translations } from '../translations';
 import { motion } from 'framer-motion';
-import { CAT_BREEDS } from '../data/catBreeds';
-import { CAT_COLORS } from '../data/catColors';
 import LocationPicker from '../components/LocationPicker';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import { shareCatCardPoster } from '../lib/sharePoster';
 import { suggestCatName } from '../lib/catNameGenerator';
-
-const PERSONALITY_LABELS: Record<CatPersonalityTag, { zh: string; en: string }> = {
-  friendly: { zh: '親人', en: 'Friendly' },
-  shy: { zh: '怕人', en: 'Shy' },
-  indifferent: { zh: '不理人', en: 'Keeps distance' },
-  aloof: { zh: '高冷', en: 'Aloof' },
-  foodie: { zh: '貪吃', en: 'Foodie' },
-  clingy: { zh: '撒嬌', en: 'Cuddly' },
-  alert: { zh: '警戒中', en: 'Alert' },
-};
-
-const CARE_LABELS: Record<CatCareStatusTag, { zh: string; en: string }> = {
-  tnr: { zh: '已剪耳 / TNR', en: 'Ear-tipped / TNR' },
-  collar: { zh: '有項圈', en: 'Has collar' },
-  owned: { zh: '疑似有人養', en: 'Likely owned' },
-  fed: { zh: '固定餵養', en: 'Fed regularly' },
-  injured: { zh: '疑似受傷', en: 'May be injured' },
-  unknown: { zh: '不確定', en: 'Not sure' },
-};
+import {
+  CAT_CARE_STATUS_LABELS,
+  CAT_PERSONALITY_LABELS,
+  getCatInfoCopy,
+  getCatOptionalFactLabels,
+  getCareStatusLabels,
+  getPersonalityLabels,
+} from '../lib/catInfoDisplay';
 
 type CatInfoDraft = {
   catName: string;
@@ -47,47 +34,21 @@ const EMPTY_CAT_INFO_DRAFT: CatInfoDraft = {
   careStatusTags: [],
 };
 
-const getDetailCopy = (language: 'zh' | 'en') => ({
-  editInfo: language === 'zh' ? '補充貓咪資訊' : 'Add cat info',
-  saveInfo: language === 'zh' ? '儲存貓咪資訊' : 'Save cat info',
-  saved: language === 'zh' ? '已儲存' : 'Saved',
-  suggestName: language === 'zh' ? '幫我取名' : 'Name for me',
-  nameLabel: language === 'zh' ? '貓咪名字' : 'Cat name',
-  namePlaceholder: language === 'zh'
-    ? '例如：懶散橘貓、不想上班的白貓'
-    : 'Example: Lazy Orange Cat, Off-duty White Cat',
-  featureNote: language === 'zh' ? '特徵描述' : 'Feature note',
-  featurePlaceholder: language === 'zh'
-    ? '例如：左耳白毛、尾巴短短、看到相機會慢慢眨眼'
-    : 'Example: white patch on left ear, short tail, slow blinks at camera',
-  spotNote: language === 'zh' ? '出沒備註' : 'Spot note',
-  spotPlaceholder: language === 'zh'
-    ? '例如：傍晚常在咖啡店門口紙箱睡覺'
-    : 'Example: sleeps in the box by the cafe entrance in the evening',
-  personality: language === 'zh' ? '牠給人的感覺' : 'How this cat feels',
-  careStatus: language === 'zh' ? '照護狀態' : 'Care status',
-  optionalFacts: language === 'zh' ? '其他資料' : 'Optional facts',
-  goFindCat: language === 'zh' ? '去找這隻貓' : 'Go find this cat',
-  featureHeading: language === 'zh' ? '特徵' : 'Features',
-  spotHeading: language === 'zh' ? '出沒線索' : 'Spot clues',
-});
-
 export default function Detail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { items, removeItem, updateItem, language } = useScrapbookStore();
   const t = translations[language];
-  const detailCopy = getDetailCopy(language);
+  const detailCopy = getCatInfoCopy(language);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [isEditingCatInfo, setIsEditingCatInfo] = useState(false);
   const [catInfoDraft, setCatInfoDraft] = useState<CatInfoDraft>(EMPTY_CAT_INFO_DRAFT);
   const [catInfoSavedMessage, setCatInfoSavedMessage] = useState<string | null>(null);
 
   const item = items.find(i => i.id === id);
-  const breedMeta = item?.catBreed ? CAT_BREEDS.find((breed) => breed.id === item.catBreed) : undefined;
-  const colorMeta = item?.catColor ? CAT_COLORS.find((color) => color.id === item.catColor) : undefined;
-  const breedLabel = breedMeta ? (language === 'zh' ? breedMeta.zh : breedMeta.en) : item?.catBreed;
-  const colorLabel = colorMeta ? (language === 'zh' ? colorMeta.zh : colorMeta.en) : item?.catColor;
+  const optionalFactLabels = item
+    ? getCatOptionalFactLabels(item, language, { catBreed: t.catBreed, catColor: t.catColor })
+    : [];
 
   useEffect(() => {
     if (!item) {
@@ -140,17 +101,13 @@ export default function Detail() {
       navigate('/');
     }
   };
-  const personalityLabels = (item.personalityTags ?? [])
-    .map((tag) => PERSONALITY_LABELS[tag]?.[language])
-    .filter(Boolean);
-  const careLabels = (item.careStatusTags ?? [])
-    .map((tag) => CARE_LABELS[tag]?.[language])
-    .filter(Boolean);
+  const personalityLabels = getPersonalityLabels(item.personalityTags, language);
+  const careLabels = getCareStatusLabels(item.careStatusTags, language);
   const hasCatDetails = personalityLabels.length > 0
     || careLabels.length > 0
     || Boolean(item.catFeatureNote?.trim())
     || Boolean(item.spotNote?.trim())
-    || Boolean(breedLabel || colorLabel);
+    || optionalFactLabels.length > 0;
   const mapTarget = `/map?cat=${encodeURIComponent(item.id)}&mode=mine`;
 
   const updateCatInfoDraft = (updater: (draft: CatInfoDraft) => CatInfoDraft) => {
@@ -343,7 +300,7 @@ export default function Detail() {
                 <div>
                   <p className="mb-2 text-xs font-black text-[#221915]">{detailCopy.personality}</p>
                   <div className="flex flex-wrap gap-2">
-                    {(Object.keys(PERSONALITY_LABELS) as CatPersonalityTag[]).map((tag) => {
+                    {(Object.keys(CAT_PERSONALITY_LABELS) as CatPersonalityTag[]).map((tag) => {
                       const selected = catInfoDraft.personalityTags.includes(tag);
                       return (
                         <button
@@ -356,7 +313,7 @@ export default function Detail() {
                               : 'border-[#221915]/15 bg-white text-[#6d5f52]'
                           }`}
                         >
-                          {PERSONALITY_LABELS[tag][language]}
+                          {CAT_PERSONALITY_LABELS[tag][language]}
                         </button>
                       );
                     })}
@@ -366,7 +323,7 @@ export default function Detail() {
                 <div>
                   <p className="mb-2 text-xs font-black text-[#221915]">{detailCopy.careStatus}</p>
                   <div className="flex flex-wrap gap-2">
-                    {(Object.keys(CARE_LABELS) as CatCareStatusTag[]).map((tag) => {
+                    {(Object.keys(CAT_CARE_STATUS_LABELS) as CatCareStatusTag[]).map((tag) => {
                       const selected = catInfoDraft.careStatusTags.includes(tag);
                       return (
                         <button
@@ -379,7 +336,7 @@ export default function Detail() {
                               : 'border-[#221915]/15 bg-white text-[#6d5f52]'
                           }`}
                         >
-                          {CARE_LABELS[tag][language]}
+                          {CAT_CARE_STATUS_LABELS[tag][language]}
                         </button>
                       );
                     })}
@@ -402,28 +359,15 @@ export default function Detail() {
               <p className="text-cat-text-tertiary text-xs font-bold tracking-widest uppercase mb-3">
                 {t.detail}
               </p>
-              <div className="flex flex-wrap gap-2">
-                {personalityLabels.map((label) => (
-                  <span key={`personality-${label}`} className="px-3 py-1.5 rounded-full bg-[#fff2cf] text-cat-text-main text-sm font-black border border-[#221915]/15">
-                    {label}
-                  </span>
-                ))}
-                {careLabels.map((label) => (
-                  <span key={`care-${label}`} className="px-3 py-1.5 rounded-full bg-[#eaf1ff] text-cat-text-main text-sm font-black border border-[#2f5fb3]/20">
-                    {label}
-                  </span>
-                ))}
-                {breedLabel ? (
-                  <span className="px-3 py-1.5 rounded-full bg-cat-bg text-cat-text-main text-sm font-semibold border border-cat-border-light">
-                    {t.catBreed}: {breedLabel}
-                  </span>
-                ) : null}
-                {colorLabel ? (
-                  <span className="px-3 py-1.5 rounded-full bg-cat-bg text-cat-text-main text-sm font-semibold border border-cat-border-light">
-                    {t.catColor}: {colorLabel}
-                  </span>
-                ) : null}
-              </div>
+              {personalityLabels.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {personalityLabels.map((label) => (
+                    <span key={`personality-${label}`} className="px-3 py-1.5 rounded-full bg-[#fff2cf] text-cat-text-main text-sm font-black border border-[#221915]/15">
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
               {item.catFeatureNote?.trim() ? (
                 <div className="mt-3 rounded-[16px] border border-[#221915]/10 bg-[#fffdf2] px-3 py-2">
                   <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
@@ -442,6 +386,34 @@ export default function Detail() {
                   <p className="mt-1 text-sm font-bold leading-6 text-[#4d4038]">
                     {item.spotNote.trim()}
                   </p>
+                </div>
+              ) : null}
+              {careLabels.length > 0 ? (
+                <div className="mt-3 rounded-[16px] border border-[#2f5fb3]/15 bg-[#eaf1ff] px-3 py-2">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
+                    {detailCopy.careHeading}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {careLabels.map((label) => (
+                      <span key={`care-${label}`} className="px-3 py-1.5 rounded-full bg-[#fffdf2] text-cat-text-main text-sm font-black border border-[#2f5fb3]/20">
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              {optionalFactLabels.length > 0 ? (
+                <div className="mt-3 rounded-[16px] border border-[#221915]/10 bg-cat-bg px-3 py-2">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
+                    {detailCopy.optionalFacts}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {optionalFactLabels.map((label) => (
+                      <span key={`optional-${label}`} className="px-3 py-1.5 rounded-full bg-[#fffdf2] text-cat-text-main text-sm font-semibold border border-cat-border-light">
+                        {label}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               ) : null}
             </div>

@@ -8,6 +8,12 @@ import { getReadableLocationName, hasReadableLocationName } from '../lib/locatio
 import type { ScrapbookItem } from '../store/useScrapbookStore';
 import { useScrapbookStore } from '../store/useScrapbookStore';
 import { translations } from '../translations';
+import {
+  getCatColorLabel,
+  getCatInfoCopy,
+  getCareStatusLabels,
+  getPersonalityLabels,
+} from '../lib/catInfoDisplay';
 
 const paperTexture = {
   backgroundImage: [
@@ -66,6 +72,7 @@ const buildPlaceGroups = (items: ScrapbookItem[], language: 'zh' | 'en') => {
 export default function Catdex() {
   const { items, language } = useScrapbookStore();
   const t = translations[language];
+  const catInfoCopy = getCatInfoCopy(language);
   const [activeCollectionTab, setActiveCollectionTab] = useState<CatdexCollectionTab>('self');
 
   const selfFoundItems = useMemo(
@@ -156,51 +163,84 @@ export default function Catdex() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  {group.items.map((item) => (
-                    <Link
-                      key={item.id}
-                      to={`/detail/${item.id}`}
-                      className="group block border-2 border-black bg-[#fffdf2] p-2 shadow-[6px_6px_0_rgba(0,0,0,0.88)] transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2f5fb3] focus-visible:ring-offset-2 focus-visible:ring-offset-cat-bg"
-                    >
-                      <div className="flex aspect-square items-center justify-center border-2 border-black bg-cat-card p-2">
-                        <img
-                          src={item.imageData}
-                          alt={`${t.catdex} ${isWorldSaved ? formatPublicCatCardNumber(item.publicNumber) : item.catdexNumber ?? ''}`.trim()}
-                          className="max-h-full max-w-full object-contain drop-shadow-[0_8px_10px_rgba(0,0,0,0.16)]"
-                          draggable={false}
-                        />
-                      </div>
-                      <div className="mt-3 flex justify-center">
-                        {isWorldSaved ? (
-                          <div className="inline-flex min-w-[116px] flex-col border-2 border-black bg-[#fffdf2] px-3 py-2 text-right shadow-[4px_4px_0_rgba(0,0,0,0.88)]">
-                            <span className="text-[10px] font-black uppercase leading-none text-black">
-                              {formatPublicCatCardNumber(item.publicNumber)}
-                            </span>
-                            <span className="mt-1 text-[11px] font-bold leading-none text-[#2f5fb3]">
-                              WORLD CAT
-                            </span>
+                  {group.items.map((item) => {
+                    const personalityLabels = getPersonalityLabels(item.personalityTags, language);
+                    const careLabels = getCareStatusLabels(item.careStatusTags, language);
+                    const colorLabel = getCatColorLabel(item.catColor, language);
+                    const summaryLabels = [
+                      ...personalityLabels,
+                      ...careLabels,
+                      colorLabel,
+                    ].filter(Boolean).slice(0, 3) as string[];
+
+                    return (
+                      <Link
+                        key={item.id}
+                        to={`/detail/${item.id}`}
+                        className="group block border-2 border-black bg-[#fffdf2] p-2 shadow-[6px_6px_0_rgba(0,0,0,0.88)] transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2f5fb3] focus-visible:ring-offset-2 focus-visible:ring-offset-cat-bg"
+                      >
+                        <div className="flex aspect-square items-center justify-center border-2 border-black bg-cat-card p-2">
+                          <img
+                            src={item.imageData}
+                            alt={`${t.catdex} ${isWorldSaved ? formatPublicCatCardNumber(item.publicNumber) : item.catdexNumber ?? ''}`.trim()}
+                            className="max-h-full max-w-full object-contain drop-shadow-[0_8px_10px_rgba(0,0,0,0.16)]"
+                            draggable={false}
+                          />
+                        </div>
+                        <div className="mt-3 flex justify-center">
+                          {isWorldSaved ? (
+                            <div className="inline-flex min-w-[116px] flex-col border-2 border-black bg-[#fffdf2] px-3 py-2 text-right shadow-[4px_4px_0_rgba(0,0,0,0.88)]">
+                              <span className="text-[10px] font-black uppercase leading-none text-black">
+                                {formatPublicCatCardNumber(item.publicNumber)}
+                              </span>
+                              <span className="mt-1 text-[11px] font-bold leading-none text-[#2f5fb3]">
+                                WORLD CAT
+                              </span>
+                            </div>
+                          ) : (
+                            <CatdexLabel catdexNumber={item.catdexNumber} label={t.catdexLabel} />
+                          )}
+                        </div>
+                        {item.catName?.trim() ? (
+                          <p className="mt-2 truncate text-center text-sm font-black text-[#221915]">
+                            {item.catName.trim()}
+                          </p>
+                        ) : null}
+                        {summaryLabels.length > 0 ? (
+                          <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+                            {summaryLabels.map((label) => (
+                              <span
+                                key={label}
+                                className="rounded-full border border-[#221915]/12 bg-[#fff2cf] px-2 py-1 text-[10px] font-black text-[#221915]"
+                              >
+                                {label}
+                              </span>
+                            ))}
                           </div>
-                        ) : (
-                          <CatdexLabel catdexNumber={item.catdexNumber} label={t.catdexLabel} />
-                        )}
-                      </div>
-                      {item.catName?.trim() ? (
-                        <p className="mt-2 truncate text-center text-sm font-black text-[#221915]">
-                          {item.catName.trim()}
-                        </p>
-                      ) : null}
-                      {isWorldSaved ? (
-                        <p className="mt-2 text-center text-[11px] font-black text-[#2f5fb3]">
-                          {language === 'zh' ? '收藏自全世界地圖' : 'Saved from World Map'}
-                        </p>
-                      ) : null}
-                      {item.location ? (
-                        <p className="mt-1 truncate text-center text-[11px] font-bold text-[#76665a]">
-                          {getReadableLocationName(item, language)}
-                        </p>
-                      ) : null}
-                    </Link>
-                  ))}
+                        ) : null}
+                        {item.catFeatureNote?.trim() ? (
+                          <p className="mt-2 line-clamp-2 text-left text-[11px] font-bold leading-5 text-[#4d4038]">
+                            {catInfoCopy.featureHeading}：{item.catFeatureNote.trim()}
+                          </p>
+                        ) : null}
+                        {item.spotNote?.trim() ? (
+                          <p className="mt-1 line-clamp-2 text-left text-[11px] font-bold leading-5 text-[#6d5f52]">
+                            {catInfoCopy.spotHeading}：{item.spotNote.trim()}
+                          </p>
+                        ) : null}
+                        {isWorldSaved ? (
+                          <p className="mt-2 text-center text-[11px] font-black text-[#2f5fb3]">
+                            {language === 'zh' ? '收藏自全世界地圖' : 'Saved from World Map'}
+                          </p>
+                        ) : null}
+                        {item.location ? (
+                          <p className="mt-1 truncate text-center text-[11px] font-bold text-[#76665a]">
+                            {getReadableLocationName(item, language)}
+                          </p>
+                        ) : null}
+                      </Link>
+                    );
+                  })}
                 </div>
               </section>
             );
