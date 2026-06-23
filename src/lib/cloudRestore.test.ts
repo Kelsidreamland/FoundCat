@@ -49,6 +49,7 @@ describe('restoreCloudCatCards', () => {
           owner_id: 'user-1',
           catdex_number: 12,
           cat_name: '曼谷小橘',
+          cat_feature_note: '左耳白毛，尾巴短短',
           image_data: 'data:image/jpeg;base64,cat',
           hero_image_data: null,
           encountered_at: '2026-06-02T08:00:00.000Z',
@@ -74,6 +75,7 @@ describe('restoreCloudCatCards', () => {
           type: 'sticker',
           catdexNumber: 12,
           catName: '曼谷小橘',
+          catFeatureNote: '左耳白毛，尾巴短短',
           imageData: 'data:image/jpeg;base64,cat',
           date: '2026-06-02T08:00:00.000Z',
           location: {

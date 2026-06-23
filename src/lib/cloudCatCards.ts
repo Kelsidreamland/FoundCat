@@ -10,6 +10,7 @@ export type CloudCatCardRow = {
   catdex_number: number | null;
   public_number: number | null;
   cat_name: string | null;
+  cat_feature_note: string | null;
   image_data: string;
   hero_image_data: string | null;
   encountered_at: string;
@@ -33,6 +34,7 @@ export type PublicCloudCatCard = {
   catdexNumber: number | null;
   publicNumber: number | null;
   catName: string | null;
+  catFeatureNote: string | null;
   imageData: string;
   heroImageData: string | null;
   encounteredAt: string;
@@ -62,6 +64,7 @@ export function toCloudCatCardUpsert(
     owner_id: ownerId,
     catdex_number: item.catdexNumber ?? null,
     cat_name: emptyToNull(item.catName),
+    cat_feature_note: emptyToNull(item.catFeatureNote),
     image_data: item.imageData,
     hero_image_data: item.heroImageData ?? null,
     encountered_at: item.date,
@@ -77,6 +80,23 @@ export function toCloudCatCardUpsert(
   };
 }
 
+export const isCatFeatureNoteSchemaError = (error: unknown) => {
+  if (!error || typeof error !== 'object' || !('message' in error)) return false;
+  const message = String(error.message).toLowerCase();
+
+  return message.includes('cat_feature_note')
+    && (
+      message.includes('schema cache')
+      || message.includes('could not find')
+      || message.includes('column')
+    );
+};
+
+export const withoutCatFeatureNote = <T extends { cat_feature_note?: string | null }>(row: T) => {
+  const { cat_feature_note: _catFeatureNote, ...fallbackRow } = row;
+  return fallbackRow;
+};
+
 export function toPublicCloudCatCard(row: CloudCatCardRow): PublicCloudCatCard {
   if (row.lat === null || row.lng === null) {
     throw new Error('Public cloud cat card requires coordinates');
@@ -87,6 +107,7 @@ export function toPublicCloudCatCard(row: CloudCatCardRow): PublicCloudCatCard {
     catdexNumber: row.catdex_number,
     publicNumber: row.public_number,
     catName: row.cat_name,
+    catFeatureNote: row.cat_feature_note,
     imageData: row.image_data,
     heroImageData: row.hero_image_data,
     encounteredAt: row.encountered_at,

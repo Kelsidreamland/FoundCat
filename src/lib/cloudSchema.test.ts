@@ -21,6 +21,14 @@ describe('FOUND CAT Supabase schema', () => {
     expect(publicViewSql).not.toMatch(/\bspot_note\b/i);
   });
 
+  it('stores and exposes cat feature notes without exposing private spot notes', () => {
+    expect(schemaSql).toMatch(/\bcat_feature_note\s+text\b/i);
+
+    const publicViewSql = schemaSql.split(/create\s+or\s+replace\s+view\s+public\.public_cat_cards/i)[1] ?? '';
+    expect(publicViewSql).toMatch(/\bcat_feature_note\b/i);
+    expect(publicViewSql).not.toMatch(/\bspot_note\b/i);
+  });
+
   it('keeps world-map numbering separate from private catdex numbering', () => {
     expect(schemaSql).toMatch(/\bpublic_number\s+integer\b/i);
     expect(schemaSql).toMatch(/create\s+sequence\s+if\s+not\s+exists\s+public\.public_cat_cards_number_seq/i);

@@ -22,6 +22,7 @@ const localCat: ScrapbookItem = {
   scale: 1,
   zIndex: 1,
   catName: '巷口小橘',
+  catFeatureNote: '左耳白毛，尾巴短短',
   location: {
     lat: 13.7563,
     lng: 100.5018,
@@ -82,11 +83,36 @@ describe('setCloudCatCardVisibility', () => {
       expect.objectContaining({
         id: 'cat-1',
         owner_id: 'user-1',
+        cat_feature_note: '左耳白毛，尾巴短短',
         is_public: true,
       }),
     ], {
       onConflict: 'id',
     });
+  });
+
+  it('retries visibility updates without cat_feature_note when the cloud schema is not migrated yet', async () => {
+    getSupabaseClient.mockResolvedValue({ from });
+    upsert
+      .mockResolvedValueOnce({ error: { message: "Could not find the 'cat_feature_note' column in the schema cache" } })
+      .mockResolvedValueOnce({ error: null });
+
+    await expect(setCloudCatCardVisibility({
+      ownerId: 'user-1',
+      item: localCat,
+      isPublic: true,
+    })).resolves.toEqual({
+      ok: true,
+      isPublic: true,
+    });
+
+    expect(upsert).toHaveBeenCalledTimes(2);
+    expect(upsert).toHaveBeenNthCalledWith(1, [
+      expect.objectContaining({ cat_feature_note: '左耳白毛，尾巴短短' }),
+    ], { onConflict: 'id' });
+    expect(upsert).toHaveBeenNthCalledWith(2, [
+      expect.not.objectContaining({ cat_feature_note: expect.anything() }),
+    ], { onConflict: 'id' });
   });
 
   it('returns visibility_failed when the cloud upsert fails', async () => {

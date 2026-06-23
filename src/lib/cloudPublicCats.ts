@@ -10,6 +10,7 @@ type PublicCatCardViewRow = {
   catdex_number: number | null;
   public_number: number | null;
   cat_name: string | null;
+  cat_feature_note: string | null;
   image_data: string;
   hero_image_data: string | null;
   encountered_at: string;
@@ -45,6 +46,7 @@ const publicRowToScrapbookItem = (row: PublicCatCardViewRow): ScrapbookItem => (
   scale: 1,
   zIndex: 1,
   catName: row.cat_name ?? undefined,
+  catFeatureNote: row.cat_feature_note ?? undefined,
   location: {
     lat: row.lat,
     lng: row.lng,

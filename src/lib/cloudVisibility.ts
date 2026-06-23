@@ -1,5 +1,5 @@
 import type { ScrapbookItem } from '../store/useScrapbookStore';
-import { toCloudCatCardUpsert } from './cloudCatCards';
+import { isCatFeatureNoteSchemaError, toCloudCatCardUpsert, withoutCatFeatureNote } from './cloudCatCards';
 import { getSupabaseClient } from './supabaseClient';
 
 type SetCloudCatCardVisibilityInput = {
@@ -40,11 +40,28 @@ export async function setCloudCatCardVisibility({
     };
   }
 
-  const { error } = await client.from('cat_cards').upsert([
-    toCloudCatCardUpsert(item, ownerId, { isPublic }),
-  ], {
+  const row = toCloudCatCardUpsert(item, ownerId, { isPublic });
+  const options = {
     onConflict: 'id',
-  });
+  };
+  const { error } = await client.from('cat_cards').upsert([row], options);
+
+  if (error && isCatFeatureNoteSchemaError(error)) {
+    const { error: fallbackError } = await client.from('cat_cards').upsert([withoutCatFeatureNote(row)], options);
+
+    if (!fallbackError) {
+      return {
+        ok: true,
+        isPublic,
+      };
+    }
+
+    return {
+      ok: false,
+      reason: 'visibility_failed',
+      message: fallbackError.message,
+    };
+  }
 
   if (error) {
     return {

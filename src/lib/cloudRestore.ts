@@ -30,6 +30,7 @@ const rowToScrapbookItem = (row: CloudCatCardRow): ScrapbookItem => ({
   scale: 1,
   zIndex: 1,
   catName: row.cat_name ?? undefined,
+  catFeatureNote: row.cat_feature_note ?? undefined,
   location: row.lat !== null && row.lng !== null
     ? {
         lat: row.lat,
