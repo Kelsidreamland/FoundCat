@@ -29,6 +29,15 @@ describe('FOUND CAT Supabase schema', () => {
     expect(publicViewSql).not.toMatch(/\bspot_note\b/i);
   });
 
+  it('stores and exposes original Google Maps links without exposing full private addresses', () => {
+    expect(schemaSql).toMatch(/\blocation_map_url\s+text\b/i);
+
+    const publicViewSql = schemaSql.split(/create\s+or\s+replace\s+view\s+public\.public_cat_cards/i)[1] ?? '';
+    expect(publicViewSql).toMatch(/\blocation_map_url\b/i);
+    expect(publicViewSql).not.toMatch(/\blocation_address\b/i);
+    expect(publicViewSql).not.toMatch(/\blocation_place_id\b/i);
+  });
+
   it('keeps world-map numbering separate from private catdex numbering', () => {
     expect(schemaSql).toMatch(/\bpublic_number\s+integer\b/i);
     expect(schemaSql).toMatch(/create\s+sequence\s+if\s+not\s+exists\s+public\.public_cat_cards_number_seq/i);

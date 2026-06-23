@@ -573,6 +573,37 @@ describe('Map page', () => {
     );
   });
 
+  it('uses a saved Google Maps link for map card navigation when available', async () => {
+    const user = userEvent.setup();
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          location: {
+            lat: 25.033,
+            lng: 121.565,
+            name: '貓咪出沒點',
+            mapUrl: 'https://maps.app.goo.gl/catspot',
+          },
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    await user.click(await screen.findByRole('button', { name: '去找這隻貓' }));
+
+    expect(await screen.findByRole('link', { name: '去找這隻貓' })).toHaveAttribute(
+      'href',
+      'https://maps.app.goo.gl/catspot'
+    );
+  });
+
   it('keeps the map cat popup compact while prioritizing name, traits, notes, and care info', async () => {
     const user = userEvent.setup();
     useScrapbookStore.setState({

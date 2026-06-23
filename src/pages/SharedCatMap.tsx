@@ -67,6 +67,7 @@ export default function SharedCatMap() {
     lng: activeCat.lng,
     name: activeCat.locationName,
     address: activeCat.locationAddress,
+    mapUrl: activeCat.locationMapUrl,
   }) : '';
 
   return (

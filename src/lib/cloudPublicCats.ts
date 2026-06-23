@@ -15,6 +15,7 @@ type PublicCatCardViewRow = {
   hero_image_data: string | null;
   encountered_at: string;
   location_name: string | null;
+  location_map_url: string | null;
   lat: number;
   lng: number;
   personality_tags: CatPersonalityTag[] | null;
@@ -51,6 +52,7 @@ const publicRowToScrapbookItem = (row: PublicCatCardViewRow): ScrapbookItem => (
     lat: row.lat,
     lng: row.lng,
     name: row.location_name ?? 'FOUND CAT',
+    mapUrl: row.location_map_url ?? undefined,
   },
   personalityTags: row.personality_tags ?? [],
   careStatusTags: row.care_status_tags ?? [],

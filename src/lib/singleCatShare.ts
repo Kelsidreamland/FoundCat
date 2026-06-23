@@ -37,6 +37,7 @@ export interface SingleCatSharePayload {
   date: string;
   locationName: string;
   locationAddress?: string;
+  locationMapUrl?: string;
   lat: number;
   lng: number;
   language: 'zh' | 'en';
@@ -75,6 +76,7 @@ export const buildSingleCatSharePayload = (
   const memo = item.spotNote?.trim();
   const catName = item.catName?.trim();
   const locationAddress = item.location.address?.trim();
+  const locationMapUrl = item.location.mapUrl?.trim();
 
   return {
     v: SINGLE_CAT_SHARE_VERSION,
@@ -85,6 +87,7 @@ export const buildSingleCatSharePayload = (
     date: item.date,
     locationName: item.location.name,
     locationAddress: locationAddress || undefined,
+    locationMapUrl: locationMapUrl || undefined,
     lat: item.location.lat,
     lng: item.location.lng,
     language: options.language,
@@ -124,12 +127,19 @@ export const buildGoogleMapsSearchUrl = ({
   lng,
   name,
   address,
+  mapUrl,
 }: {
   lat: number;
   lng: number;
   name?: string;
   address?: string;
+  mapUrl?: string;
 }) => {
+  const trimmedMapUrl = mapUrl?.trim();
+  if (trimmedMapUrl && /^(https:\/\/)?(?:maps\.app\.goo\.gl|goo\.gl\/maps|(?:www\.)?google\.[^/]+\/maps|maps\.google\.[^/]+)/i.test(trimmedMapUrl)) {
+    return /^https?:\/\//i.test(trimmedMapUrl) ? trimmedMapUrl : `https://${trimmedMapUrl}`;
+  }
+
   const readablePlace = [name, address]
     .map((part) => part?.trim())
     .filter((part): part is string => Boolean(part && hasReadableLocationName(part)))

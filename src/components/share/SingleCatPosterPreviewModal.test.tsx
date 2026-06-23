@@ -67,6 +67,27 @@ describe('SingleCatPosterPreviewModal', () => {
     expect(screen.getByRole('button', { name: '儲存圖片' })).toBeInTheDocument();
   });
 
+  it('uses the saved Google Maps link in the preview when the cat card has one', async () => {
+    render(
+      <SingleCatPosterPreviewModal
+        item={{
+          ...item,
+          location: {
+            ...item.location!,
+            mapUrl: 'https://maps.app.goo.gl/catspot',
+          },
+        }}
+        language="zh"
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(await screen.findByRole('link', { name: '用 Google Maps 打開' })).toHaveAttribute(
+      'href',
+      'https://maps.app.goo.gl/catspot'
+    );
+  });
+
   it('lets the owner opt in to memo sharing before generating the final poster data', async () => {
     const user = userEvent.setup();
     const { prepareSingleCatPosterShare } = await import('../../lib/sharePoster');

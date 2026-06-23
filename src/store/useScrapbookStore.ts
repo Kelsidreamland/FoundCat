@@ -26,6 +26,7 @@ export interface ScrapbookItem {
     name: string;
     address?: string;
     placeId?: string;
+    mapUrl?: string;
   };
   catName?: string;
   catBreed?: string;

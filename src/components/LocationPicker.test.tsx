@@ -295,6 +295,7 @@ describe('LocationPicker', () => {
       lat: 18.795163,
       lng: 98.967533,
       name: 'G Nimman Chiang Mai',
+      mapUrl: 'https://www.google.com/maps/place/G+Nimman+Chiang+Mai/@18.795163,98.967533,18z',
     });
   });
 
@@ -407,10 +408,36 @@ describe('LocationPicker', () => {
         lat: 25.033,
         lng: 121.565,
         name: '貓咪出沒點',
+        mapUrl: 'https://maps.app.goo.gl/abc123',
       });
       expect(onPicked).not.toHaveBeenCalledWith(expect.objectContaining({
         name: 'https://maps.app.goo.gl/abc123',
       }));
+    });
+  });
+
+  it('saves the original Google Maps URL when a pasted full map link has coordinates', async () => {
+    const onPicked = vi.fn();
+
+    render(
+      <LocationPicker
+        language="zh"
+        onPicked={onPicked}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText('地點名稱'), {
+      target: { value: 'https://www.google.com/maps/place/G+Nimman+Chiang+Mai/@18.795163,98.967533,18z' },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: '套用 Google Maps 位置' }));
+    fireEvent.click(screen.getByRole('button', { name: '確認地點' }));
+
+    expect(onPicked).toHaveBeenCalledWith({
+      lat: 18.795163,
+      lng: 98.967533,
+      name: 'G Nimman Chiang Mai',
+      mapUrl: 'https://www.google.com/maps/place/G+Nimman+Chiang+Mai/@18.795163,98.967533,18z',
     });
   });
 

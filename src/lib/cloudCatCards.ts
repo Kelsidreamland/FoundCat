@@ -17,6 +17,7 @@ export type CloudCatCardRow = {
   location_name: string | null;
   location_address: string | null;
   location_place_id: string | null;
+  location_map_url: string | null;
   lat: number | null;
   lng: number | null;
   personality_tags: CatPersonalityTag[];
@@ -39,6 +40,7 @@ export type PublicCloudCatCard = {
   heroImageData: string | null;
   encounteredAt: string;
   locationName: string | null;
+  locationMapUrl: string | null;
   lat: number;
   lng: number;
   personalityTags: CatPersonalityTag[];
@@ -71,6 +73,7 @@ export function toCloudCatCardUpsert(
     location_name: item.location?.name ?? null,
     location_address: item.location?.address ?? null,
     location_place_id: item.location?.placeId ?? null,
+    location_map_url: item.location?.mapUrl ?? null,
     lat: item.location?.lat ?? null,
     lng: item.location?.lng ?? null,
     personality_tags: item.personalityTags ?? [],
@@ -90,6 +93,28 @@ export const isCatFeatureNoteSchemaError = (error: unknown) => {
       || message.includes('could not find')
       || message.includes('column')
     );
+};
+
+export const isOptionalCloudColumnSchemaError = (error: unknown) => {
+  if (!error || typeof error !== 'object' || !('message' in error)) return false;
+  const message = String(error.message).toLowerCase();
+
+  return (
+    message.includes('cat_feature_note') ||
+    message.includes('location_map_url')
+  ) && (
+    message.includes('schema cache')
+    || message.includes('could not find')
+    || message.includes('column')
+  );
+};
+
+export const withoutOptionalCloudColumns = <T extends {
+  cat_feature_note?: string | null;
+  location_map_url?: string | null;
+}>(row: T) => {
+  const { cat_feature_note: _catFeatureNote, location_map_url: _locationMapUrl, ...fallbackRow } = row;
+  return fallbackRow;
 };
 
 export const withoutCatFeatureNote = <T extends { cat_feature_note?: string | null }>(row: T) => {
@@ -112,6 +137,7 @@ export function toPublicCloudCatCard(row: CloudCatCardRow): PublicCloudCatCard {
     heroImageData: row.hero_image_data,
     encounteredAt: row.encountered_at,
     locationName: row.location_name,
+    locationMapUrl: row.location_map_url,
     lat: row.lat,
     lng: row.lng,
     personalityTags: row.personality_tags,

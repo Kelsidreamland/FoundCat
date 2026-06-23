@@ -63,6 +63,7 @@ const getGoogleMapsUrl = (cat: MapShareCat) => {
     lng: cat.lng,
     name: cat.locationName,
     address: cat.locationAddress,
+    mapUrl: cat.locationMapUrl,
   });
 };
 

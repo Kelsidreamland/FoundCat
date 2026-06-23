@@ -1,6 +1,6 @@
 import type { ScrapbookItem } from '../store/useScrapbookStore';
 import { getSupabaseClient } from './supabaseClient';
-import { isCatFeatureNoteSchemaError, toCloudCatCardUpsert, withoutCatFeatureNote } from './cloudCatCards';
+import { isOptionalCloudColumnSchemaError, toCloudCatCardUpsert, withoutOptionalCloudColumns } from './cloudCatCards';
 
 type BackupLocalCatCardsInput = {
   ownerId: string | null | undefined;
@@ -51,8 +51,8 @@ export async function backupLocalCatCards({
   };
   const { error } = await client.from('cat_cards').upsert(rows, options);
 
-  if (error && isCatFeatureNoteSchemaError(error)) {
-    const fallbackRows = rows.map(withoutCatFeatureNote);
+  if (error && isOptionalCloudColumnSchemaError(error)) {
+    const fallbackRows = rows.map(withoutOptionalCloudColumns);
     const { error: fallbackError } = await client.from('cat_cards').upsert(fallbackRows, options);
 
     if (!fallbackError) {

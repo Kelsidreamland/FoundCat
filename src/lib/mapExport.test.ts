@@ -52,6 +52,27 @@ describe('map export helpers', () => {
     expect(csv).not.toContain('cat-no-location');
   });
 
+  it('exports a saved Google Maps link when the cat card has one', () => {
+    const csv = buildCatMapCsv([
+      makeItem({
+        catName: '短連結貓',
+        location: {
+          lat: 25.033,
+          lng: 121.565,
+          name: '貓咪出沒點',
+          mapUrl: 'https://maps.app.goo.gl/catspot',
+        },
+      }),
+    ], {
+      title: '我的貓咪地圖',
+      includeMemo: false,
+      language: 'zh',
+    });
+
+    expect(csv).toContain('https://maps.app.goo.gl/catspot');
+    expect(csv).not.toContain('query=25.033%2C121.565');
+  });
+
   it('keeps memo private unless the user opts into exporting it', () => {
     const csv = buildCatMapCsv([
       makeItem({

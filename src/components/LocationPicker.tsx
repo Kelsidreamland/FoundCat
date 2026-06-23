@@ -15,6 +15,7 @@ interface LocationResult {
   name: string;
   address?: string;
   placeId?: string;
+  mapUrl?: string;
 }
 
 interface LocationPickerProps {
@@ -41,6 +42,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   );
   const [selectedAddress, setSelectedAddress] = useState<string | undefined>(initialLocation?.address);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | undefined>(initialLocation?.placeId);
+  const [selectedMapUrl, setSelectedMapUrl] = useState<string | undefined>(initialLocation?.mapUrl);
   const [locationName, setLocationName] = useState(initialLocation?.name ?? '');
   const [isLocating, setIsLocating] = useState(false);
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
@@ -57,6 +59,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   const searchQuery = googleMapsSearchText ?? locationName.trim();
   const hasGoogleMapsUrlInput = /(?:google\.[a-z.]+\/maps|maps\.app\.goo\.gl|goo\.gl\/maps)/i.test(locationName);
   const hasUnresolvedUrlInput = /^https?:\/\//i.test(locationName.trim()) && !parsedGoogleMapsLocation && !googleMapsSearchText;
+  const typedGoogleMapsUrl = hasGoogleMapsUrlInput ? locationName.trim() : undefined;
 
   useEffect(() => {
     defaultLocationNameRef.current = defaultLocationName;
@@ -89,6 +92,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   const setMarkerAt = useCallback((lat: number, lng: number, metadata?: {
     address?: string;
     placeId?: string;
+    mapUrl?: string;
   }) => {
     const map = mapRef.current;
     if (!map) return;
@@ -104,6 +108,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
     setSelectedLocation({ lat, lng });
     setSelectedAddress(metadata?.address);
     setSelectedPlaceId(metadata?.placeId);
+    setSelectedMapUrl(metadata?.mapUrl);
   }, []);
 
   const canReplaceLocationName = useCallback(() => {
@@ -278,6 +283,9 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   const handleLocationNameChange = useCallback((value: string) => {
     selectedSuggestionNameRef.current = null;
     setLinkInputError(false);
+    if (!/(?:google\.[a-z.]+\/maps|maps\.app\.goo\.gl|goo\.gl\/maps)/i.test(value)) {
+      setSelectedMapUrl(undefined);
+    }
     setLocationName(value);
   }, []);
 
@@ -291,13 +299,14 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
     setMarkerAt(suggestion.lat, suggestion.lng, {
       address: suggestion.address,
       placeId: suggestion.placeId,
+      mapUrl: selectedMapUrl,
     });
     mapRef.current?.easeTo({
       center: [suggestion.lng, suggestion.lat],
       zoom: 15,
       duration: 800,
     });
-  }, [setMarkerAt]);
+  }, [selectedMapUrl, setMarkerAt]);
 
   const pickSuggestion = useCallback((suggestion: PlaceSuggestion) => {
     applySuggestion(suggestion);
@@ -312,13 +321,15 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
     setLocationName(nextName);
     setSuggestions([]);
     setSearchStatus('idle');
-    setMarkerAt(parsedGoogleMapsLocation.lat, parsedGoogleMapsLocation.lng);
+    setMarkerAt(parsedGoogleMapsLocation.lat, parsedGoogleMapsLocation.lng, {
+      mapUrl: typedGoogleMapsUrl,
+    });
     mapRef.current?.easeTo({
       center: [parsedGoogleMapsLocation.lng, parsedGoogleMapsLocation.lat],
       zoom: 16,
       duration: 800,
     });
-  }, [defaultLocationName, locationName, parsedGoogleMapsLocation, setMarkerAt]);
+  }, [defaultLocationName, locationName, parsedGoogleMapsLocation, setMarkerAt, typedGoogleMapsUrl]);
 
   const handleFullAddressSearch = useCallback(async () => {
     const query = searchQuery;
@@ -355,9 +366,10 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
 
     if (suggestion.address) location.address = suggestion.address;
     if (suggestion.placeId) location.placeId = suggestion.placeId;
+    if (selectedMapUrl) location.mapUrl = selectedMapUrl;
 
     return location;
-  }, []);
+  }, [selectedMapUrl]);
 
   const getFallbackCoordinate = useCallback(() => {
     if (selectedLocation) return selectedLocation;
@@ -382,6 +394,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
         lat: fallbackCoordinate.lat,
         lng: fallbackCoordinate.lng,
         name: defaultLocationName,
+        mapUrl: typedGoogleMapsUrl,
       });
       return;
     }
@@ -434,8 +447,13 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
     if (selectedLocation) {
       if (selectedAddress) location.address = selectedAddress;
       if (selectedPlaceId) location.placeId = selectedPlaceId;
+      if (selectedMapUrl) location.mapUrl = selectedMapUrl;
     } else {
       setMarkerAt(fallbackCoordinate.lat, fallbackCoordinate.lng);
+    }
+
+    if (!location.mapUrl && typedGoogleMapsUrl) {
+      location.mapUrl = typedGoogleMapsUrl;
     }
 
     onPicked(location);
@@ -453,9 +471,11 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
     searchQuery,
     selectedAddress,
     selectedLocation,
+    selectedMapUrl,
     selectedPlaceId,
     setMarkerAt,
     t.noLocationPicked,
+    typedGoogleMapsUrl,
   ]);
 
   const canConfirm = Boolean(selectedLocation) || locationName.trim().length >= 2;

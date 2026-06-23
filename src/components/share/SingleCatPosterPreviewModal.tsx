@@ -36,6 +36,7 @@ export default function SingleCatPosterPreviewModal({ item, language, onClose }:
         lng: item.location.lng,
         name: item.location.name,
         address: item.location.address,
+        mapUrl: item.location.mapUrl,
       })
     : null;
   const previewTitle = item.catName?.trim() || item.location?.name || (language === 'zh' ? '今天遇見的貓' : 'Cat spotted today');

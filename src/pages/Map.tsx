@@ -574,6 +574,7 @@ export default function Map() {
         lng: selectedItem.location.lng,
         name: selectedItem.location.name,
         address: selectedItem.location.address,
+        mapUrl: selectedItem.location.mapUrl,
       })
     : null;
   const expandedImage = expandedImageItem?.heroImageData || expandedImageItem?.imageData;

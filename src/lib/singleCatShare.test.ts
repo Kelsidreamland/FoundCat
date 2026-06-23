@@ -40,6 +40,13 @@ describe('single cat share helpers', () => {
       personalityTags: ['friendly'],
       careStatusTags: ['fed'],
       spotNote: '晚上常在後方紅色花園附近',
+      location: {
+        lat: 25.033,
+        lng: 121.565,
+        name: '台北 101',
+        address: '台北市信義區',
+        mapUrl: 'https://maps.app.goo.gl/catspot',
+      },
     }), {
       includeMemo: true,
       language: 'zh',
@@ -50,6 +57,7 @@ describe('single cat share helpers', () => {
     expect(decodeSingleCatSharePayload(encoded)).toEqual(payload);
     expect(payload.catName).toBe('放鬆的貓咪');
     expect(payload.locationAddress).toBe('台北市信義區');
+    expect(payload.locationMapUrl).toBe('https://maps.app.goo.gl/catspot');
   });
 
   it('omits memo when memo sharing is not opted in', () => {
@@ -91,6 +99,14 @@ describe('single cat share helpers', () => {
     })).toBe(
       'https://www.google.com/maps/search/?api=1&query=25.033%2C121.565'
     );
+  });
+
+  it('uses a saved Google Maps URL directly when the cat card has one', () => {
+    expect(buildGoogleMapsSearchUrl({
+      lat: 25.033,
+      lng: 121.565,
+      mapUrl: 'https://maps.app.goo.gl/abc123',
+    })).toBe('https://maps.app.goo.gl/abc123');
   });
 
   it('uses mystery copy when no share tags are present', () => {

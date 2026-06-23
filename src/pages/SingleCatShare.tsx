@@ -47,6 +47,7 @@ export default function SingleCatShare() {
     lng: payload.lng,
     name: payload.locationName,
     address: payload.locationAddress,
+    mapUrl: payload.locationMapUrl,
   });
   const isZh = language === 'zh';
   const title = payload.catName?.trim() || (isZh ? '今天遇見的貓' : 'A cat found nearby');

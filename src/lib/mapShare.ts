@@ -10,6 +10,7 @@ export interface MapShareCat {
   date: string;
   locationName: string;
   locationAddress?: string;
+  locationMapUrl?: string;
   lat: number;
   lng: number;
   personalityTags?: CatPersonalityTag[];
@@ -54,6 +55,7 @@ export const buildMapSharePayload = (
       const memo = item.spotNote?.trim();
       const catName = item.catName?.trim();
       const locationAddress = location.address?.trim();
+      const locationMapUrl = location.mapUrl?.trim();
 
       return {
         id: item.id,
@@ -62,6 +64,7 @@ export const buildMapSharePayload = (
         date: item.date,
         locationName: location.name,
         locationAddress: locationAddress || undefined,
+        locationMapUrl: locationMapUrl || undefined,
         lat: location.lat,
         lng: location.lng,
         personalityTags: item.personalityTags,

@@ -23,13 +23,14 @@ const localCat: ScrapbookItem = {
   personalityTags: ['friendly', 'foodie'],
   careStatusTags: ['tnr'],
   spotNote: '晚餐時間常在便利店旁邊',
-  location: {
-    lat: 13.7563,
-    lng: 100.5018,
-    name: '曼谷街角咖啡',
-    address: 'Bangkok, Thailand',
-    placeId: 'place-1',
-  },
+    location: {
+      lat: 13.7563,
+      lng: 100.5018,
+      name: '曼谷街角咖啡',
+      address: 'Bangkok, Thailand',
+      placeId: 'place-1',
+      mapUrl: 'https://maps.app.goo.gl/catspot',
+    },
 };
 
 describe('cloud cat card mapping', () => {
@@ -46,6 +47,7 @@ describe('cloud cat card mapping', () => {
       location_name: '曼谷街角咖啡',
       location_address: 'Bangkok, Thailand',
       location_place_id: 'place-1',
+      location_map_url: 'https://maps.app.goo.gl/catspot',
       lat: 13.7563,
       lng: 100.5018,
       personality_tags: ['friendly', 'foodie'],
@@ -93,6 +95,7 @@ describe('cloud cat card mapping', () => {
       heroImageData: 'data:image/jpeg;base64,hero',
       encounteredAt: '2026-06-02T08:00:00.000Z',
       locationName: '曼谷街角咖啡',
+      locationMapUrl: 'https://maps.app.goo.gl/catspot',
       lat: 13.7563,
       lng: 100.5018,
       personalityTags: ['friendly', 'foodie'],

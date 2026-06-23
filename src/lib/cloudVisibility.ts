@@ -1,5 +1,5 @@
 import type { ScrapbookItem } from '../store/useScrapbookStore';
-import { isCatFeatureNoteSchemaError, toCloudCatCardUpsert, withoutCatFeatureNote } from './cloudCatCards';
+import { isOptionalCloudColumnSchemaError, toCloudCatCardUpsert, withoutOptionalCloudColumns } from './cloudCatCards';
 import { getSupabaseClient } from './supabaseClient';
 
 type SetCloudCatCardVisibilityInput = {
@@ -46,8 +46,8 @@ export async function setCloudCatCardVisibility({
   };
   const { error } = await client.from('cat_cards').upsert([row], options);
 
-  if (error && isCatFeatureNoteSchemaError(error)) {
-    const { error: fallbackError } = await client.from('cat_cards').upsert([withoutCatFeatureNote(row)], options);
+  if (error && isOptionalCloudColumnSchemaError(error)) {
+    const { error: fallbackError } = await client.from('cat_cards').upsert([withoutOptionalCloudColumns(row)], options);
 
     if (!fallbackError) {
       return {

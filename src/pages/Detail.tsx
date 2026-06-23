@@ -74,6 +74,7 @@ export default function Detail() {
     name: string;
     address?: string;
     placeId?: string;
+    mapUrl?: string;
   }) => {
     if (!item) return;
 

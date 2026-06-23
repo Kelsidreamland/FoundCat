@@ -38,6 +38,7 @@ const rowToScrapbookItem = (row: CloudCatCardRow): ScrapbookItem => ({
         name: row.location_name ?? 'FOUND CAT',
         address: row.location_address ?? undefined,
         placeId: row.location_place_id ?? undefined,
+        mapUrl: row.location_map_url ?? undefined,
       }
     : undefined,
   personalityTags: row.personality_tags,
