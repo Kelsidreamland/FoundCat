@@ -29,5 +29,5 @@ export const getReadableLocationName = (
 };
 
 export const getFindCatCta = (language: 'zh' | 'en') => (
-  language === 'zh' ? '出發去找這隻貓' : 'Go find this cat'
+  language === 'zh' ? '去找這隻貓' : 'Go find this cat'
 );

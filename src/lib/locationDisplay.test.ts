@@ -27,7 +27,7 @@ describe('location display helpers', () => {
   });
 
   it('returns concise CTA copy for detail actions', () => {
-    expect(getFindCatCta('zh')).toBe('出發去找這隻貓');
+    expect(getFindCatCta('zh')).toBe('去找這隻貓');
     expect(getFindCatCta('en')).toBe('Go find this cat');
   });
 });

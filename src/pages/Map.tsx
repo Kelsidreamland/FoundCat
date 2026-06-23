@@ -14,7 +14,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { CAT_BREEDS } from '../data/catBreeds';
 import { CAT_COLORS } from '../data/catColors';
 import { formatCatCardNumberForItem } from '../lib/catdexDeck';
-import { getFindCatCta, getReadableLocationName, hasReadableLocationName } from '../lib/locationDisplay';
+import { getFindCatCta, getReadableLocationName } from '../lib/locationDisplay';
 import { MapTreasureBrandMark } from '../components/brand/BrandMarks';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import CloudBackupPrompt from '../components/cloud/CloudBackupPrompt';
@@ -49,6 +49,7 @@ const CARE_STATUS_TAGS: Array<{ id: CatCareStatusTag; zh: string; en: string }> 
 
 type EncounterDetailDraft = {
   catName: string;
+  catFeatureNote: string;
   personalityTags: CatPersonalityTag[];
   spotNote: string;
   careStatusTags: CatCareStatusTag[];
@@ -60,6 +61,7 @@ type PublicLoadStatus = 'idle' | 'loading' | 'success' | 'error' | 'unconfigured
 
 const EMPTY_ENCOUNTER_DETAIL_DRAFT: EncounterDetailDraft = {
   catName: '',
+  catFeatureNote: '',
   personalityTags: [],
   spotNote: '',
   careStatusTags: [],
@@ -190,16 +192,23 @@ export default function Map() {
     catNamePlaceholder: language === 'zh'
       ? '例如：放鬆的貓咪、哭哭臉、轉角小虎'
       : 'Example: relaxed cat, sleepy face, corner tiger',
-    spotNote: language === 'zh' ? '出沒備註' : 'Spot note',
+    featureNote: language === 'zh' ? '特徵描述' : 'Feature note',
+    featureNotePlaceholder: language === 'zh'
+      ? '例如：白襪、左耳白毛、尾巴短短、看到相機會慢慢眨眼'
+      : 'Example: white socks, white patch on left ear, short tail, slow blinks at camera',
+    featureHeading: language === 'zh' ? '特徵' : 'Features',
+    spotNote: language === 'zh' ? '出沒線索' : 'Spot clues',
     spotNotePlaceholder: language === 'zh'
       ? '例如：飯店右手邊門口的紙箱、對面 7-11 晚上常出現'
       : 'Example: cardboard box by the hotel entrance, often seen near 7-11 at night',
+    spotHeading: language === 'zh' ? '出沒線索' : 'Spot clues',
     personality: language === 'zh' ? '牠給人的感覺' : 'How this cat felt',
     careStatus: language === 'zh' ? '照護狀態' : 'Care status',
+    careHeading: language === 'zh' ? '照護' : 'Care',
     expandDetails: language === 'zh' ? '補充貓咪資訊' : 'Add cat info',
     expandDetailsHint: language === 'zh'
-      ? '出沒備註、個性、照護狀態'
-      : 'Notes, personality, care status',
+      ? '名字、特徵、出沒線索'
+      : 'Name, features, spot clues',
     dialogTitle: language === 'zh' ? '補充這隻貓的線索' : 'Add clues for this cat',
     dialogSubtitle: language === 'zh'
       ? '可以先只填你確定的事，之後再回來補。'
@@ -219,6 +228,7 @@ export default function Map() {
 
     setEncounterDetailDraft({
       catName: selectedItem.catName ?? '',
+      catFeatureNote: selectedItem.catFeatureNote ?? '',
       personalityTags: selectedItem.personalityTags ?? [],
       spotNote: selectedItem.spotNote ?? '',
       careStatusTags: selectedItem.careStatusTags ?? [],
@@ -255,10 +265,12 @@ export default function Map() {
     if (!selectedItem) return;
 
     const trimmedCatName = encounterDetailDraft.catName.trim();
+    const trimmedFeatureNote = encounterDetailDraft.catFeatureNote.trim();
     const trimmedSpotNote = encounterDetailDraft.spotNote.trim();
 
     await updateItem(selectedItem.id, {
       catName: trimmedCatName || undefined,
+      catFeatureNote: trimmedFeatureNote || undefined,
       personalityTags: encounterDetailDraft.personalityTags.length > 0
         ? encounterDetailDraft.personalityTags
         : undefined,
@@ -553,7 +565,6 @@ export default function Map() {
   const selectedImage = selectedItem?.heroImageData || selectedItem?.imageData;
   const selectedLocationDisplayName = selectedItem ? getReadableLocationName(selectedItem, language) : '';
   const selectedFindCatCta = getFindCatCta(language);
-  const shouldShowSelectedFindCatCta = Boolean(selectedItem?.location && hasReadableLocationName(selectedItem.location.name));
   const selectedDisplayName = selectedItem
     ? selectedItem.catName?.trim() || selectedLocationDisplayName
     : '';
@@ -568,6 +579,8 @@ export default function Map() {
   const expandedImage = expandedImageItem?.heroImageData || expandedImageItem?.imageData;
   const selectedPersonalityTags = selectedItem?.personalityTags ?? [];
   const selectedCareStatusTags = selectedItem?.careStatusTags ?? [];
+  const selectedFeatureNote = selectedItem?.catFeatureNote?.trim() ?? '';
+  const selectedSpotNote = selectedItem?.spotNote?.trim() ?? '';
   const selectedLocationGroupCount = selectedLocationGroup?.items.length ?? 0;
   const hasSelectedLocationSiblings = selectedLocationGroupCount > 1 && selectedLocationGroupIndex >= 0;
   const selectedLocationGroupPosition = hasSelectedLocationSiblings
@@ -576,6 +589,7 @@ export default function Map() {
   const encounterDetailsDirty = Boolean(
     selectedItem && (
       encounterDetailDraft.catName !== (selectedItem.catName ?? '') ||
+      encounterDetailDraft.catFeatureNote !== (selectedItem.catFeatureNote ?? '') ||
       encounterDetailDraft.spotNote !== (selectedItem.spotNote ?? '') ||
       !sameTags(encounterDetailDraft.personalityTags, selectedPersonalityTags) ||
       !sameTags(encounterDetailDraft.careStatusTags, selectedCareStatusTags)
@@ -664,7 +678,6 @@ export default function Map() {
   });
   const selectedEncounterSummaryLabels = [
     ...selectedPersonalityLabels,
-    ...selectedCareStatusLabels,
   ];
   const shouldShowMapEmptyState = mapReady
     && itemsWithLocation.length === 0
@@ -837,11 +850,6 @@ export default function Map() {
                   {selectedItem.catName ? (
                     <p className="mt-1 truncate text-xs font-black text-[#221915]/75">{selectedLocationDisplayName}</p>
                   ) : null}
-                  {shouldShowSelectedFindCatCta ? (
-                    <p className="mt-1 text-xs font-black text-[#2f5fb3]">
-                      {selectedFindCatCta}
-                    </p>
-                  ) : null}
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <button
@@ -894,12 +902,6 @@ export default function Map() {
                 </div>
               ) : null}
 
-              {selectedItem.spotNote ? (
-                <p className="rounded-[14px] border border-[#221915]/10 bg-white/78 px-3 py-2 text-xs font-bold leading-relaxed text-[#5f5148]">
-                  {selectedItem.spotNote}
-                </p>
-              ) : null}
-
               {selectedEncounterSummaryLabels.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {selectedEncounterSummaryLabels.map((label) => (
@@ -910,6 +912,46 @@ export default function Map() {
                       {label}
                     </span>
                   ))}
+                </div>
+              ) : null}
+
+              {selectedFeatureNote ? (
+                <div className="rounded-[14px] border border-[#221915]/10 bg-white/78 px-3 py-2 shadow-[2px_2px_0_rgba(47,95,179,0.06)]">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
+                    {encounterCopy.featureHeading}
+                  </p>
+                  <p className="mt-1 text-xs font-bold leading-relaxed text-[#5f5148]">
+                    {selectedFeatureNote}
+                  </p>
+                </div>
+              ) : null}
+
+              {selectedSpotNote ? (
+                <div className="rounded-[14px] border border-[#221915]/10 bg-white/78 px-3 py-2 shadow-[2px_2px_0_rgba(47,95,179,0.06)]">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
+                    {encounterCopy.spotHeading}
+                  </p>
+                  <p className="mt-1 text-xs font-bold leading-relaxed text-[#5f5148]">
+                    {selectedSpotNote}
+                  </p>
+                </div>
+              ) : null}
+
+              {selectedCareStatusLabels.length > 0 ? (
+                <div className="rounded-[14px] border border-[#2f5fb3]/14 bg-[#eaf1ff]/80 px-3 py-2 shadow-[2px_2px_0_rgba(247,201,72,0.12)]">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
+                    {encounterCopy.careHeading}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {selectedCareStatusLabels.map((label) => (
+                      <span
+                        key={label}
+                        className="rounded-full border border-[#2f5fb3]/16 bg-[#fffdf2] px-3 py-1.5 text-[11px] font-black text-[#221915]"
+                      >
+                        {label}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               ) : null}
 
@@ -963,11 +1005,11 @@ export default function Map() {
                     href={selectedGoogleMapsUrl}
                     target="_blank"
                     rel="noreferrer"
-                    aria-label={language === 'zh' ? '在 Google Maps 打開' : 'Open in Google Maps'}
+                    aria-label={selectedFindCatCta}
                     className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-[14px] border-2 border-[#221915] bg-[#f7c948] px-2 py-2 text-[#221915] shadow-[3px_3px_0_rgba(47,95,179,0.14)] transition-transform active:translate-x-[1px] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
                   >
                     <Navigation size={14} className="text-[#2f5fb3]" />
-                    <span>Google Maps</span>
+                    <span>{selectedFindCatCta}</span>
                   </a>
                 ) : null}
               </div>
@@ -991,7 +1033,7 @@ export default function Map() {
                     </span>
                   </span>
                   <span className="shrink-0 rounded-full bg-[#fff2cf] px-2.5 py-1 text-[11px] font-black text-[#221915]">
-                    {selectedItem.catName || selectedItem.spotNote || selectedEncounterSummaryLabels.length > 0
+                    {selectedItem.catName || selectedItem.catFeatureNote || selectedItem.spotNote || selectedEncounterSummaryLabels.length > 0 || selectedCareStatusLabels.length > 0
                       ? (language === 'zh' ? '編輯' : 'Edit')
                       : (language === 'zh' ? '新增' : 'Add')}
                   </span>
@@ -1125,6 +1167,20 @@ export default function Map() {
                     }))}
                     placeholder={encounterCopy.catNamePlaceholder}
                     className="min-h-11 w-full rounded-[12px] border border-[#221915]/15 bg-[#fffdf2] px-3 py-2 text-sm font-semibold text-[#221915] placeholder:text-[#8b7b6f] focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/50"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-black text-[#221915]">{encounterCopy.featureNote}</span>
+                  <textarea
+                    aria-label={encounterCopy.featureNote}
+                    value={encounterDetailDraft.catFeatureNote}
+                    onChange={(event) => updateEncounterDetailDraft((draft) => ({
+                      ...draft,
+                      catFeatureNote: event.target.value,
+                    }))}
+                    placeholder={encounterCopy.featureNotePlaceholder}
+                    className="min-h-[72px] w-full resize-none rounded-[12px] border border-[#221915]/15 bg-[#fffdf2] px-3 py-2 text-sm font-semibold leading-relaxed text-[#221915] placeholder:text-[#8b7b6f] focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/50"
                   />
                 </label>
 
