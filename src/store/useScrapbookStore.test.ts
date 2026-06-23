@@ -48,12 +48,14 @@ describe('useScrapbookStore catdex display name', () => {
 
     await useScrapbookStore.getState().updateItem('cat-1', {
       personalityTags: ['friendly', 'aloof'],
+      catFeatureNote: '左耳白毛，尾巴短短',
       spotNote: '公園長椅下方，傍晚常出現',
       careStatusTags: ['tnr', 'fed'],
     });
 
     expect(useScrapbookStore.getState().items[0]).toMatchObject({
       personalityTags: ['friendly', 'aloof'],
+      catFeatureNote: '左耳白毛，尾巴短短',
       spotNote: '公園長椅下方，傍晚常出現',
       careStatusTags: ['tnr', 'fed'],
     });
@@ -63,6 +65,7 @@ describe('useScrapbookStore catdex display name', () => {
         expect.objectContaining({
           id: 'cat-1',
           personalityTags: ['friendly', 'aloof'],
+          catFeatureNote: '左耳白毛，尾巴短短',
           spotNote: '公園長椅下方，傍晚常出現',
           careStatusTags: ['tnr', 'fed'],
         }),

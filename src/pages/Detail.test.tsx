@@ -30,6 +30,8 @@ const makeItem = (overrides: Partial<ScrapbookItem> = {}): ScrapbookItem => ({
   zIndex: 1,
   location: overrides.location,
   catName: overrides.catName,
+  catFeatureNote: overrides.catFeatureNote,
+  catColor: overrides.catColor,
   personalityTags: overrides.personalityTags,
   spotNote: overrides.spotNote,
   careStatusTags: overrides.careStatusTags,
@@ -81,7 +83,7 @@ describe('Detail page', () => {
     expect(screen.queryByText('貼文公開')).not.toBeInTheDocument();
   });
 
-  it('prioritizes the cat location CTA, personality tags, and notes over the collection date', () => {
+  it('prioritizes a simple find-cat CTA, personality tags, and notes over address noise', () => {
     useScrapbookStore.setState({
       items: [
         makeItem({
@@ -95,6 +97,7 @@ describe('Detail page', () => {
           },
           personalityTags: ['friendly', 'foodie'],
           careStatusTags: ['fed'],
+          catFeatureNote: '左耳有一小塊白毛，看到相機會慢慢眨眼',
           spotNote: '傍晚常在門口紙箱睡覺',
           date: '2026-05-11T08:00:00.000Z',
         }),
@@ -112,11 +115,15 @@ describe('Detail page', () => {
     );
 
     expect(screen.getByText('巷口店長')).toBeInTheDocument();
-    expect(screen.getByText('台北市信義區貓咪路 1 號')).toBeInTheDocument();
-    expect(screen.getByText('出發去找這隻貓')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '去找這隻貓' })).toBeInTheDocument();
+    expect(screen.queryByText('巷口咖啡店')).not.toBeInTheDocument();
+    expect(screen.queryByText('台北市信義區貓咪路 1 號')).not.toBeInTheDocument();
+    expect(screen.queryByText('Google Maps')).not.toBeInTheDocument();
+    expect(screen.queryByText('出發去找這隻貓')).not.toBeInTheDocument();
     expect(screen.getByText('親人')).toBeInTheDocument();
     expect(screen.getByText('貪吃')).toBeInTheDocument();
     expect(screen.getByText('固定餵養')).toBeInTheDocument();
+    expect(screen.getByText('左耳有一小塊白毛，看到相機會慢慢眨眼')).toBeInTheDocument();
     expect(screen.getByText('傍晚常在門口紙箱睡覺')).toBeInTheDocument();
     expect(screen.queryByText(/2026/)).not.toBeInTheDocument();
   });
@@ -150,5 +157,46 @@ describe('Detail page', () => {
     expect(screen.getByText('去找這隻貓')).toBeInTheDocument();
     expect(screen.queryByText('出發去找這隻貓')).not.toBeInTheDocument();
     expect(screen.queryByText('https://maps.app.goo.gl/abc123')).not.toBeInTheDocument();
+  });
+
+  it('lets me edit cat info and generate a playful local name', async () => {
+    const user = userEvent.setup();
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          id: 'cat-1',
+          catColor: 'orange-tabby',
+          personalityTags: ['foodie'],
+          spotNote: '躺在咖啡廳門口等飯',
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/detail/cat-1']}>
+        <Routes>
+          <Route path="/detail/:id" element={<Detail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole('button', { name: '補充貓咪資訊' }));
+    await user.click(screen.getByRole('button', { name: '幫我取名' }));
+    await user.type(screen.getByLabelText('特徵描述'), '右眼旁邊有一點深色花紋');
+    await user.click(screen.getByRole('button', { name: '高冷' }));
+    await user.click(screen.getByRole('button', { name: '儲存貓咪資訊' }));
+
+    await waitFor(() => {
+      expect(useScrapbookStore.getState().items[0]).toMatchObject({
+        catName: '懶散橘貓',
+        catFeatureNote: '右眼旁邊有一點深色花紋',
+        personalityTags: ['foodie', 'aloof'],
+      });
+    });
+
+    expect(screen.getByText('懶散橘貓')).toBeInTheDocument();
+    expect(screen.getByText('右眼旁邊有一點深色花紋')).toBeInTheDocument();
   });
 });

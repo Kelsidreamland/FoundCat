@@ -30,6 +30,7 @@ export interface ScrapbookItem {
   catName?: string;
   catBreed?: string;
   catColor?: string;
+  catFeatureNote?: string;
   personalityTags?: CatPersonalityTag[];
   spotNote?: string;
   careStatusTags?: CatCareStatusTag[];
