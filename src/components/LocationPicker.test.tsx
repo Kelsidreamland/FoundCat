@@ -161,6 +161,39 @@ describe('LocationPicker', () => {
     expect(screen.getByText('貼上 Google Maps')).toBeInTheDocument();
     expect(screen.getByText('搜尋店名地址')).toBeInTheDocument();
     expect(screen.getByText('點地圖放 pin')).toBeInTheDocument();
+    expect(screen.getByText('貼 Google Maps、搜尋店名地址，或直接點地圖放 pin。')).toBeInTheDocument();
+  });
+
+  it('tells users a full Google Maps coordinate link can be confirmed immediately', async () => {
+    render(
+      <LocationPicker
+        language="zh"
+        onPicked={vi.fn()}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText('地點名稱'), {
+      target: { value: 'https://www.google.com/maps/place/G+Nimman+Chiang+Mai/@18.795163,98.967533,18z' },
+    });
+
+    expect(await screen.findByText('已讀到 Google Maps 位置，可以直接確認地點。')).toBeInTheDocument();
+  });
+
+  it('tells users typed place text can be searched or pinned on the map', () => {
+    render(
+      <LocationPicker
+        language="zh"
+        onPicked={vi.fn()}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText('地點名稱'), {
+      target: { value: '成都貓咪咖啡館' },
+    });
+
+    expect(screen.getByText('可以搜尋店名或地址；找不到時，保留這段文字再點地圖選位置。')).toBeInTheDocument();
   });
 
   it('uses address fallback for instant suggestions so pasted addresses and local-language cafe names can resolve sooner', async () => {

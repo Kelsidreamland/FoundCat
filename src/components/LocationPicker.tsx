@@ -64,6 +64,21 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   const hasUnresolvedUrlInput = /^https?:\/\//i.test(locationName.trim()) && !parsedGoogleMapsLocation && !googleMapsSearchText;
   const typedGoogleMapsUrl = hasGoogleMapsUrlInput ? locationName.trim() : undefined;
   const shouldShowLinkInputGuidance = hasGoogleMapsUrlInput && !parsedGoogleMapsLocation;
+  const locationInputHelperCopy = parsedGoogleMapsLocation
+    ? (language === 'zh'
+        ? '已讀到 Google Maps 位置，可以直接確認地點。'
+        : 'Google Maps location detected. You can confirm it now.')
+    : hasUnresolvedUrlInput
+      ? (language === 'zh'
+          ? '短連結請先打開後複製完整網址，或直接點地圖選位置。'
+          : 'Open short links first and copy the full URL, or tap the map.')
+      : locationName.trim().length > 0
+        ? (language === 'zh'
+            ? '可以搜尋店名或地址；找不到時，保留這段文字再點地圖選位置。'
+            : 'Search the place or address; if it is missing, keep this text and tap the map.')
+        : (language === 'zh'
+            ? '貼 Google Maps、搜尋店名地址，或直接點地圖放 pin。'
+            : 'Paste Google Maps, search a place or address, or tap the map to drop a pin.');
 
   useEffect(() => {
     defaultLocationNameRef.current = defaultLocationName;
@@ -671,6 +686,20 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
               ) : null}
             </div>
           </label>
+
+          <p
+            data-testid="location-input-helper-copy"
+            className={[
+              'mt-2 rounded-2xl border px-3 py-2 text-xs font-bold leading-5',
+              parsedGoogleMapsLocation
+                ? 'border-[#2f5fb3]/18 bg-[#d9ecff]/52 text-[#2f5fb3]'
+                : hasUnresolvedUrlInput
+                  ? 'border-[#d97706]/25 bg-[#fff2cf]/75 text-[#7a4a08]'
+                  : 'border-[#221915]/10 bg-white/58 text-cat-text-secondary',
+            ].join(' ')}
+          >
+            {locationInputHelperCopy}
+          </p>
 
           {parsedGoogleMapsLocation ? (
             <div className="mt-3 rounded-2xl border border-[#2f5fb3]/20 bg-[#d9ecff]/70 px-3 py-3">
