@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import CatActionNav from '../components/catdex/CatActionNav';
 import CatdexLabel from '../components/catdex/CatdexLabel';
@@ -92,19 +92,57 @@ export default function Catdex() {
     [language, worldSavedItems]
   );
 
-  useEffect(() => {
-    if (activeCollectionTab === 'self' && selfFoundItems.length === 0 && worldSavedItems.length > 0) {
-      setActiveCollectionTab('world');
-    }
-    if (activeCollectionTab === 'world' && worldSavedItems.length === 0 && selfFoundItems.length > 0) {
-      setActiveCollectionTab('self');
-    }
-  }, [activeCollectionTab, selfFoundItems.length, worldSavedItems.length]);
-
   const formatGroupCount = (count: number) => (
     language === 'zh'
       ? `${count} 張貓卡`
       : `${count} cat ${count === 1 ? 'card' : 'cards'}`
+  );
+
+  const renderCollectionSummary = (isWorldSaved: boolean) => (
+    <div className="mt-3 grid grid-cols-[auto_1fr] items-center gap-3 rounded-[18px] border border-[#221915]/14 bg-[#fffdf2]/80 px-3 py-2 shadow-[2px_3px_0_rgba(47,95,179,0.09)]">
+      <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${
+        isWorldSaved
+          ? 'bg-[#d9ecff] text-[#2f5fb3]'
+          : 'bg-[#fff2cf] text-[#221915]'
+      }`}>
+        {isWorldSaved
+          ? (language === 'zh' ? '世界地圖編號' : 'World map number')
+          : (language === 'zh' ? '我的圖鑑編號' : 'My card number')}
+      </span>
+      <p className="text-xs font-bold leading-5 text-[#6d5f52]">
+        {isWorldSaved
+          ? (language === 'zh'
+              ? '保留 W-001 編號，不併入自己的 No 編號。'
+              : 'Keeps W-001 numbers and never merges into your private No. series.')
+          : (language === 'zh'
+              ? 'No.001 起算，只整理自己親自拍到的貓。'
+              : 'Starts at No.001 and only includes cats you photographed yourself.')}
+      </p>
+    </div>
+  );
+
+  const renderCollectionEmptyState = (isWorldSaved: boolean) => (
+    <section aria-live="polite" className="rounded-[24px] border-2 border-[#221915] bg-[#fffdf2] p-6 text-center shadow-[7px_8px_0_rgba(29,23,20,0.86)]">
+      <div className={`mx-auto mb-4 grid h-16 w-16 rotate-[-4deg] place-items-center border-2 border-[#221915] text-2xl font-black shadow-[4px_4px_0_rgba(29,23,20,0.82)] ${
+        isWorldSaved ? 'bg-[#d9ecff] text-[#2f5fb3]' : 'bg-[#fff2cf] text-[#221915]'
+      }`}>
+        {isWorldSaved ? 'W' : 'No.'}
+      </div>
+      <p className="text-lg font-black text-[#1d1714]">
+        {isWorldSaved
+          ? (language === 'zh' ? '還沒有收藏世界貓卡' : 'No saved world cats yet')
+          : (language === 'zh' ? '還沒有自己拍到的貓卡' : 'No cats you found yet')}
+      </p>
+      <p className="mx-auto mt-2 max-w-[17rem] text-sm font-bold leading-6 text-[#6d5f52]">
+        {isWorldSaved
+          ? (language === 'zh'
+              ? '回首頁左滑收藏喜歡的世界貓卡，牠們會保留 W 編號出現在這裡。'
+              : 'Go back home and swipe left to save world cats. They will keep their W-numbers here.')
+          : (language === 'zh'
+              ? '按中間的拍貓按鈕，存下你親自遇見的第一隻貓。'
+              : 'Use the center capture button to save the first cat you found yourself.')}
+      </p>
+    </section>
   );
 
   const renderCollectionSection = ({
@@ -120,7 +158,7 @@ export default function Catdex() {
     groups: CatdexPlaceGroup[];
     isWorldSaved: boolean;
   }) => {
-    if (groups.length === 0) return null;
+    if (groups.length === 0) return renderCollectionEmptyState(isWorldSaved);
 
     return (
       <section aria-labelledby={isWorldSaved ? 'world-saved-cats-heading' : 'self-found-cats-heading'}>
@@ -137,6 +175,7 @@ export default function Catdex() {
           <p className="mt-1 text-sm font-bold leading-6 text-[#6d5f52]">
             {description}
           </p>
+          {renderCollectionSummary(isWorldSaved)}
         </div>
 
         <div className="space-y-6">
