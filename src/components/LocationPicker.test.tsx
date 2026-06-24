@@ -158,6 +158,9 @@ describe('LocationPicker', () => {
 
     expect(screen.getAllByText(/貼上 Google Maps 連結/).length).toBeGreaterThan(0);
     expect(screen.getByPlaceholderText('貼上 Google Maps 連結、搜尋店名或地址')).toBeInTheDocument();
+    expect(screen.getByText('貼上 Google Maps')).toBeInTheDocument();
+    expect(screen.getByText('搜尋店名地址')).toBeInTheDocument();
+    expect(screen.getByText('點地圖放 pin')).toBeInTheDocument();
   });
 
   it('uses address fallback for instant suggestions so pasted addresses and local-language cafe names can resolve sooner', async () => {
@@ -413,9 +416,10 @@ describe('LocationPicker', () => {
     fireEvent.change(screen.getByLabelText('地點名稱'), {
       target: { value: 'https://maps.app.goo.gl/abc123' },
     });
+    expect(await screen.findByText(/短連結目前無法直接定位/)).toBeInTheDocument();
+
     fireEvent.click(screen.getByRole('button', { name: '確認地點' }));
 
-    expect(await screen.findByText(/短連結目前無法直接定位/)).toBeInTheDocument();
     expect(searchPlaces).not.toHaveBeenCalled();
     expect(onPicked).not.toHaveBeenCalled();
   });

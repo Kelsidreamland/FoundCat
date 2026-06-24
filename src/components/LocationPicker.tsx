@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
-import { Loader2, LocateFixed, MapPin, X } from 'lucide-react';
+import { Link2, Loader2, LocateFixed, MapPin, Search, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { translations } from '../translations';
 import { reverseGeocodePlace, searchPlaces, type PlaceSuggestion } from '../lib/placeSearch';
@@ -63,6 +63,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   const hasGoogleMapsUrlInput = /(?:google\.[a-z.]+\/maps|maps\.app\.goo\.gl|goo\.gl\/maps)/i.test(locationName);
   const hasUnresolvedUrlInput = /^https?:\/\//i.test(locationName.trim()) && !parsedGoogleMapsLocation && !googleMapsSearchText;
   const typedGoogleMapsUrl = hasGoogleMapsUrlInput ? locationName.trim() : undefined;
+  const shouldShowLinkInputGuidance = hasGoogleMapsUrlInput && !parsedGoogleMapsLocation;
 
   useEffect(() => {
     defaultLocationNameRef.current = defaultLocationName;
@@ -515,6 +516,35 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
         <div className="p-4 border-b border-cat-border-light bg-cat-bg/50">
           <p className="text-cat-text-tertiary text-xs mb-3">{t.tapMapHint}</p>
 
+          <div className="mb-3 grid grid-cols-3 gap-2" aria-label={language === 'zh' ? '地點輸入方式' : 'Location input methods'}>
+            {[
+              {
+                icon: Link2,
+                label: language === 'zh' ? '貼上 Google Maps' : 'Paste Maps link',
+              },
+              {
+                icon: Search,
+                label: language === 'zh' ? '搜尋店名地址' : 'Search place',
+              },
+              {
+                icon: MapPin,
+                label: language === 'zh' ? '點地圖放 pin' : 'Tap map pin',
+              },
+            ].map((method) => {
+              const Icon = method.icon;
+
+              return (
+                <div
+                  key={method.label}
+                  className="flex min-h-10 items-center justify-center gap-1.5 rounded-2xl border border-[#2f5fb3]/10 bg-white/62 px-2 text-center text-[11px] font-bold leading-4 text-cat-text-secondary shadow-[1px_2px_0_rgba(47,95,179,0.06)]"
+                >
+                  <Icon size={13} className="shrink-0 text-[#2f5fb3]/65" />
+                  <span className="min-w-0">{method.label}</span>
+                </div>
+              );
+            })}
+          </div>
+
           <div className="flex gap-2 mb-3">
             <button
               onClick={useCurrentLocation}
@@ -625,11 +655,18 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
                 {language === 'zh' ? '套用 Google Maps 位置' : 'Use Google Maps location'}
               </button>
             </div>
-          ) : hasGoogleMapsUrlInput ? (
-            <p className="mt-3 rounded-2xl border border-[#221915]/12 bg-white/75 px-3 py-2 text-xs font-bold leading-5 text-cat-text-secondary">
+          ) : shouldShowLinkInputGuidance ? (
+            <p
+              className={[
+                'mt-3 rounded-2xl px-3 py-2 text-xs font-bold leading-5',
+                hasUnresolvedUrlInput
+                  ? 'border border-[#d97706]/25 bg-[#fff2cf]/75 text-[#7a4a08]'
+                  : 'border border-[#221915]/12 bg-white/75 text-cat-text-secondary',
+              ].join(' ')}
+            >
               {language === 'zh'
-                ? '這個 Google Maps 連結沒有可直接讀取的座標。如果是短連結，請在 Google Maps 打開後複製完整網址，或直接點地圖選位置。'
-                : 'This Google Maps link does not expose coordinates. Open it in Google Maps and copy the full URL, or tap the map directly.'}
+                ? '短連結目前無法直接定位。請在 Google Maps 打開後複製完整網址，或點地圖選位置。'
+                : 'Short links cannot be placed directly yet. Open it in Google Maps and copy the full URL, or tap the map directly.'}
             </p>
           ) : null}
           {linkInputError ? (
