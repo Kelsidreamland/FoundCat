@@ -35,6 +35,9 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   const defaultLocationNameRef = useRef('');
   const hasReliableSearchCenterRef = useRef(Boolean(initialLocation));
   const pickedManualCoordinateRef = useRef(false);
+  const selectedLocationRef = useRef<{ lat: number; lng: number } | null>(
+    initialLocation ? { lat: initialLocation.lat, lng: initialLocation.lng } : null
+  );
   const languageRef = useRef(language);
   const reverseLookupIdRef = useRef(0);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(
@@ -105,7 +108,9 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
       markerRef.current.setLngLat([lng, lat]);
     }
 
-    setSelectedLocation({ lat, lng });
+    const nextLocation = { lat, lng };
+    selectedLocationRef.current = nextLocation;
+    setSelectedLocation(nextLocation);
     setSelectedAddress(metadata?.address);
     setSelectedPlaceId(metadata?.placeId);
     setSelectedMapUrl(metadata?.mapUrl);
@@ -372,7 +377,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   }, [selectedMapUrl]);
 
   const getFallbackCoordinate = useCallback(() => {
-    if (selectedLocation) return selectedLocation;
+    if (selectedLocationRef.current) return selectedLocationRef.current;
 
     const center = mapRef.current?.getCenter();
     if (center) {
@@ -384,18 +389,10 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
 
   const handleConfirm = useCallback(async () => {
     const query = searchQuery;
-    if (hasUnresolvedUrlInput) {
+    if (hasUnresolvedUrlInput && !selectedLocationRef.current) {
       setSuggestions([]);
       setSearchStatus('idle');
-      const fallbackCoordinate = getFallbackCoordinate();
-      setLinkInputError(false);
-      setMarkerAt(fallbackCoordinate.lat, fallbackCoordinate.lng);
-      onPicked({
-        lat: fallbackCoordinate.lat,
-        lng: fallbackCoordinate.lng,
-        name: defaultLocationName,
-        mapUrl: typedGoogleMapsUrl,
-      });
+      setLinkInputError(true);
       return;
     }
 
@@ -441,7 +438,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
     const location: LocationResult = {
       lat: fallbackCoordinate.lat,
       lng: fallbackCoordinate.lng,
-      name: query || defaultLocationName,
+      name: hasUnresolvedUrlInput ? defaultLocationName : (query || defaultLocationName),
     };
 
     if (selectedLocation) {
@@ -638,8 +635,8 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
           {linkInputError ? (
             <p className="mt-2 rounded-2xl border border-[#d97706]/25 bg-[#fff2cf]/75 px-3 py-2 text-xs font-black leading-5 text-[#7a4a08]">
               {language === 'zh'
-                ? '這個連結讀不到地點名稱。請補上店名或地址，再按確認地點。'
-                : 'This link does not include a readable place name. Add the shop name or address, then confirm.'}
+                ? '短連結目前無法直接定位。請在 Google Maps 打開後複製完整網址，或點地圖選位置，再按確認地點。'
+                : 'Short links cannot be placed directly yet. Open it in Google Maps and copy the full URL, or tap the map first.'}
             </p>
           ) : null}
         </div>

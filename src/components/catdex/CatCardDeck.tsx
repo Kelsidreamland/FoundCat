@@ -66,6 +66,7 @@ export default function CatCardDeck({
   const [isSwipeHintDismissed, setIsSwipeHintDismissed] = useState(hasSeenSwipeHint);
   const [collectFeedback, setCollectFeedback] = useState<string | null>(null);
   const swipeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const swipeHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const collectFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSwipeAnimatingRef = useRef(false);
   const activeIdRef = useRef<string | null>(null);
@@ -77,9 +78,28 @@ export default function CatCardDeck({
   useEffect(() => {
     return () => {
       if (swipeTimerRef.current) clearTimeout(swipeTimerRef.current);
+      if (swipeHintTimerRef.current) clearTimeout(swipeHintTimerRef.current);
       if (collectFeedbackTimerRef.current) clearTimeout(collectFeedbackTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!showSwipeHint) return;
+
+    rememberSwipeHint();
+    if (swipeHintTimerRef.current) clearTimeout(swipeHintTimerRef.current);
+    swipeHintTimerRef.current = setTimeout(() => {
+      setIsSwipeHintDismissed(true);
+      swipeHintTimerRef.current = null;
+    }, 4800);
+
+    return () => {
+      if (swipeHintTimerRef.current) {
+        clearTimeout(swipeHintTimerRef.current);
+        swipeHintTimerRef.current = null;
+      }
+    };
+  }, [showSwipeHint]);
 
   useEffect(() => {
     if (swipeTimerRef.current) {
@@ -188,12 +208,12 @@ export default function CatCardDeck({
     <section aria-label={language === 'zh' ? '貓咪卡片' : 'Cat cards'}>
       <div className="relative mt-2 h-[min(390px,calc(100dvh-240px))] min-h-[320px]">
         {showSwipeHint ? (
-          <div className="absolute right-4 top-4 z-30 flex items-center gap-2 rounded-full border-2 border-[#1d1714] bg-[#fff2cf]/95 px-3 py-2 text-[11px] font-black text-[#1d1714] shadow-[3px_3px_0_rgba(29,23,20,0.72)] backdrop-blur-sm">
+          <div className="absolute right-4 top-4 z-30 flex items-center gap-2 rounded-full border border-[#2f5fb3]/15 bg-[#fffdf7]/78 px-3 py-2 text-[11px] font-medium tracking-[0.08em] text-[#7d6d5f]/80 shadow-[2px_3px_14px_rgba(47,95,179,0.10)] backdrop-blur-md">
             <span>{language === 'zh' ? '左滑收藏，右滑看下一隻' : 'Swipe left to collect, right for next'}</span>
             <button
               type="button"
               onClick={dismissSwipeHint}
-              className="grid h-5 w-5 place-items-center rounded-full border border-[#1d1714]/30 bg-[#fffdf7] leading-none"
+              className="grid h-5 w-5 place-items-center rounded-full border border-[#2f5fb3]/10 bg-white/70 text-[#8a7a6a]/70 leading-none"
               aria-label={language === 'zh' ? '關閉左右滑動提示' : 'Close swipe hint'}
             >
               ×

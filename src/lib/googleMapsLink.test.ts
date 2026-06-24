@@ -32,6 +32,21 @@ describe('parseGoogleMapsLink', () => {
     });
   });
 
+  it('prefers the actual Google Maps place coordinates over the map viewport center', () => {
+    expect(parseGoogleMapsLink('https://www.google.com/maps/place/Cat+Cafe/@13.7200,100.5200,17z/data=!3m1!4b1!4m6!3m5!1sabc!8m2!3d13.7563!4d100.5018!16sxyz')).toEqual({
+      lat: 13.7563,
+      lng: 100.5018,
+      name: 'Cat Cafe',
+    });
+  });
+
+  it('parses coordinate-only Google Maps data links from dropped pins', () => {
+    expect(parseGoogleMapsLink('https://www.google.com/maps/@?api=1&map_action=map&center=22.3193,114.1694&data=!3d24.1501!4d120.6839')).toEqual({
+      lat: 24.1501,
+      lng: 120.6839,
+    });
+  });
+
   it('rejects non-coordinate URLs', () => {
     expect(parseGoogleMapsLink('https://example.com/maps/@25.033,121.565')).toBeNull();
   });

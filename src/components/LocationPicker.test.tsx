@@ -147,6 +147,19 @@ describe('LocationPicker', () => {
     expect(getCurrentPosition).not.toHaveBeenCalled();
   });
 
+  it('tells users they can paste a Google Maps link in the location field', () => {
+    render(
+      <LocationPicker
+        language="zh"
+        onPicked={vi.fn()}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(screen.getAllByText(/貼上 Google Maps 連結/).length).toBeGreaterThan(0);
+    expect(screen.getByPlaceholderText('貼上 Google Maps 連結、搜尋店名或地址')).toBeInTheDocument();
+  });
+
   it('uses address fallback for instant suggestions so pasted addresses and local-language cafe names can resolve sooner', async () => {
     render(
       <LocationPicker
@@ -386,7 +399,7 @@ describe('LocationPicker', () => {
     });
   });
 
-  it('lets unexpanded Google Maps short links save an approximate cat spot without storing the raw URL', async () => {
+  it('does not save an unreadable Google Maps short link as an approximate map center', async () => {
     const onPicked = vi.fn();
 
     render(
@@ -402,17 +415,55 @@ describe('LocationPicker', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: '確認地點' }));
 
+    expect(await screen.findByText(/短連結目前無法直接定位/)).toBeInTheDocument();
+    expect(searchPlaces).not.toHaveBeenCalled();
+    expect(onPicked).not.toHaveBeenCalled();
+  });
+
+  it('lets a Google Maps short link be saved after the user manually places the map pin', async () => {
+    const onPicked = vi.fn();
+    let clickHandler: ((event: { lngLat: { lat: number; lng: number } }) => void) | undefined;
+
+    const MapMock = vi.mocked(maplibregl.Map) as unknown as ReturnType<typeof vi.fn>;
+    MapMock.mockImplementationOnce(function MapMock(this: {
+      addControl: ReturnType<typeof vi.fn>;
+      on: ReturnType<typeof vi.fn>;
+      easeTo: ReturnType<typeof vi.fn>;
+      getCenter: ReturnType<typeof vi.fn>;
+      getZoom: ReturnType<typeof vi.fn>;
+      remove: ReturnType<typeof vi.fn>;
+    }) {
+      this.addControl = vi.fn();
+      this.on = vi.fn((event: string, callback: (event: { lngLat: { lat: number; lng: number } }) => void) => {
+        if (event === 'click') clickHandler = callback;
+      });
+      this.easeTo = mapEaseTo;
+      this.getCenter = mapGetCenter;
+      this.getZoom = mapGetZoom;
+      this.remove = mapRemove;
+    });
+
+    render(
+      <LocationPicker
+        language="zh"
+        onPicked={onPicked}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText('地點名稱'), {
+      target: { value: 'https://maps.app.goo.gl/abc123' },
+    });
+    clickHandler?.({ lngLat: { lat: 24.1501, lng: 120.6839 } });
+    fireEvent.click(screen.getByRole('button', { name: '確認地點' }));
+
     await waitFor(() => {
-      expect(searchPlaces).not.toHaveBeenCalled();
       expect(onPicked).toHaveBeenCalledWith({
-        lat: 25.033,
-        lng: 121.565,
+        lat: 24.1501,
+        lng: 120.6839,
         name: '貓咪出沒點',
         mapUrl: 'https://maps.app.goo.gl/abc123',
       });
-      expect(onPicked).not.toHaveBeenCalledWith(expect.objectContaining({
-        name: 'https://maps.app.goo.gl/abc123',
-      }));
     });
   });
 
