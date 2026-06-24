@@ -397,6 +397,8 @@ describe('Map page', () => {
     await user.click(await screen.findByRole('button', { name: '巷口咖啡店' }));
 
     expect(await screen.findByText('No.029')).toBeInTheDocument();
+    expect(screen.getByText('我的圖鑑編號')).toBeInTheDocument();
+    expect(screen.getByText('只整理你親自拍到的貓。')).toBeInTheDocument();
     expect(screen.getByText('巷口咖啡店')).toBeInTheDocument();
     expect(screen.queryByText('台北市信義區')).not.toBeInTheDocument();
     expect(screen.getByText('虎斑貓 · 橘虎斑')).toBeInTheDocument();
@@ -985,8 +987,11 @@ describe('Map page', () => {
     );
 
     expect(await screen.findByText('W-001')).toBeInTheDocument();
+    expect(screen.getByText('世界地圖編號')).toBeInTheDocument();
+    expect(screen.getByText('來自全世界地圖，保留 W 編號。')).toBeInTheDocument();
     expect(screen.queryByText('No.088')).not.toBeInTheDocument();
     expect(screen.getByText('曼谷街角咖啡')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '編輯地點' })).not.toBeInTheDocument();
     expect(screen.queryByText('想讓大家也看到這隻貓？')).not.toBeInTheDocument();
   });
 
