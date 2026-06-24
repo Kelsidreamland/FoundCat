@@ -496,6 +496,36 @@ describe('LocationPicker', () => {
     });
   });
 
+  it('confirms a full Google Maps coordinate link directly without falling back to the map center', async () => {
+    const onPicked = vi.fn();
+    vi.mocked(searchPlaces).mockResolvedValue([]);
+
+    render(
+      <LocationPicker
+        language="zh"
+        onPicked={onPicked}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText('地點名稱'), {
+      target: { value: 'https://www.google.com/maps/place/G+Nimman+Chiang+Mai/@18.795163,98.967533,18z' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '確認地點' }));
+
+    expect(searchPlaces).not.toHaveBeenCalled();
+    expect(markerSetLngLat).toHaveBeenCalledWith([98.967533, 18.795163]);
+    expect(mapEaseTo).toHaveBeenCalledWith(
+      expect.objectContaining({ center: [98.967533, 18.795163], zoom: 16 })
+    );
+    expect(onPicked).toHaveBeenCalledWith({
+      lat: 18.795163,
+      lng: 98.967533,
+      name: 'G Nimman Chiang Mai',
+      mapUrl: 'https://www.google.com/maps/place/G+Nimman+Chiang+Mai/@18.795163,98.967533,18z',
+    });
+  });
+
   it('uses readable Google Maps search text to resolve pasted map URLs without coordinates', async () => {
     const onPicked = vi.fn();
 

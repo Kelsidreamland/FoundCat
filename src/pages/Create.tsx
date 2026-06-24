@@ -198,6 +198,7 @@ export default function Create() {
     name: string;
     address?: string;
     placeId?: string;
+    mapUrl?: string;
   }) => {
     if (createdStickerId) {
       await updateItem(createdStickerId, { location });

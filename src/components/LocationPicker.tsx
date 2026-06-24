@@ -318,24 +318,37 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
     applySuggestion(suggestion);
   }, [applySuggestion]);
 
-  const applyParsedGoogleMapsLocation = useCallback(() => {
-    if (!parsedGoogleMapsLocation) return;
+  const buildParsedGoogleMapsLocationResult = useCallback((): LocationResult | null => {
+    if (!parsedGoogleMapsLocation) return null;
 
     const nextName = parsedGoogleMapsLocation.name ?? locationName.trim() ?? defaultLocationName;
+
+    return {
+      lat: parsedGoogleMapsLocation.lat,
+      lng: parsedGoogleMapsLocation.lng,
+      name: nextName,
+      ...(typedGoogleMapsUrl ? { mapUrl: typedGoogleMapsUrl } : {}),
+    };
+  }, [defaultLocationName, locationName, parsedGoogleMapsLocation, typedGoogleMapsUrl]);
+
+  const applyParsedGoogleMapsLocation = useCallback(() => {
+    const parsedLocation = buildParsedGoogleMapsLocationResult();
+    if (!parsedLocation) return;
+
     pickedManualCoordinateRef.current = true;
-    selectedSuggestionNameRef.current = nextName;
-    setLocationName(nextName);
+    selectedSuggestionNameRef.current = parsedLocation.name;
+    setLocationName(parsedLocation.name);
     setSuggestions([]);
     setSearchStatus('idle');
-    setMarkerAt(parsedGoogleMapsLocation.lat, parsedGoogleMapsLocation.lng, {
-      mapUrl: typedGoogleMapsUrl,
+    setMarkerAt(parsedLocation.lat, parsedLocation.lng, {
+      mapUrl: parsedLocation.mapUrl,
     });
     mapRef.current?.easeTo({
-      center: [parsedGoogleMapsLocation.lng, parsedGoogleMapsLocation.lat],
+      center: [parsedLocation.lng, parsedLocation.lat],
       zoom: 16,
       duration: 800,
     });
-  }, [defaultLocationName, locationName, parsedGoogleMapsLocation, setMarkerAt, typedGoogleMapsUrl]);
+  }, [buildParsedGoogleMapsLocationResult, setMarkerAt]);
 
   const handleFullAddressSearch = useCallback(async () => {
     const query = searchQuery;
@@ -390,6 +403,26 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
 
   const handleConfirm = useCallback(async () => {
     const query = searchQuery;
+    const parsedGoogleMapsResult = buildParsedGoogleMapsLocationResult();
+    if (parsedGoogleMapsResult) {
+      pickedManualCoordinateRef.current = true;
+      selectedSuggestionNameRef.current = parsedGoogleMapsResult.name;
+      setLocationName(parsedGoogleMapsResult.name);
+      setSuggestions([]);
+      setSearchStatus('idle');
+      setLinkInputError(false);
+      setMarkerAt(parsedGoogleMapsResult.lat, parsedGoogleMapsResult.lng, {
+        mapUrl: parsedGoogleMapsResult.mapUrl,
+      });
+      mapRef.current?.easeTo({
+        center: [parsedGoogleMapsResult.lng, parsedGoogleMapsResult.lat],
+        zoom: 16,
+        duration: 800,
+      });
+      onPicked(parsedGoogleMapsResult);
+      return;
+    }
+
     if (hasUnresolvedUrlInput && !selectedLocationRef.current) {
       setSuggestions([]);
       setSearchStatus('idle');
@@ -458,6 +491,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   }, [
     applySuggestion,
     buildLocationResult,
+    buildParsedGoogleMapsLocationResult,
     defaultLocationName,
     getFallbackCoordinate,
     getSearchCenter,
