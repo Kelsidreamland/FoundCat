@@ -203,6 +203,11 @@ export default function CatCardDeck({
   const activeDate = formatter.format(new Date(active.date));
   const activeLocation = getReadableLocationName(active, language);
   const activeCatName = active.catName?.trim();
+  const motionState = swipeDirection === 1
+    ? 'leaving-right'
+    : swipeDirection === -1
+      ? 'leaving-left'
+      : 'settled';
 
   return (
     <section aria-label={language === 'zh' ? '貓咪卡片' : 'Cat cards'}>
@@ -224,7 +229,7 @@ export default function CatCardDeck({
         {collectFeedback ? (
           <div
             role="status"
-            className="absolute left-1/2 top-[46%] z-40 -translate-x-1/2 rounded-full border-2 border-[#1d1714] bg-[#fffdf7]/94 px-4 py-2 text-[12px] font-black text-[#1d1714] shadow-[4px_4px_0_rgba(47,95,179,0.25)] backdrop-blur-sm"
+            className="absolute left-1/2 top-[46%] z-40 -translate-x-1/2 -rotate-2 rounded-[12px] border-2 border-[#1d1714] bg-[#fff2cf]/96 px-4 py-2 text-[12px] font-black text-[#1d1714] shadow-[4px_4px_0_rgba(47,95,179,0.22)] backdrop-blur-sm"
           >
             {collectFeedback}
           </div>
@@ -246,6 +251,7 @@ export default function CatCardDeck({
         <motion.article
           key={active.id}
           data-testid="active-cat-card"
+          data-motion-state={motionState}
           data-swipe-ready={hasMultipleCards ? 'true' : 'false'}
           data-swipe-exit={
             swipeDirection === 1
@@ -262,18 +268,19 @@ export default function CatCardDeck({
           onDragEnd={handleDragEnd}
           onKeyDown={handleKeyDown}
           aria-label={language === 'zh' ? '貓咪卡片，可左右滑動或使用左右方向鍵' : 'Cat card, swipe or use left and right arrow keys'}
-          initial={{ x: swipeDirection ? 50 * -swipeDirection : 0, rotate: -1.5, scale: 0.98, opacity: 0.72 }}
+          initial={{ x: swipeDirection ? 46 * -swipeDirection : 0, y: 8, rotate: -1.2, scale: 0.985, opacity: 0.78 }}
           animate={{
             x: swipeDirection === 1 ? 460 : swipeDirection === -1 ? -460 : 0,
-            rotate: swipeDirection === 1 ? 16 : swipeDirection === -1 ? -16 : -1.5,
-            scale: swipeDirection ? 0.94 : 1,
+            y: swipeDirection ? -10 : 0,
+            rotate: swipeDirection === 1 ? 14 : swipeDirection === -1 ? -14 : -1.2,
+            scale: swipeDirection ? 0.955 : 1,
             opacity: swipeDirection ? 0 : 1,
           }}
           transition={{
             type: swipeDirection ? 'tween' : 'spring',
             duration: swipeDirection ? SWIPE_ANIMATION_MS / 1000 : undefined,
-            stiffness: 360,
-            damping: 28,
+            stiffness: 420,
+            damping: 31,
           }}
           whileDrag={{ scale: 1.015, rotate: 0 }}
         >

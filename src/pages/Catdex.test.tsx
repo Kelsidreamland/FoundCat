@@ -201,6 +201,8 @@ describe('Catdex page', () => {
     const worldTab = screen.getByRole('button', { name: '收藏的世界貓卡 1' });
     expect(selfTab).toHaveAttribute('aria-pressed', 'true');
     expect(worldTab).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByTestId('catdex-collection-motion')).toHaveAttribute('data-motion-surface', 'catdex-collection');
+    expect(screen.getByTestId('catdex-collection-motion')).toHaveAttribute('data-active-collection', 'self');
     expect(screen.getByRole('heading', { name: '我拍到的貓' })).toBeInTheDocument();
     expect(screen.getByText('我的圖鑑編號')).toBeInTheDocument();
     expect(screen.getByText('No.001 起算，只整理自己親自拍到的貓。')).toBeInTheDocument();
@@ -212,6 +214,7 @@ describe('Catdex page', () => {
 
     expect(selfTab).toHaveAttribute('aria-pressed', 'false');
     expect(worldTab).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('catdex-collection-motion')).toHaveAttribute('data-active-collection', 'world');
     expect(screen.getByRole('heading', { name: '收藏的世界貓卡' })).toBeInTheDocument();
     expect(screen.getByText('世界地圖編號')).toBeInTheDocument();
     expect(screen.getByText('保留 W-001 編號，不併入自己的 No 編號。')).toBeInTheDocument();

@@ -285,9 +285,12 @@ describe('CatCardDeck', () => {
       />
     );
 
+    expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-motion-state', 'settled');
+
     fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
 
     expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-swipe-exit', 'left');
+    expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-motion-state', 'leaving-left');
     expect(screen.getByText('No.001')).toBeInTheDocument();
 
     act(() => {

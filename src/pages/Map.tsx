@@ -811,10 +811,12 @@ export default function Map() {
       <AnimatePresence>
         {selectedItem && selectedItem.location ? (
           <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
+            initial={{ opacity: 0, y: 22, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 16, scale: 0.985 }}
+            transition={{ type: 'spring', stiffness: 360, damping: 34, mass: 0.72 }}
             data-testid="map-cat-detail-sheet"
+            data-motion-surface="map-cat-sheet"
             style={{ maxHeight: 'min(calc(100dvh - 6.75rem - env(safe-area-inset-bottom)), 620px)', transformOrigin: 'bottom center' }}
             className="absolute bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-0 right-0 z-20 mx-auto flex w-[calc(100%_-_1.5rem)] max-w-sm flex-col overflow-hidden rounded-[22px] border-2 border-[#221915] bg-[#fffdf2]/95 shadow-[8px_8px_0_rgba(47,95,179,0.28)] backdrop-blur-sm"
           >
@@ -844,9 +846,12 @@ export default function Map() {
               </span>
             </button>
 
-            <div
+            <motion.div
               data-testid="map-card-scroll"
               className="min-h-0 flex-1 space-y-2.5 overflow-y-auto p-3"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, delay: 0.04, ease: 'easeOut' }}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -1120,7 +1125,7 @@ export default function Map() {
                 </div>
               ) : null}
 
-            </div>
+            </motion.div>
           </motion.div>
         ) : null}
       </AnimatePresence>

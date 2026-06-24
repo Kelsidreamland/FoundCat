@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import CatActionNav from '../components/catdex/CatActionNav';
 import CatdexLabel from '../components/catdex/CatdexLabel';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
@@ -391,9 +392,18 @@ export default function Catdex() {
             </div>
           </div>
         ) : (
-          <div className="space-y-6 pb-2">
+          <motion.div
+            key={activeCollectionTab}
+            data-testid="catdex-collection-motion"
+            data-motion-surface="catdex-collection"
+            data-active-collection={activeCollectionTab}
+            className="space-y-6 pb-2"
+            initial={{ opacity: 0, y: 8, scale: 0.992 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.16, ease: 'easeOut' }}
+          >
             {renderCollectionSection(activeCollection)}
-          </div>
+          </motion.div>
         )}
       </main>
 
