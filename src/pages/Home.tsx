@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import CatActionNav from '../components/catdex/CatActionNav';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import CatCardDeck from '../components/catdex/CatCardDeck';
+import CollectedCatProfileSheet from '../components/catdex/CollectedCatProfileSheet';
 import CloudBackupPrompt from '../components/cloud/CloudBackupPrompt';
 import { loadPublicCatCards } from '../lib/cloudPublicCats';
 import type { ScrapbookItem } from '../store/useScrapbookStore';
@@ -78,6 +79,7 @@ export default function Home() {
   const t = translations[language];
   const [publicItems, setPublicItems] = useState<ScrapbookItem[]>([]);
   const [publicDeckStatus, setPublicDeckStatus] = useState<PublicDeckStatus>('loading');
+  const [collectedProfileItem, setCollectedProfileItem] = useState<ScrapbookItem | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -118,7 +120,7 @@ export default function Home() {
   const handleCollectCard = useCallback(async (item: ScrapbookItem) => {
     if (!item.isPublic || items.some((localItem) => alreadyHasPublicCat(item, localItem))) return;
 
-    await addItem({
+    const savedItem = await addItem({
       type: item.type,
       imageData: item.imageData,
       heroImageData: item.heroImageData,
@@ -140,6 +142,7 @@ export default function Home() {
       careStatusTags: item.careStatusTags,
       isPublic: false,
     });
+    setCollectedProfileItem(savedItem);
   }, [addItem, items]);
 
   if (isLoading) {
@@ -191,6 +194,12 @@ export default function Home() {
           capture: language === 'zh' ? '拍貓' : 'Capture cat',
           map: t.map,
         }}
+      />
+
+      <CollectedCatProfileSheet
+        item={collectedProfileItem}
+        language={language}
+        onClose={() => setCollectedProfileItem(null)}
       />
     </div>
   );

@@ -356,6 +356,65 @@ describe('Home page', () => {
     ]);
   });
 
+  it('opens a dating-style cat profile after collecting a public cat card', async () => {
+    vi.mocked(loadPublicCatCards).mockResolvedValue({
+      ok: true,
+      items: [
+        makeItem({
+          id: 'public-cat-88',
+          catdexNumber: 88,
+          publicNumber: 88,
+          catName: '首爾店長貓',
+          catFeatureNote: '左耳白毛，尾巴短短',
+          catColor: 'orange-tabby',
+          catBreed: 'domestic-shorthair',
+          personalityTags: ['friendly', 'foodie'],
+          spotNote: '下午常在窗邊睡覺',
+          careStatusTags: ['fed'],
+          location: {
+            lat: 37.5665,
+            lng: 126.978,
+            name: '首爾咖啡店',
+            address: '首爾市中區測試路 123 號 4 樓',
+            mapUrl: 'https://maps.app.goo.gl/seoulcat',
+          },
+          isPublic: true,
+        }),
+        makeItem({
+          id: 'public-cat-89',
+          catdexNumber: 89,
+          publicNumber: 89,
+          catName: '曼谷小橘',
+          location: { lat: 13.7563, lng: 100.5018, name: '曼谷街角咖啡' },
+          isPublic: true,
+        }),
+      ],
+    });
+
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
+    );
+
+    await screen.findByText('首爾店長貓');
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+
+    const profile = await screen.findByRole('dialog', { name: '首爾店長貓 貓咪個人檔案' });
+    expect(profile).toHaveTextContent('貓咪個人檔案');
+    expect(profile).toHaveTextContent('喵，謝謝你收藏我。');
+    expect(profile).toHaveTextContent('首爾店長貓');
+    expect(profile).toHaveTextContent('W-088');
+    expect(profile).toHaveTextContent('親人');
+    expect(profile).toHaveTextContent('貪吃');
+    expect(profile).toHaveTextContent('橘虎斑');
+    expect(profile).toHaveTextContent('米克斯短毛');
+    expect(profile).toHaveTextContent('左耳白毛，尾巴短短');
+    expect(profile).toHaveTextContent('下午常在窗邊睡覺');
+    expect(profile).toHaveTextContent('首爾咖啡店');
+    expect(profile).not.toHaveTextContent('首爾市中區測試路 123 號 4 樓');
+  });
+
   it('recognizes an already-collected world cat by its public source id', async () => {
     vi.mocked(loadPublicCatCards).mockResolvedValue({
       ok: true,
