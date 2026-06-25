@@ -401,7 +401,9 @@ describe('Map page', () => {
     expect(screen.getByText('只整理你親自拍到的貓。')).toBeInTheDocument();
     expect(screen.getByText('巷口咖啡店')).toBeInTheDocument();
     expect(screen.queryByText('台北市信義區')).not.toBeInTheDocument();
-    expect(screen.getByText('虎斑貓 · 橘虎斑')).toBeInTheDocument();
+    expect(screen.getByText('外型小檔案')).toBeInTheDocument();
+    expect(screen.getByText('虎斑貓')).toBeInTheDocument();
+    expect(screen.getByText('橘虎斑')).toBeInTheDocument();
     expect(screen.queryByText('2026年5月11日')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('幫這張貓咪圖鑑卡片取名字')).not.toBeInTheDocument();
     expect(screen.getByTestId('map-cat-detail-sheet')).toHaveStyle({
@@ -530,7 +532,7 @@ describe('Map page', () => {
     expect(screen.getByRole('heading', { name: '放鬆的貓咪' })).toBeInTheDocument();
     expect(screen.getByText('特徵')).toBeInTheDocument();
     expect(screen.getByText('耳朵有一小塊白毛，喜歡趴在窗邊')).toBeInTheDocument();
-    expect(screen.getByText('出沒線索')).toBeInTheDocument();
+    expect(screen.getByText('喜歡出沒')).toBeInTheDocument();
     expect(screen.getByText('飯店右手邊門口的紙箱')).toBeInTheDocument();
     expect(screen.getByText('親人')).toBeInTheDocument();
     expect(screen.getByText('固定餵養')).toBeInTheDocument();
@@ -615,8 +617,16 @@ describe('Map page', () => {
           catName: '窗邊小虎',
           catFeatureNote: '白襪、耳朵缺一角，看到人會慢慢靠近。',
           spotNote: '下午常在咖啡廳門口的木椅旁睡覺。',
+          catBreed: 'domestic-shorthair',
+          catColor: 'orange-tabby',
           personalityTags: ['friendly', 'foodie'],
           careStatusTags: ['tnr'],
+          location: {
+            lat: 25.033,
+            lng: 121.565,
+            name: '巷口咖啡店',
+            address: '台北市信義區貓咪路 1 號',
+          },
         }),
       ],
       isLoading: false,
@@ -632,14 +642,23 @@ describe('Map page', () => {
     await user.click(await screen.findByRole('button', { name: '巷口咖啡店' }));
 
     expect(screen.getByRole('heading', { name: '窗邊小虎' })).toBeInTheDocument();
+    expect(screen.getByText('貓咪個人檔案')).toBeInTheDocument();
+    expect(screen.getByText('喵，謝謝你收藏我。下次見面可以慢慢眨眼。')).toBeInTheDocument();
+    expect(screen.getByText('牠給人的感覺')).toBeInTheDocument();
     expect(screen.getByText('親人')).toBeInTheDocument();
     expect(screen.getByText('貪吃')).toBeInTheDocument();
+    expect(screen.getByText('外型小檔案')).toBeInTheDocument();
+    expect(screen.getByText('米克斯短毛')).toBeInTheDocument();
+    expect(screen.getByText('橘虎斑')).toBeInTheDocument();
     expect(screen.getByText('特徵')).toBeInTheDocument();
     expect(screen.getByText('白襪、耳朵缺一角，看到人會慢慢靠近。')).toBeInTheDocument();
-    expect(screen.getByText('出沒線索')).toBeInTheDocument();
+    expect(screen.getByText('喜歡出沒')).toBeInTheDocument();
     expect(screen.getByText('下午常在咖啡廳門口的木椅旁睡覺。')).toBeInTheDocument();
-    expect(screen.getByText('照護')).toBeInTheDocument();
+    expect(screen.getByText('照護狀態')).toBeInTheDocument();
     expect(screen.getByText('已剪耳 / TNR')).toBeInTheDocument();
+    expect(screen.getByText('出沒城市')).toBeInTheDocument();
+    expect(screen.getByText('巷口咖啡店')).toBeInTheDocument();
+    expect(screen.queryByText('台北市信義區貓咪路 1 號')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: '去找這隻貓' })).toBeInTheDocument();
     expect(screen.queryByText('Google Maps')).not.toBeInTheDocument();
   });

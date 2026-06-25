@@ -7,15 +7,13 @@ import { translations } from '../translations';
 import { motion } from 'framer-motion';
 import LocationPicker from '../components/LocationPicker';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
+import CatProfileSummary from '../components/catdex/CatProfileSummary';
 import { shareCatCardPoster } from '../lib/sharePoster';
 import { suggestCatName } from '../lib/catNameGenerator';
 import {
   CAT_CARE_STATUS_LABELS,
   CAT_PERSONALITY_LABELS,
   getCatInfoCopy,
-  getCatOptionalFactLabels,
-  getCareStatusLabels,
-  getPersonalityLabels,
 } from '../lib/catInfoDisplay';
 
 type CatInfoDraft = {
@@ -46,9 +44,6 @@ export default function Detail() {
   const [catInfoSavedMessage, setCatInfoSavedMessage] = useState<string | null>(null);
 
   const item = items.find(i => i.id === id);
-  const optionalFactLabels = item
-    ? getCatOptionalFactLabels(item, language, { catBreed: t.catBreed, catColor: t.catColor })
-    : [];
 
   useEffect(() => {
     if (!item) {
@@ -102,13 +97,6 @@ export default function Detail() {
       navigate('/');
     }
   };
-  const personalityLabels = getPersonalityLabels(item.personalityTags, language);
-  const careLabels = getCareStatusLabels(item.careStatusTags, language);
-  const hasCatDetails = personalityLabels.length > 0
-    || careLabels.length > 0
-    || Boolean(item.catFeatureNote?.trim())
-    || Boolean(item.spotNote?.trim())
-    || optionalFactLabels.length > 0;
   const mapTarget = `/map?cat=${encodeURIComponent(item.id)}&mode=mine`;
 
   const updateCatInfoDraft = (updater: (draft: CatInfoDraft) => CatInfoDraft) => {
@@ -355,70 +343,9 @@ export default function Detail() {
             </div>
           ) : null}
 
-          {hasCatDetails ? (
-            <div className="bg-cat-card rounded-2xl shadow-cat-whisper border border-cat-border-light p-4 text-left">
-              <p className="text-cat-text-tertiary text-xs font-bold tracking-widest uppercase mb-3">
-                {t.detail}
-              </p>
-              {personalityLabels.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {personalityLabels.map((label) => (
-                    <span key={`personality-${label}`} className="px-3 py-1.5 rounded-full bg-[#fff2cf] text-cat-text-main text-sm font-black border border-[#221915]/15">
-                      {label}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-              {item.catFeatureNote?.trim() ? (
-                <div className="mt-3 rounded-[16px] border border-[#221915]/10 bg-[#fffdf2] px-3 py-2">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
-                    {detailCopy.featureHeading}
-                  </p>
-                  <p className="mt-1 text-sm font-bold leading-6 text-[#4d4038]">
-                    {item.catFeatureNote.trim()}
-                  </p>
-                </div>
-              ) : null}
-              {item.spotNote?.trim() ? (
-                <div className="mt-3 rounded-[16px] border border-[#221915]/10 bg-[#fffdf2] px-3 py-2">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
-                    {detailCopy.spotHeading}
-                  </p>
-                  <p className="mt-1 text-sm font-bold leading-6 text-[#4d4038]">
-                    {item.spotNote.trim()}
-                  </p>
-                </div>
-              ) : null}
-              {careLabels.length > 0 ? (
-                <div className="mt-3 rounded-[16px] border border-[#2f5fb3]/15 bg-[#eaf1ff] px-3 py-2">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
-                    {detailCopy.careHeading}
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {careLabels.map((label) => (
-                      <span key={`care-${label}`} className="px-3 py-1.5 rounded-full bg-[#fffdf2] text-cat-text-main text-sm font-black border border-[#2f5fb3]/20">
-                        {label}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-              {optionalFactLabels.length > 0 ? (
-                <div className="mt-3 rounded-[16px] border border-[#221915]/10 bg-cat-bg px-3 py-2">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
-                    {detailCopy.optionalFacts}
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {optionalFactLabels.map((label) => (
-                      <span key={`optional-${label}`} className="px-3 py-1.5 rounded-full bg-[#fffdf2] text-cat-text-main text-sm font-semibold border border-cat-border-light">
-                        {label}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
+          <div className="rounded-[22px] border border-[#221915]/14 bg-[#fffdf2] p-4 text-left shadow-[5px_5px_0_rgba(47,95,179,0.14)]">
+            <CatProfileSummary item={item} language={language} variant="compact" />
+          </div>
 
           {item.location ? (
             <button

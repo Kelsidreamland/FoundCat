@@ -31,6 +31,7 @@ const makeItem = (overrides: Partial<ScrapbookItem> = {}): ScrapbookItem => ({
   location: overrides.location,
   catName: overrides.catName,
   catFeatureNote: overrides.catFeatureNote,
+  catBreed: overrides.catBreed,
   catColor: overrides.catColor,
   personalityTags: overrides.personalityTags,
   spotNote: overrides.spotNote,
@@ -100,6 +101,7 @@ describe('Detail page', () => {
           catFeatureNote: '左耳有一小塊白毛，看到相機會慢慢眨眼',
           spotNote: '傍晚常在門口紙箱睡覺',
           catColor: 'orange-tabby',
+          catBreed: 'domestic-shorthair',
           date: '2026-05-11T08:00:00.000Z',
         }),
       ],
@@ -117,20 +119,26 @@ describe('Detail page', () => {
 
     expect(screen.getByText('巷口店長')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '去找這隻貓' })).toBeInTheDocument();
-    expect(screen.queryByText('巷口咖啡店')).not.toBeInTheDocument();
     expect(screen.queryByText('台北市信義區貓咪路 1 號')).not.toBeInTheDocument();
     expect(screen.queryByText('Google Maps')).not.toBeInTheDocument();
     expect(screen.queryByText('出發去找這隻貓')).not.toBeInTheDocument();
+    expect(screen.getByText('貓咪個人檔案')).toBeInTheDocument();
+    expect(screen.getByText('喵，謝謝你收藏我。下次見面可以慢慢眨眼。')).toBeInTheDocument();
+    expect(screen.getByText('牠給人的感覺')).toBeInTheDocument();
     expect(screen.getByText('親人')).toBeInTheDocument();
     expect(screen.getByText('貪吃')).toBeInTheDocument();
+    expect(screen.getByText('外型小檔案')).toBeInTheDocument();
+    expect(screen.getByText('橘虎斑')).toBeInTheDocument();
+    expect(screen.getByText('米克斯短毛')).toBeInTheDocument();
     expect(screen.getByText('特徵')).toBeInTheDocument();
-    expect(screen.getByText('出沒線索')).toBeInTheDocument();
-    expect(screen.getByText('照護')).toBeInTheDocument();
-    expect(screen.getByText('其他資料')).toBeInTheDocument();
+    expect(screen.getByText('喜歡出沒')).toBeInTheDocument();
+    expect(screen.getByText('照護狀態')).toBeInTheDocument();
+    expect(screen.getByText('出沒城市')).toBeInTheDocument();
+    expect(screen.getByText('巷口咖啡店')).toBeInTheDocument();
     expect(screen.getByText('固定餵養')).toBeInTheDocument();
     expect(screen.getByText('左耳有一小塊白毛，看到相機會慢慢眨眼')).toBeInTheDocument();
     expect(screen.getByText('傍晚常在門口紙箱睡覺')).toBeInTheDocument();
-    expect(screen.getByText('貓咪毛色: 橘虎斑')).toBeInTheDocument();
+    expect(screen.queryByText('貓咪毛色: 橘虎斑')).not.toBeInTheDocument();
     expect(screen.queryByText(/2026/)).not.toBeInTheDocument();
   });
 

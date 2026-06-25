@@ -11,12 +11,11 @@ import {
 import { translations } from '../translations';
 import { ArrowLeft, ArrowRight, Check, ExternalLink, MapPin, Maximize2, Navigation, PencilLine, Plus, Share2, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CAT_BREEDS } from '../data/catBreeds';
-import { CAT_COLORS } from '../data/catColors';
 import { formatCatCardNumberForItem } from '../lib/catdexDeck';
 import { getFindCatCta, getReadableLocationName } from '../lib/locationDisplay';
 import { MapTreasureBrandMark } from '../components/brand/BrandMarks';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
+import CatProfileSummary from '../components/catdex/CatProfileSummary';
 import CloudBackupPrompt from '../components/cloud/CloudBackupPrompt';
 import { buildGoogleMapsSearchUrl } from '../lib/singleCatShare';
 import { setCloudCatCardVisibility } from '../lib/cloudVisibility';
@@ -173,18 +172,6 @@ export default function Map() {
   const expandedImageItem = activeItems.find((item) => item.id === expandedImageItemId) ?? null;
   const posterPreviewItem = activeItems.find((item) => item.id === posterPreviewItemId) ?? null;
   const locationEditItem = items.find((item) => item.id === locationEditItemId && item.location) ?? null;
-
-  const getBreedLabel = useCallback((breedId?: string) => {
-    if (!breedId) return null;
-    const breed = CAT_BREEDS.find((candidate) => candidate.id === breedId);
-    return breed ? (language === 'zh' ? breed.zh : breed.en) : breedId;
-  }, [language]);
-
-  const getColorLabel = useCallback((colorId?: string) => {
-    if (!colorId) return null;
-    const color = CAT_COLORS.find((candidate) => candidate.id === colorId);
-    return color ? (language === 'zh' ? color.zh : color.en) : colorId;
-  }, [language]);
 
   const encounterCopy = useMemo(() => ({
     title: language === 'zh' ? '出沒補記' : 'Encounter notes',
@@ -559,8 +546,6 @@ export default function Map() {
     }
   }, [t.mapShareTitle, t.shareMapFailed]);
 
-  const selectedBreedLabel = getBreedLabel(selectedItem?.catBreed);
-  const selectedColorLabel = getColorLabel(selectedItem?.catColor);
   const selectedCardNumber = selectedItem ? formatCatCardNumberForItem(selectedItem) : null;
   const selectedNumberLabel = isPublicMapMode
     ? (language === 'zh' ? '世界地圖編號' : 'World map number')
@@ -586,8 +571,6 @@ export default function Map() {
   const expandedImage = expandedImageItem?.heroImageData || expandedImageItem?.imageData;
   const selectedPersonalityTags = selectedItem?.personalityTags ?? [];
   const selectedCareStatusTags = selectedItem?.careStatusTags ?? [];
-  const selectedFeatureNote = selectedItem?.catFeatureNote?.trim() ?? '';
-  const selectedSpotNote = selectedItem?.spotNote?.trim() ?? '';
   const selectedLocationGroupCount = selectedLocationGroup?.items.length ?? 0;
   const hasSelectedLocationSiblings = selectedLocationGroupCount > 1 && selectedLocationGroupIndex >= 0;
   const selectedLocationGroupPosition = hasSelectedLocationSiblings
@@ -675,17 +658,6 @@ export default function Map() {
       ? '登入後可以公開到全世界地圖，也能之後修改或撤回。'
       : 'Sign in to publish it to the world map, then edit or remove it later.',
   };
-  const selectedPersonalityLabels = selectedPersonalityTags.flatMap((tagId) => {
-    const tag = PERSONALITY_TAGS.find((candidate) => candidate.id === tagId);
-    return tag ? [language === 'zh' ? tag.zh : tag.en] : [];
-  });
-  const selectedCareStatusLabels = selectedCareStatusTags.flatMap((tagId) => {
-    const tag = CARE_STATUS_TAGS.find((candidate) => candidate.id === tagId);
-    return tag ? [language === 'zh' ? tag.zh : tag.en] : [];
-  });
-  const selectedEncounterSummaryLabels = [
-    ...selectedPersonalityLabels,
-  ];
   const shouldShowMapEmptyState = mapReady
     && itemsWithLocation.length === 0
     && !(isPublicMapMode && publicLoadStatus === 'loading');
@@ -873,9 +845,6 @@ export default function Map() {
                   {selectedCardNumber ? (
                     <p className="mt-0.5 truncate text-[11px] font-bold text-[#6d5f52]">{selectedNumberHint}</p>
                   ) : null}
-                  {selectedItem.catName ? (
-                    <p className="mt-1 truncate text-xs font-black text-[#221915]/75">{selectedLocationDisplayName}</p>
-                  ) : null}
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <button
@@ -928,58 +897,15 @@ export default function Map() {
                 </div>
               ) : null}
 
-              {selectedEncounterSummaryLabels.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {selectedEncounterSummaryLabels.map((label) => (
-                    <span
-                      key={label}
-                      className="rounded-full border border-[#221915]/12 bg-[#fff2cf] px-3 py-1.5 text-[11px] font-black text-[#221915] shadow-[2px_2px_0_rgba(47,95,179,0.08)]"
-                    >
-                      {label}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-
-              {selectedFeatureNote ? (
-                <div className="rounded-[14px] border border-[#221915]/10 bg-white/78 px-3 py-2 shadow-[2px_2px_0_rgba(47,95,179,0.06)]">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
-                    {encounterCopy.featureHeading}
-                  </p>
-                  <p className="mt-1 text-xs font-bold leading-relaxed text-[#5f5148]">
-                    {selectedFeatureNote}
-                  </p>
-                </div>
-              ) : null}
-
-              {selectedSpotNote ? (
-                <div className="rounded-[14px] border border-[#221915]/10 bg-white/78 px-3 py-2 shadow-[2px_2px_0_rgba(47,95,179,0.06)]">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
-                    {encounterCopy.spotHeading}
-                  </p>
-                  <p className="mt-1 text-xs font-bold leading-relaxed text-[#5f5148]">
-                    {selectedSpotNote}
-                  </p>
-                </div>
-              ) : null}
-
-              {selectedCareStatusLabels.length > 0 ? (
-                <div className="rounded-[14px] border border-[#2f5fb3]/14 bg-[#eaf1ff]/80 px-3 py-2 shadow-[2px_2px_0_rgba(247,201,72,0.12)]">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
-                    {encounterCopy.careHeading}
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {selectedCareStatusLabels.map((label) => (
-                      <span
-                        key={label}
-                        className="rounded-full border border-[#2f5fb3]/16 bg-[#fffdf2] px-3 py-1.5 text-[11px] font-black text-[#221915]"
-                      >
-                        {label}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
+              <div className="rounded-[16px] border border-[#221915]/12 bg-white/78 px-3 py-3 shadow-[2px_2px_0_rgba(47,95,179,0.06)]">
+                <CatProfileSummary
+                  item={selectedItem}
+                  language={language}
+                  variant="compact"
+                  showNumber={false}
+                  showPlace={Boolean(selectedItem.catName)}
+                />
+              </div>
 
               {shouldShowPublishLoginHint ? (
                 <div className="rounded-[16px] border border-white/55 bg-white/55 px-3 py-2.5 shadow-[3px_3px_0_rgba(47,95,179,0.08)] backdrop-blur-md">
@@ -1059,17 +985,11 @@ export default function Map() {
                     </span>
                   </span>
                   <span className="shrink-0 rounded-full bg-[#fff2cf] px-2.5 py-1 text-[11px] font-black text-[#221915]">
-                    {selectedItem.catName || selectedItem.catFeatureNote || selectedItem.spotNote || selectedEncounterSummaryLabels.length > 0 || selectedCareStatusLabels.length > 0
+                    {selectedItem.catName || selectedItem.catFeatureNote || selectedItem.spotNote || selectedPersonalityTags.length > 0 || selectedCareStatusTags.length > 0
                       ? (language === 'zh' ? '編輯' : 'Edit')
                       : (language === 'zh' ? '新增' : 'Add')}
                   </span>
                 </button>
-              ) : null}
-
-              {(selectedBreedLabel || selectedColorLabel) ? (
-                <p className="rounded-[14px] border border-[#221915]/10 bg-[#f7c948]/25 px-3 py-2 text-sm font-black text-[#221915]">
-                  {[selectedBreedLabel, selectedColorLabel].filter(Boolean).join(' · ')}
-                </p>
               ) : null}
 
               {canPublishSelectedItem ? (
