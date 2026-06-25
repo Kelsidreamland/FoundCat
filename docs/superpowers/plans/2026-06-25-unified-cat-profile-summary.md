@@ -47,4 +47,4 @@
 
 - [x] Run focused Detail, Map, Home, CatProfileSummary, and CatCardDeck tests.
 - [x] Run full test suite, typecheck, production build, and cloud readiness.
-- [ ] Commit, push to main, and rely on Vercel/GitHub deployment status.
+- [x] Commit, push to main, and rely on Vercel/GitHub deployment status.
