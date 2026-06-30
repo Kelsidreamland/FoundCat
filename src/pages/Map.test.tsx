@@ -860,6 +860,7 @@ describe('Map page', () => {
     expect(screen.getByText('登入後才能把這隻貓公開到世界地圖，也能備份你的貓卡。')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '用 Email 登入' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '稍後再說' })).toBeInTheDocument();
+    expect(setCloudCatCardVisibility).not.toHaveBeenCalled();
   });
 
   it('invites logged-out users to sign in before publishing a local cat to the world map', async () => {
