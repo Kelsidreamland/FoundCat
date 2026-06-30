@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import CatActionNav from '../components/catdex/CatActionNav';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import CatCardDeck from '../components/catdex/CatCardDeck';
 import CollectedCatProfileSheet from '../components/catdex/CollectedCatProfileSheet';
+import WorldCatProfileSheet from '../components/catdex/WorldCatProfileSheet';
 import CloudBackupPrompt from '../components/cloud/CloudBackupPrompt';
 import { loadPublicCatCards } from '../lib/cloudPublicCats';
 import type { ScrapbookItem } from '../store/useScrapbookStore';
@@ -75,11 +77,13 @@ function alreadyHasPublicCat(publicItem: ScrapbookItem, localItem: ScrapbookItem
 }
 
 export default function Home() {
+  const navigate = useNavigate();
   const { items, isLoading, language, setLanguage, addItem } = useScrapbookStore();
   const t = translations[language];
   const [publicItems, setPublicItems] = useState<ScrapbookItem[]>([]);
   const [publicDeckStatus, setPublicDeckStatus] = useState<PublicDeckStatus>('loading');
   const [collectedProfileItem, setCollectedProfileItem] = useState<ScrapbookItem | null>(null);
+  const [profileSheetItem, setProfileSheetItem] = useState<ScrapbookItem | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -117,7 +121,10 @@ export default function Home() {
     await shareCatCardPoster(item, language);
   };
 
-  const handleCollectCard = useCallback(async (item: ScrapbookItem) => {
+  const collectPublicCat = useCallback(async (
+    item: ScrapbookItem,
+    options: { showCollectedProfile: boolean }
+  ) => {
     if (!item.isPublic || items.some((localItem) => alreadyHasPublicCat(item, localItem))) return;
 
     const savedItem = await addItem({
@@ -142,8 +149,27 @@ export default function Home() {
       careStatusTags: item.careStatusTags,
       isPublic: false,
     });
-    setCollectedProfileItem(savedItem);
+    if (options.showCollectedProfile) {
+      setCollectedProfileItem(savedItem);
+    }
   }, [addItem, items]);
+
+  const handleCollectCard = useCallback(async (item: ScrapbookItem) => {
+    await collectPublicCat(item, { showCollectedProfile: false });
+  }, [collectPublicCat]);
+
+  const isProfileSheetItemSaved = profileSheetItem
+    ? items.some((localItem) => alreadyHasPublicCat(profileSheetItem, localItem))
+    : false;
+
+  const handleProfileSave = useCallback(async (item: ScrapbookItem) => {
+    await collectPublicCat(item, { showCollectedProfile: false });
+  }, [collectPublicCat]);
+
+  const handleProfileFind = useCallback((item: ScrapbookItem) => {
+    const publicCatId = item.collectedFromPublicId || item.id;
+    navigate(`/map?mode=public&cat=${encodeURIComponent(publicCatId)}`);
+  }, [navigate]);
 
   if (isLoading) {
     return <LoadingStamp text={t.loading} />;
@@ -182,6 +208,7 @@ export default function Home() {
               }}
               onShareCard={handleShareCard}
               onCollectCard={handleCollectCard}
+              onOpenCard={setProfileSheetItem}
             />
           )}
         </section>
@@ -200,6 +227,15 @@ export default function Home() {
         item={collectedProfileItem}
         language={language}
         onClose={() => setCollectedProfileItem(null)}
+      />
+
+      <WorldCatProfileSheet
+        item={profileSheetItem}
+        language={language}
+        isSaved={isProfileSheetItemSaved}
+        onClose={() => setProfileSheetItem(null)}
+        onSave={handleProfileSave}
+        onFind={handleProfileFind}
       />
     </div>
   );

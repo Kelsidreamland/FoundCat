@@ -20,6 +20,10 @@ const makeItem = (overrides: Partial<ScrapbookItem>): ScrapbookItem => ({
   catName: overrides.catName,
   isPublic: overrides.isPublic,
   collectedFromPublicId: overrides.collectedFromPublicId,
+  catFeatureNote: overrides.catFeatureNote,
+  personalityTags: overrides.personalityTags,
+  spotNote: overrides.spotNote,
+  careStatusTags: overrides.careStatusTags,
 });
 
 describe('CatCardDeck', () => {
@@ -56,6 +60,175 @@ describe('CatCardDeck', () => {
     expect(screen.getByText('No.029')).toBeInTheDocument();
     expect(screen.getByText('巷口咖啡店')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '分享這張卡與地址' })).toBeInTheDocument();
+  });
+
+  it('keeps the home card lightweight for public cats', () => {
+    render(
+      <CatCardDeck
+        items={[
+          makeItem({
+            id: 'public-cat-12',
+            catName: '窗邊小虎',
+            publicNumber: 12,
+            isPublic: true,
+            location: {
+              lat: 18.7883,
+              lng: 98.9853,
+              name: '泰國 清邁',
+              address: '清邁舊城測試路 123 號',
+              mapUrl: 'https://maps.app.goo.gl/chiang-mai-cat',
+            },
+            spotNote: '下午會趴在木窗旁邊看路人',
+            personalityTags: ['friendly', 'foodie', 'alert'],
+            catFeatureNote: '左耳有白毛，尾巴短短',
+            careStatusTags: ['fed'],
+          }),
+        ]}
+        language="zh"
+        labels={{
+          empty: '還沒有貓卡',
+          previous: '上一張',
+          next: '下一張',
+          shareCard: '分享這張卡與地址',
+        }}
+        onShareCard={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('窗邊小虎')).toBeInTheDocument();
+    expect(screen.getByText('W-012')).toBeInTheDocument();
+    expect(screen.getByText('泰國 清邁')).toBeInTheDocument();
+    expect(screen.getByText('親人')).toBeInTheDocument();
+    expect(screen.getByText('貪吃')).toBeInTheDocument();
+    expect(screen.queryByText('警戒中')).not.toBeInTheDocument();
+    expect(screen.queryByText('下午會趴在木窗旁邊看路人')).not.toBeInTheDocument();
+    expect(screen.queryByText('左耳有白毛，尾巴短短')).not.toBeInTheDocument();
+    expect(screen.queryByText('固定餵養')).not.toBeInTheDocument();
+    expect(screen.queryByText('清邁舊城測試路 123 號')).not.toBeInTheDocument();
+    expect(screen.queryByText('https://maps.app.goo.gl/chiang-mai-cat')).not.toBeInTheDocument();
+    expect(screen.queryByText('May 11')).not.toBeInTheDocument();
+  });
+
+  it('renders a fallback cat name when the active cat has no saved name', () => {
+    render(
+      <CatCardDeck
+        items={[
+          makeItem({
+            id: 'public-cat-12',
+            catName: '   ',
+            publicNumber: 12,
+            isPublic: true,
+            location: { lat: 18.7883, lng: 98.9853, name: '泰國 清邁' },
+          }),
+        ]}
+        language="zh"
+        labels={{
+          empty: '還沒有貓卡',
+          previous: '上一張',
+          next: '下一張',
+          shareCard: '分享這張卡與地址',
+        }}
+        onShareCard={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('轉角小貓 012')).toBeInTheDocument();
+  });
+
+  it('opens the active card when tapped but keeps share separate', () => {
+    const onOpenCard = vi.fn();
+    const onShareCard = vi.fn();
+
+    render(
+      <CatCardDeck
+        items={[
+          makeItem({ id: 'public-cat-12', publicNumber: 12, isPublic: true, catName: '窗邊小虎' }),
+        ]}
+        language="zh"
+        labels={{
+          empty: '還沒有貓卡',
+          previous: '上一張',
+          next: '下一張',
+          shareCard: '分享這張卡與地址',
+        }}
+        onShareCard={onShareCard}
+        onOpenCard={onOpenCard}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('active-cat-card'));
+    expect(onOpenCard).toHaveBeenCalledWith(expect.objectContaining({ id: 'public-cat-12' }));
+
+    onOpenCard.mockClear();
+    fireEvent.click(screen.getByRole('button', { name: '分享這張卡與地址' }));
+    expect(onShareCard).toHaveBeenCalledWith(expect.objectContaining({ id: 'public-cat-12' }));
+    expect(onOpenCard).not.toHaveBeenCalled();
+  });
+
+  it('opens a single active card with Enter and Space when a card opener is available', () => {
+    const onOpenCard = vi.fn();
+
+    render(
+      <CatCardDeck
+        items={[
+          makeItem({ id: 'public-cat-12', publicNumber: 12, isPublic: true, catName: '窗邊小虎' }),
+        ]}
+        language="zh"
+        labels={{
+          empty: '還沒有貓卡',
+          previous: '上一張',
+          next: '下一張',
+          shareCard: '分享這張卡與地址',
+        }}
+        onShareCard={vi.fn()}
+        onOpenCard={onOpenCard}
+      />
+    );
+
+    const activeCard = screen.getByTestId('active-cat-card');
+    activeCard.focus();
+
+    expect(activeCard).toHaveFocus();
+
+    fireEvent.keyDown(activeCard, { key: 'Enter' });
+    fireEvent.keyDown(activeCard, { key: ' ' });
+
+    expect(onOpenCard).toHaveBeenCalledTimes(2);
+    expect(onOpenCard).toHaveBeenNthCalledWith(1, expect.objectContaining({ id: 'public-cat-12' }));
+    expect(onOpenCard).toHaveBeenNthCalledWith(2, expect.objectContaining({ id: 'public-cat-12' }));
+  });
+
+  it('does not open the active card from the click that follows a drag gesture', () => {
+    const onOpenCard = vi.fn();
+
+    render(
+      <CatCardDeck
+        items={[
+          makeItem({ id: 'cat-1', catdexNumber: 1 }),
+          makeItem({ id: 'cat-2', catdexNumber: 2 }),
+        ]}
+        language="zh"
+        labels={{
+          empty: '還沒有貓卡',
+          previous: '上一張',
+          next: '下一張',
+          shareCard: '分享這張卡與地址',
+        }}
+        onShareCard={vi.fn()}
+        onOpenCard={onOpenCard}
+      />
+    );
+
+    const activeCard = screen.getByTestId('active-cat-card');
+    fireEvent.pointerDown(activeCard, { clientX: 160, clientY: 240, pointerId: 1 });
+    fireEvent.pointerMove(activeCard, { clientX: 210, clientY: 240, pointerId: 1 });
+    fireEvent.pointerUp(activeCard, { clientX: 210, clientY: 240, pointerId: 1 });
+    fireEvent.click(activeCard);
+
+    expect(onOpenCard).not.toHaveBeenCalled();
+
+    fireEvent.click(activeCard);
+    expect(onOpenCard).toHaveBeenCalledWith(expect.objectContaining({ id: 'cat-1' }));
   });
 
   it('shows the world-map number for public cat cards', () => {

@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadPublicCatCards } from '../lib/cloudPublicCats';
 import { shareCatCardPoster } from '../lib/sharePoster';
@@ -48,6 +48,11 @@ const makeItem = (overrides: Partial<ScrapbookItem> = {}): ScrapbookItem => ({
   zIndex: 1,
   ...overrides,
 });
+
+function CurrentRoute() {
+  const location = useLocation();
+  return <div data-testid="current-route">{location.pathname}{location.search}</div>;
+}
 
 describe('Home page', () => {
   beforeEach(() => {
@@ -356,7 +361,7 @@ describe('Home page', () => {
     ]);
   });
 
-  it('opens a dating-style cat profile after collecting a public cat card', async () => {
+  it('does not interrupt left-swipe collection with the old collected profile sheet', async () => {
     vi.mocked(loadPublicCatCards).mockResolvedValue({
       ok: true,
       items: [
@@ -398,21 +403,29 @@ describe('Home page', () => {
     );
 
     await screen.findByText('首爾店長貓');
+    vi.useFakeTimers();
     fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
 
-    const profile = await screen.findByRole('dialog', { name: '首爾店長貓 貓咪個人檔案' });
-    expect(profile).toHaveTextContent('貓咪個人檔案');
-    expect(profile).toHaveTextContent('喵，謝謝你收藏我。');
-    expect(profile).toHaveTextContent('首爾店長貓');
-    expect(profile).toHaveTextContent('W-088');
-    expect(profile).toHaveTextContent('親人');
-    expect(profile).toHaveTextContent('貪吃');
-    expect(profile).toHaveTextContent('橘虎斑');
-    expect(profile).toHaveTextContent('米克斯短毛');
-    expect(profile).toHaveTextContent('左耳白毛，尾巴短短');
-    expect(profile).toHaveTextContent('下午常在窗邊睡覺');
-    expect(profile).toHaveTextContent('首爾咖啡店');
-    expect(profile).not.toHaveTextContent('首爾市中區測試路 123 號 4 樓');
+    expect(screen.getByRole('status')).toHaveTextContent('已收藏到我的貓卡');
+
+    await act(async () => {
+      vi.advanceTimersByTime(260);
+    });
+
+    expect(screen.queryByRole('dialog', { name: '首爾店長貓 貓咪個人檔案' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: '首爾店長貓 世界貓咪檔案' })).not.toBeInTheDocument();
+    expect(useScrapbookStore.getState().items).toEqual([
+      expect.objectContaining({
+        catName: '首爾店長貓',
+        publicNumber: 88,
+        collectedFromPublicId: 'public-cat-88',
+      }),
+    ]);
+
+    fireEvent.click(screen.getByTestId('active-cat-card'));
+
+    const worldProfile = screen.getByRole('dialog', { name: '曼谷小橘 世界貓咪檔案' });
+    expect(worldProfile).toHaveTextContent('曼谷街角咖啡');
   });
 
   it('recognizes an already-collected world cat by its public source id', async () => {
@@ -599,6 +612,82 @@ describe('Home page', () => {
 
     expect(screen.getByRole('main')).toHaveClass('pt-[clamp(0.75rem,4vh,2.25rem)]');
     expect(screen.getByRole('main')).toHaveClass('mb-[calc(4.25rem+env(safe-area-inset-bottom))]');
+  });
+
+  it('opens the world profile sheet from a card and navigates to the public map target', async () => {
+    vi.mocked(loadPublicCatCards).mockResolvedValue({
+      ok: true,
+      items: [
+        makeItem({
+          id: 'public-cat-1',
+          publicNumber: 1,
+          catName: '窗邊小虎',
+          location: { lat: 18.7883, lng: 98.9853, name: '泰國 清邁' },
+          personalityTags: ['friendly'],
+          isPublic: true,
+        }),
+      ],
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/map" element={<CurrentRoute />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await screen.findByText('窗邊小虎');
+    fireEvent.click(screen.getByTestId('active-cat-card'));
+
+    const dialog = await screen.findByRole('dialog', { name: '窗邊小虎 世界貓咪檔案' });
+    expect(dialog).toHaveTextContent('泰國 清邁');
+
+    fireEvent.click(screen.getByRole('button', { name: '去找這隻喵' }));
+
+    expect(await screen.findByTestId('current-route')).toHaveTextContent('/map?mode=public&cat=public-cat-1');
+  });
+
+  it('collects from the world profile sheet without closing it', async () => {
+    vi.mocked(loadPublicCatCards).mockResolvedValue({
+      ok: true,
+      items: [
+        makeItem({
+          id: 'public-cat-1',
+          publicNumber: 1,
+          catName: '窗邊小虎',
+          location: { lat: 18.7883, lng: 98.9853, name: '泰國 清邁' },
+          personalityTags: ['friendly'],
+          isPublic: true,
+        }),
+      ],
+    });
+
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
+    );
+
+    await screen.findByText('窗邊小虎');
+    fireEvent.click(screen.getByTestId('active-cat-card'));
+    expect(await screen.findByRole('dialog', { name: '窗邊小虎 世界貓咪檔案' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '收藏' }));
+
+    await waitFor(() => {
+      expect(useScrapbookStore.getState().items).toEqual([
+        expect.objectContaining({
+          catName: '窗邊小虎',
+          publicNumber: 1,
+          collectedFromPublicId: 'public-cat-1',
+        }),
+      ]);
+    });
+    expect(screen.getByRole('dialog', { name: '窗邊小虎 世界貓咪檔案' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '已收藏' })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: '窗邊小虎 貓咪個人檔案' })).not.toBeInTheDocument();
   });
 
   it('keeps cloud backup as a compact secondary action instead of a full-width card under the deck', () => {
