@@ -101,10 +101,31 @@ const sameTags = <T extends string>(left: T[], right: T[]) => (
   left.length === right.length && left.every((tag, index) => tag === right[index])
 );
 
+function isCollectedWorldCopy(publicItem: ScrapbookItem, localItem: ScrapbookItem) {
+  if (localItem.collectedFromPublicId && localItem.collectedFromPublicId === publicItem.id) return true;
+  return Boolean(
+    localItem.collectedFromPublicId &&
+    localItem.publicNumber &&
+    publicItem.publicNumber &&
+    localItem.publicNumber === publicItem.publicNumber
+  );
+}
+
+function alreadyHasPublicCat(publicItem: ScrapbookItem, localItem: ScrapbookItem) {
+  if (isCollectedWorldCopy(publicItem, localItem)) return true;
+  if (localItem.id === publicItem.id) return true;
+  return Boolean(
+    localItem.isPublic &&
+    localItem.publicNumber &&
+    publicItem.publicNumber &&
+    localItem.publicNumber === publicItem.publicNumber
+  );
+}
+
 export default function Map() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { items, language, updateItem } = useScrapbookStore();
+  const { items, language, addItem, updateItem } = useScrapbookStore();
   const user = useAuthStore((state) => state.user);
   const isCloudConfigured = useAuthStore((state) => state.isConfigured);
   const t = translations[language];
@@ -131,6 +152,7 @@ export default function Map() {
   const [publicItems, setPublicItems] = useState<ScrapbookItem[]>([]);
   const [publicLoadStatus, setPublicLoadStatus] = useState<PublicLoadStatus>('idle');
   const [publicReloadKey, setPublicReloadKey] = useState(0);
+  const [collectingPublicItemId, setCollectingPublicItemId] = useState<string | null>(null);
 
   const activeItems = mapMode === 'public' ? publicItems : items;
   const isPublicMapMode = mapMode === 'public';
@@ -303,6 +325,38 @@ export default function Map() {
   const handleRetryPublicMap = useCallback(() => {
     setPublicReloadKey((current) => current + 1);
   }, []);
+
+  const handleCollectPublicCat = useCallback(async (item: ScrapbookItem) => {
+    if (!item.isPublic || items.some((localItem) => alreadyHasPublicCat(item, localItem))) return;
+
+    setCollectingPublicItemId(item.id);
+    try {
+      await addItem({
+        type: item.type,
+        imageData: item.imageData,
+        heroImageData: item.heroImageData,
+        date: item.date,
+        x: item.x,
+        y: item.y,
+        rotation: item.rotation,
+        scale: item.scale,
+        location: item.location,
+        publicNumber: item.publicNumber,
+        collectedFromPublicId: item.id,
+        collectedAt: new Date().toISOString(),
+        catName: item.catName,
+        catFeatureNote: item.catFeatureNote,
+        catBreed: item.catBreed,
+        catColor: item.catColor,
+        personalityTags: item.personalityTags,
+        spotNote: item.spotNote,
+        careStatusTags: item.careStatusTags,
+        isPublic: false,
+      });
+    } finally {
+      setCollectingPublicItemId(null);
+    }
+  }, [addItem, items]);
 
   const selectSiblingInLocationGroup = useCallback((direction: 'previous' | 'next') => {
     if (!selectedItem || !selectedLocationGroup || selectedLocationGroup.items.length < 2) return;
@@ -591,6 +645,14 @@ export default function Map() {
   const previousSamePlaceCatLabel = language === 'zh' ? '上一隻同地點貓咪' : 'Previous cat at this spot';
   const nextSamePlaceCatLabel = language === 'zh' ? '下一隻同地點貓咪' : 'Next cat at this spot';
   const canPublishSelectedItem = Boolean(!isPublicMapMode && user && isCloudConfigured && selectedItem?.location);
+  const isSelectedPublicCatCollected = Boolean(
+    selectedItem && isPublicMapMode && items.some((localItem) => alreadyHasPublicCat(selectedItem, localItem))
+  );
+  const collectPublicCatCopy = {
+    save: language === 'zh' ? '收藏' : 'Save',
+    saved: language === 'zh' ? '已收藏' : 'Saved',
+    saving: language === 'zh' ? '收藏中...' : 'Saving...',
+  };
   const shouldShowPublishLoginHint = Boolean(
     searchParams.get('publishHint') === '1' &&
     selectedItem?.location &&
@@ -939,7 +1001,7 @@ export default function Map() {
 
               <div
                 data-testid="map-card-action-row"
-                className={`grid gap-2 text-[11px] font-black text-[#221915] ${canEditSelectedItem ? 'grid-cols-2' : 'grid-cols-1'}`}
+                className={`grid gap-2 text-[11px] font-black text-[#221915] ${canEditSelectedItem || isPublicMapMode ? 'grid-cols-2' : 'grid-cols-1'}`}
               >
                 {canEditSelectedItem ? (
                   <button
@@ -950,6 +1012,30 @@ export default function Map() {
                   >
                     <PencilLine size={14} className="text-[#2f5fb3]" />
                     <span>{language === 'zh' ? '編輯地點' : 'Edit'}</span>
+                  </button>
+                ) : null}
+                {isPublicMapMode ? (
+                  <button
+                    type="button"
+                    onClick={() => void handleCollectPublicCat(selectedItem)}
+                    disabled={isSelectedPublicCatCollected || collectingPublicItemId === selectedItem.id}
+                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-[14px] border border-[#221915]/15 bg-white px-2 py-2 text-[#221915] transition-colors hover:border-[#2f5fb3]/50 disabled:cursor-default disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
+                    aria-label={
+                      collectingPublicItemId === selectedItem.id
+                        ? collectPublicCatCopy.saving
+                        : isSelectedPublicCatCollected
+                          ? collectPublicCatCopy.saved
+                          : collectPublicCatCopy.save
+                    }
+                  >
+                    <Check size={14} className="text-[#2f5fb3]" />
+                    <span>
+                      {collectingPublicItemId === selectedItem.id
+                        ? collectPublicCatCopy.saving
+                        : isSelectedPublicCatCollected
+                          ? collectPublicCatCopy.saved
+                          : collectPublicCatCopy.save}
+                    </span>
                   </button>
                 ) : null}
                 {selectedGoogleMapsUrl ? (

@@ -203,6 +203,7 @@ describe('Map page', () => {
             name: '曼谷街角咖啡',
           },
           personalityTags: ['friendly'],
+          spotNote: '每天傍晚會在咖啡店門口等飯。',
           careStatusTags: ['fed'],
           isPublic: true,
         }),
@@ -292,7 +293,13 @@ describe('Map page', () => {
     expect(screen.queryByRole('button', { name: '備份我的貓咪地圖' })).not.toBeInTheDocument();
   });
 
-  it('opens the world cat map by default', async () => {
+  it('opens the world cat map by default without requesting GPS', async () => {
+    const getCurrentPosition = vi.fn();
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: { getCurrentPosition },
+    });
+
     render(
       <MemoryRouter>
         <Map />
@@ -302,6 +309,23 @@ describe('Map page', () => {
     expect(await screen.findByRole('button', { name: '全世界地圖' })).toHaveAttribute('aria-pressed', 'true');
     expect(loadPublicCatCards).toHaveBeenCalledTimes(1);
     expect(await screen.findByRole('button', { name: '曼谷街角咖啡' })).toBeInTheDocument();
+    expect(getCurrentPosition).not.toHaveBeenCalled();
+  });
+
+  it('opens a focused public cat from a find link after public cats load', async () => {
+    render(
+      <MemoryRouter initialEntries={['/map?mode=public&cat=public-cat-1']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('heading', { name: '曼谷小橘' })).toBeInTheDocument();
+    expect(screen.getByText('偶遇線索')).toBeInTheDocument();
+    expect(screen.getByText('每天傍晚會在咖啡店門口等飯。')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '去找這隻喵' })).toBeInTheDocument();
+    expect(mapEaseTo).toHaveBeenCalledWith(
+      expect.objectContaining({ center: [100.5018, 13.7563], zoom: 15 })
+    );
   });
 
   it('does not show a central world-map empty prompt while public cats are still loading', async () => {
@@ -840,6 +864,7 @@ describe('Map page', () => {
     await user.click(screen.getByRole('button', { name: '曼谷街角咖啡' }));
 
     expect(await screen.findByRole('heading', { name: '曼谷小橘' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '收藏' })).toBeInTheDocument();
     expect(screen.getByText('親人')).toBeInTheDocument();
     expect(screen.getByText('固定餵養')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '貓咪詳情' })).not.toBeInTheDocument();
@@ -850,6 +875,34 @@ describe('Map page', () => {
     await user.click(screen.getByRole('button', { name: '我的地圖' }));
 
     expect(await screen.findByRole('button', { name: '巷口咖啡店' })).toBeInTheDocument();
+  });
+
+  it('collects a public map cat once while preserving its world metadata', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={['/map?mode=public&cat=public-cat-1']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    await user.click(await screen.findByRole('button', { name: '收藏' }));
+    await waitFor(() => {
+      expect(useScrapbookStore.getState().items).toHaveLength(2);
+    });
+    expect(useScrapbookStore.getState().items[1]).toMatchObject({
+      catName: '曼谷小橘',
+      publicNumber: 1,
+      collectedFromPublicId: 'public-cat-1',
+      isPublic: false,
+    });
+    expect(useScrapbookStore.getState().items[1].catdexNumber).toBeUndefined();
+
+    await user.click(screen.getByRole('button', { name: '已收藏' }));
+
+    await waitFor(() => {
+      expect(useScrapbookStore.getState().items).toHaveLength(2);
+    });
   });
 
   it('shows a branded public-map empty state when public loading fails', async () => {
