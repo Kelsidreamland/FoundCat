@@ -663,12 +663,6 @@ export default function Map() {
     saved: language === 'zh' ? '已收藏' : 'Saved',
     saving: language === 'zh' ? '收藏中...' : 'Saving...',
   };
-  const shouldShowPublishLoginHint = Boolean(
-    searchParams.get('publishHint') === '1' &&
-    selectedItem?.location &&
-    !isPublicMapMode &&
-    !user
-  );
   const shouldShowPublishReadyHint = Boolean(
     searchParams.get('publishHint') === '1' &&
     selectedItem?.location &&
@@ -677,7 +671,6 @@ export default function Map() {
     isCloudConfigured
   );
   const shouldShowPublishSignInPrompt = Boolean(
-    !shouldShowPublishLoginHint &&
     !isPublicMapMode &&
     !user &&
     isCloudConfigured &&
@@ -714,9 +707,12 @@ export default function Map() {
     publish: language === 'zh' ? '公開到世界地圖' : 'Publish to World Map',
     unpublish: language === 'zh' ? '從世界地圖移除' : 'Remove from World Map',
     saving: language === 'zh' ? '同步中...' : 'Syncing...',
-    published: (publicNumber: number | undefined) => language === 'zh'
-      ? `牠已加入世界地圖 ${formatPublicCatCardNumber(publicNumber)}`
-      : `This cat joined the World Map ${formatPublicCatCardNumber(publicNumber)}`,
+    published: (publicNumber: number | undefined) => {
+      const numberLabel = publicNumber ? ` ${formatPublicCatCardNumber(publicNumber)}` : '';
+      return language === 'zh'
+        ? `牠已加入世界地圖${numberLabel}`
+        : `This cat joined the World Map${numberLabel}`;
+    },
     publishedHint: language === 'zh'
       ? '世界又多了一隻可以被偶遇的貓'
       : 'The world has one more cat to stumble upon.',
@@ -733,12 +729,6 @@ export default function Map() {
       : 'Sign in to publish this cat to the World Map and back up your cat cards.',
     action: language === 'zh' ? '用 Email 登入' : 'Sign in with Email',
     secondaryAction: language === 'zh' ? '稍後再說' : 'Maybe later',
-  };
-  const publishLoginHintCopy = {
-    title: language === 'zh' ? '讓更多人也遇見牠？' : 'Let more people find this cat?',
-    body: language === 'zh'
-      ? '登入後才能把這隻貓公開到世界地圖，也能備份你的貓卡。'
-      : 'Sign in to publish it to the world map, then edit or remove it later.',
   };
   const shouldShowMapEmptyState = mapReady
     && itemsWithLocation.length === 0
@@ -988,17 +978,6 @@ export default function Map() {
                   showPlace={Boolean(selectedItem.catName)}
                 />
               </div>
-
-              {shouldShowPublishLoginHint ? (
-                <div className="rounded-[16px] border border-white/55 bg-white/55 px-3 py-2.5 shadow-[3px_3px_0_rgba(47,95,179,0.08)] backdrop-blur-md">
-                  <p className="text-sm font-black leading-snug text-[#221915]">
-                    {publishLoginHintCopy.title}
-                  </p>
-                  <p className="mt-1 text-xs font-bold leading-relaxed text-[#5f5148]">
-                    {publishLoginHintCopy.body}
-                  </p>
-                </div>
-              ) : null}
 
               {shouldShowPublishReadyHint ? (
                 <p className="rounded-[16px] border border-[#2f5fb3]/20 bg-[#d9ecff]/60 px-3 py-2 text-xs font-black leading-relaxed text-[#2f5fb3] shadow-[3px_3px_0_rgba(47,95,179,0.08)]">

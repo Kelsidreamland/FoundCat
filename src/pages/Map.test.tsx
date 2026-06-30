@@ -779,7 +779,7 @@ describe('Map page', () => {
     await waitFor(() => {
       expect(useScrapbookStore.getState().items[0].isPublic).toBe(true);
     });
-    expect(await screen.findByText('牠已加入世界地圖 W----')).toBeInTheDocument();
+    expect(await screen.findByText('牠已加入世界地圖')).toBeInTheDocument();
     expect(screen.getByText('世界又多了一隻可以被偶遇的貓')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '去全世界地圖查看' }));
 
@@ -1112,7 +1112,8 @@ describe('Map page', () => {
     expect(screen.queryByText(/Shared map/i)).not.toBeInTheDocument();
   });
 
-  it('opens a newly created local cat and explains login is needed before publishing it', async () => {
+  it('opens a newly created local cat with a publish prompt before login gating', async () => {
+    const user = userEvent.setup();
     useScrapbookStore.setState({
       items: [
         makeItem({
@@ -1139,6 +1140,11 @@ describe('Map page', () => {
     expect(await screen.findByText('No.129')).toBeInTheDocument();
     expect(screen.getByText('Taipei 101')).toBeInTheDocument();
     expect(screen.getAllByText('讓更多人也遇見牠？').length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: '公開到世界地圖' })).toBeInTheDocument();
+    expect(screen.queryByText('登入後才能把這隻貓公開到世界地圖，也能備份你的貓卡。')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '公開到世界地圖' }));
+
     expect(screen.getByText('登入後才能把這隻貓公開到世界地圖，也能備份你的貓卡。')).toBeInTheDocument();
   });
 
