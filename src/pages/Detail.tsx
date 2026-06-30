@@ -42,14 +42,21 @@ export default function Detail() {
   const [isEditingCatInfo, setIsEditingCatInfo] = useState(false);
   const [catInfoDraft, setCatInfoDraft] = useState<CatInfoDraft>(EMPTY_CAT_INFO_DRAFT);
   const [catInfoSavedMessage, setCatInfoSavedMessage] = useState<string | null>(null);
+  const [isEditingPrivateNote, setIsEditingPrivateNote] = useState(false);
+  const [privateNoteDraft, setPrivateNoteDraft] = useState('');
+  const [privateNoteSavedMessage, setPrivateNoteSavedMessage] = useState<string | null>(null);
 
   const item = items.find(i => i.id === id);
+  const isSavedWorldCat = Boolean(item?.collectedFromPublicId);
 
   useEffect(() => {
     if (!item) {
       setCatInfoDraft(EMPTY_CAT_INFO_DRAFT);
       setIsEditingCatInfo(false);
       setCatInfoSavedMessage(null);
+      setPrivateNoteDraft('');
+      setIsEditingPrivateNote(false);
+      setPrivateNoteSavedMessage(null);
       return;
     }
 
@@ -60,7 +67,10 @@ export default function Detail() {
       personalityTags: item.personalityTags ?? [],
       careStatusTags: item.careStatusTags ?? [],
     });
+    setPrivateNoteDraft(item.privateNote ?? '');
     setCatInfoSavedMessage(null);
+    setIsEditingPrivateNote(false);
+    setPrivateNoteSavedMessage(null);
   }, [item?.id]);
 
   const handleLocationPicked = useCallback(async (location: {
@@ -71,7 +81,7 @@ export default function Detail() {
     placeId?: string;
     mapUrl?: string;
   }) => {
-    if (!item) return;
+    if (!item || item.collectedFromPublicId) return;
 
     await updateItem(item.id, { location });
     setShowLocationPicker(false);
@@ -158,6 +168,16 @@ export default function Detail() {
     setIsEditingCatInfo(false);
   };
 
+  const handleSavePrivateNote = async () => {
+    const trimmedPrivateNote = privateNoteDraft.trim();
+
+    await updateItem(item.id, {
+      privateNote: trimmedPrivateNote || undefined,
+    });
+    setPrivateNoteSavedMessage(language === 'zh' ? '已儲存' : 'Saved');
+    setIsEditingPrivateNote(false);
+  };
+
   return (
     <div className="absolute inset-0 flex flex-col bg-[#fff7e8] overflow-hidden">
       <CatBrandHeader
@@ -213,23 +233,25 @@ export default function Detail() {
             </h1>
           ) : null}
 
-          <div className="flex items-center justify-center gap-2">
-            <button
-              onClick={() => setIsEditingCatInfo((current) => !current)}
-              className="inline-flex items-center gap-2 rounded-full border-2 border-[#221915] bg-[#fffdf2] px-4 py-2 text-sm font-black text-[#221915] shadow-[3px_3px_0_rgba(47,95,179,0.18)] transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2f5fb3]"
-            >
-              <PencilLine size={16} />
-              {detailCopy.editInfo}
-            </button>
-            {catInfoSavedMessage ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-[#eaf1ff] px-3 py-2 text-xs font-black text-[#2f5fb3]">
-                <Check size={14} />
-                {catInfoSavedMessage}
-              </span>
-            ) : null}
-          </div>
+          {!isSavedWorldCat ? (
+            <div className="flex items-center justify-center gap-2">
+              <button
+                onClick={() => setIsEditingCatInfo((current) => !current)}
+                className="inline-flex items-center gap-2 rounded-full border-2 border-[#221915] bg-[#fffdf2] px-4 py-2 text-sm font-black text-[#221915] shadow-[3px_3px_0_rgba(47,95,179,0.18)] transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2f5fb3]"
+              >
+                <PencilLine size={16} />
+                {detailCopy.editInfo}
+              </button>
+              {catInfoSavedMessage ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#eaf1ff] px-3 py-2 text-xs font-black text-[#2f5fb3]">
+                  <Check size={14} />
+                  {catInfoSavedMessage}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
 
-          {isEditingCatInfo ? (
+          {!isSavedWorldCat && isEditingCatInfo ? (
             <div className="rounded-[22px] border-2 border-[#221915] bg-[#fffdf2] p-4 text-left shadow-[6px_6px_0_rgba(29,23,20,0.86)]">
               <div className="space-y-4">
                 <label className="block">
@@ -347,6 +369,61 @@ export default function Detail() {
             <CatProfileSummary item={item} language={language} variant="compact" />
           </div>
 
+          {isSavedWorldCat ? (
+            <section className="rounded-[22px] border-2 border-[#221915] bg-[#fffdf2] p-4 text-left shadow-[5px_5px_0_rgba(47,95,179,0.18)]">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-base font-black text-[#1d1714]">我的備註</h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPrivateNoteSavedMessage(null);
+                    setIsEditingPrivateNote((current) => !current);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#221915] bg-[#fff2cf] px-3 py-1.5 text-xs font-black text-[#221915] shadow-[2px_2px_0_rgba(29,23,20,0.7)]"
+                >
+                  <PencilLine size={14} />
+                  編輯我的備註
+                </button>
+              </div>
+
+              {isEditingPrivateNote ? (
+                <div className="mt-3 space-y-3">
+                  <label className="block">
+                    <span className="sr-only">我的備註</span>
+                    <textarea
+                      aria-label="我的備註"
+                      value={privateNoteDraft}
+                      onChange={(event) => {
+                        setPrivateNoteSavedMessage(null);
+                        setPrivateNoteDraft(event.target.value);
+                      }}
+                      rows={4}
+                      className="w-full resize-none rounded-2xl border border-[#221915]/20 bg-white px-3 py-2 text-sm font-bold leading-6 text-[#221915] outline-none focus:border-[#2f5fb3] focus:ring-2 focus:ring-[#2f5fb3]/20"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleSavePrivateNote}
+                    className="w-full rounded-2xl border-2 border-[#221915] bg-[#2f5fb3] px-4 py-3 text-sm font-black text-white shadow-[4px_4px_0_rgba(29,23,20,0.88)]"
+                  >
+                    儲存我的備註
+                  </button>
+                </div>
+              ) : (
+                <p className="mt-3 whitespace-pre-wrap text-sm font-bold leading-6 text-[#4d4038]">
+                  {item.privateNote?.trim() || (language === 'zh' ? '還沒有備註' : 'No note yet')}
+                </p>
+              )}
+
+              {privateNoteSavedMessage ? (
+                <p className="mt-3 inline-flex items-center gap-1 rounded-full bg-[#eaf1ff] px-3 py-2 text-xs font-black text-[#2f5fb3]">
+                  <Check size={14} />
+                  {privateNoteSavedMessage}
+                </p>
+              ) : null}
+            </section>
+          ) : null}
+
           {item.location ? (
             <button
               onClick={() => navigate(mapTarget)}
@@ -358,7 +435,7 @@ export default function Detail() {
                 {detailCopy.goFindCat}
               </span>
             </button>
-          ) : (
+          ) : !isSavedWorldCat ? (
             <button
               onClick={() => setShowLocationPicker(true)}
               className="w-full bg-cat-card rounded-2xl shadow-cat-whisper border border-cat-border-light p-4 text-left hover:bg-cat-bg transition-colors"
@@ -373,12 +450,12 @@ export default function Detail() {
                 </div>
               </div>
             </button>
-          )}
+          ) : null}
 
         </motion.div>
       </div>
 
-      {showLocationPicker ? (
+      {showLocationPicker && !isSavedWorldCat ? (
         <LocationPicker
           onPicked={handleLocationPicked}
           onClose={() => setShowLocationPicker(false)}

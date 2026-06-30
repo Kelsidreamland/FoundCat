@@ -36,6 +36,10 @@ const makeItem = (overrides: Partial<ScrapbookItem> = {}): ScrapbookItem => ({
   personalityTags: overrides.personalityTags,
   spotNote: overrides.spotNote,
   careStatusTags: overrides.careStatusTags,
+  publicNumber: overrides.publicNumber,
+  collectedFromPublicId: overrides.collectedFromPublicId,
+  collectedAt: overrides.collectedAt,
+  privateNote: overrides.privateNote,
 });
 
 describe('Detail page', () => {
@@ -214,5 +218,94 @@ describe('Detail page', () => {
 
     expect(screen.getByText('懶散橘貓')).toBeInTheDocument();
     expect(screen.getByText('右眼旁邊有一點深色花紋')).toBeInTheDocument();
+  });
+
+  it('lets me edit only my private note for a saved world cat', async () => {
+    const user = userEvent.setup();
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          id: 'saved-world-cat-88',
+          catdexNumber: undefined,
+          publicNumber: 88,
+          collectedFromPublicId: 'public-cat-88',
+          catName: '清邁店長',
+          catFeatureNote: '右耳有白毛',
+          spotNote: '常在寺廟門口',
+          privateNote: '下次去清邁想找牠',
+          location: {
+            lat: 18.7883,
+            lng: 98.9853,
+            name: 'Chiang Mai',
+          },
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/detail/saved-world-cat-88']}>
+        <Routes>
+          <Route path="/detail/:id" element={<Detail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('我的備註')).toBeInTheDocument();
+    expect(screen.getByText('下次去清邁想找牠')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '去找這隻喵' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '補充貓咪資訊' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '幫我取名' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '編輯我的備註' }));
+    const noteInput = screen.getByLabelText('我的備註');
+    await user.clear(noteInput);
+    await user.type(noteInput, '想帶罐罐再去看牠');
+    await user.click(screen.getByRole('button', { name: '儲存我的備註' }));
+
+    await waitFor(() => {
+      expect(useScrapbookStore.getState().items[0]).toMatchObject({
+        id: 'saved-world-cat-88',
+        privateNote: '想帶罐罐再去看牠',
+        catName: '清邁店長',
+        catFeatureNote: '右耳有白毛',
+        spotNote: '常在寺廟門口',
+        collectedFromPublicId: 'public-cat-88',
+        publicNumber: 88,
+      });
+    });
+  });
+
+  it('does not expose location editing for a saved world cat without location', () => {
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          id: 'saved-world-cat-no-location',
+          catdexNumber: undefined,
+          publicNumber: 89,
+          collectedFromPublicId: 'public-cat-89',
+          catName: '沒有地點的世界貓',
+          privateNote: '只想記下牠',
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/detail/saved-world-cat-no-location']}>
+        <Routes>
+          <Route path="/detail/:id" element={<Detail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('我的備註')).toBeInTheDocument();
+    expect(screen.getByText('只想記下牠')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '補充貓咪資訊' })).not.toBeInTheDocument();
+    expect(screen.queryByText('加入遇見地點')).not.toBeInTheDocument();
+    expect(screen.queryByText('貼上 Google Maps 連結、搜尋地點或地址，也可以點一下地圖放置地點')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '去找這隻喵' })).not.toBeInTheDocument();
   });
 });

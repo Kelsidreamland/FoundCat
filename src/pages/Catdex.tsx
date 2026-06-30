@@ -290,8 +290,8 @@ export default function Catdex() {
     );
   };
 
-  const selfTabLabel = language === 'zh' ? '我拍到的貓' : 'Cats I Found';
-  const worldTabLabel = language === 'zh' ? '收藏的世界貓卡' : 'Saved World Cats';
+  const selfTabLabel = language === 'zh' ? '我遇到的貓' : 'Cats I Found';
+  const worldTabLabel = language === 'zh' ? '我收藏的貓' : 'Saved World Cats';
   const activeCollection = activeCollectionTab === 'world'
     ? {
         title: worldTabLabel,
