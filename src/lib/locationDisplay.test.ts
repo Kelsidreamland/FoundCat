@@ -19,15 +19,15 @@ describe('location display helpers', () => {
   });
 
   it('uses the find-cat CTA instead of raw links, coordinates, or default placeholders', () => {
-    expect(getReadableLocationName(makeItem('https://maps.app.goo.gl/abc123'), 'zh')).toBe('去找這隻貓');
-    expect(getReadableLocationName(makeItem('maps.app.goo.gl/abc123'), 'zh')).toBe('去找這隻貓');
-    expect(getReadableLocationName(makeItem('25.03300, 121.56500'), 'zh')).toBe('去找這隻貓');
-    expect(getReadableLocationName(makeItem('貓咪出沒點'), 'zh')).toBe('去找這隻貓');
+    expect(getReadableLocationName(makeItem('https://maps.app.goo.gl/abc123'), 'zh')).toBe('去找這隻喵');
+    expect(getReadableLocationName(makeItem('maps.app.goo.gl/abc123'), 'zh')).toBe('去找這隻喵');
+    expect(getReadableLocationName(makeItem('25.03300, 121.56500'), 'zh')).toBe('去找這隻喵');
+    expect(getReadableLocationName(makeItem('貓咪出沒點'), 'zh')).toBe('去找這隻喵');
     expect(getReadableLocationName(makeItem(undefined), 'en')).toBe('No location');
   });
 
   it('returns concise CTA copy for detail actions', () => {
-    expect(getFindCatCta('zh')).toBe('去找這隻貓');
+    expect(getFindCatCta('zh')).toBe('去找這隻喵');
     expect(getFindCatCta('en')).toBe('Go find this cat');
   });
 });

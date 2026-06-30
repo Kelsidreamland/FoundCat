@@ -184,17 +184,17 @@ export default function Map() {
       ? '例如：白襪、左耳白毛、尾巴短短、看到相機會慢慢眨眼'
       : 'Example: white socks, white patch on left ear, short tail, slow blinks at camera',
     featureHeading: language === 'zh' ? '特徵' : 'Features',
-    spotNote: language === 'zh' ? '出沒線索' : 'Spot clues',
+    spotNote: language === 'zh' ? '偶遇線索' : 'Spot clues',
     spotNotePlaceholder: language === 'zh'
       ? '例如：飯店右手邊門口的紙箱、對面 7-11 晚上常出現'
       : 'Example: cardboard box by the hotel entrance, often seen near 7-11 at night',
-    spotHeading: language === 'zh' ? '出沒線索' : 'Spot clues',
+    spotHeading: language === 'zh' ? '偶遇線索' : 'Spot clues',
     personality: language === 'zh' ? '牠給人的感覺' : 'How this cat felt',
     careStatus: language === 'zh' ? '照護狀態' : 'Care status',
     careHeading: language === 'zh' ? '照護' : 'Care',
     expandDetails: language === 'zh' ? '補充貓咪資訊' : 'Add cat info',
     expandDetailsHint: language === 'zh'
-      ? '名字、特徵、出沒線索'
+      ? '名字、特徵、偶遇線索'
       : 'Name, features, spot clues',
     dialogTitle: language === 'zh' ? '補充這隻貓的線索' : 'Add clues for this cat',
     dialogSubtitle: language === 'zh'

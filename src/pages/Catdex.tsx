@@ -5,7 +5,7 @@ import CatActionNav from '../components/catdex/CatActionNav';
 import CatdexLabel from '../components/catdex/CatdexLabel';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import { formatPublicCatCardNumber } from '../lib/catdexDeck';
-import { getReadableLocationName, hasReadableLocationName } from '../lib/locationDisplay';
+import { getFindCatCta, getReadableLocationName, hasReadableLocationName } from '../lib/locationDisplay';
 import type { ScrapbookItem } from '../store/useScrapbookStore';
 import { useScrapbookStore } from '../store/useScrapbookStore';
 import { translations } from '../translations';
@@ -29,7 +29,7 @@ const paperTexture = {
 const getPlaceGroupName = (location: ScrapbookItem['location'], language: 'zh' | 'en') => {
   if (!location) return language === 'zh' ? '未記錄地點' : 'No location yet';
   if (hasReadableLocationName(location.name)) return location.name.trim();
-  return language === 'zh' ? '去找這隻貓' : 'Go find this cat';
+  return getFindCatCta(language);
 };
 
 type CatdexPlaceGroup = {

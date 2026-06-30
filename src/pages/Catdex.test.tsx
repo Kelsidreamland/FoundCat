@@ -116,7 +116,7 @@ describe('Catdex page', () => {
     expect(screen.getByText('固定餵養')).toBeInTheDocument();
     expect(screen.getByText('橘虎斑')).toBeInTheDocument();
     expect(screen.getByText('特徵：左耳白毛，尾巴短短')).toBeInTheDocument();
-    expect(screen.getByText('出沒線索：下午常在窗邊睡覺')).toBeInTheDocument();
+    expect(screen.getByText('偶遇線索：下午常在窗邊睡覺')).toBeInTheDocument();
   });
 
   it('groups saved cat cards by place so travelers can scan their collection', () => {
@@ -273,7 +273,7 @@ describe('Catdex page', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByRole('heading', { name: '去找這隻貓' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '去找這隻喵' })).toBeInTheDocument();
     expect(screen.getByText('短連結貓')).toBeInTheDocument();
     expect(screen.queryByText('https://maps.app.goo.gl/abc123')).not.toBeInTheDocument();
   });

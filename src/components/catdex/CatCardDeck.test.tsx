@@ -159,7 +159,7 @@ describe('CatCardDeck', () => {
       />
     );
 
-    expect(screen.getByText('去找這隻貓')).toBeInTheDocument();
+    expect(screen.getByText('去找這隻喵')).toBeInTheDocument();
     expect(screen.queryByText('https://maps.app.goo.gl/abc123')).not.toBeInTheDocument();
   });
 

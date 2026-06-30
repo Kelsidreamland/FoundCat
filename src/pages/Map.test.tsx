@@ -424,7 +424,7 @@ describe('Map page', () => {
     expect(screen.getByTestId('map-card-scroll')).toHaveClass('min-h-0', 'flex-1', 'overflow-y-auto');
     expect(screen.getByTestId('map-card-action-row').children).toHaveLength(2);
     expect(screen.getByRole('button', { name: '編輯地點' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '去找這隻貓' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '去找這隻喵' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '補充貓咪資訊' })).toBeInTheDocument();
 
     await waitFor(() => {
@@ -514,7 +514,7 @@ describe('Map page', () => {
     await user.click(await screen.findByRole('button', { name: '親人' }));
     await user.click(screen.getByRole('button', { name: '固定餵養' }));
     await user.type(screen.getByLabelText('特徵描述'), '耳朵有一小塊白毛，喜歡趴在窗邊');
-    await user.type(screen.getByLabelText('出沒線索'), '飯店右手邊門口的紙箱');
+    await user.type(screen.getByLabelText('偶遇線索'), '飯店右手邊門口的紙箱');
     await user.click(screen.getByRole('button', { name: '儲存貓咪資訊' }));
 
     await waitFor(() => {
@@ -532,7 +532,7 @@ describe('Map page', () => {
     expect(screen.getByRole('heading', { name: '放鬆的貓咪' })).toBeInTheDocument();
     expect(screen.getByText('特徵')).toBeInTheDocument();
     expect(screen.getByText('耳朵有一小塊白毛，喜歡趴在窗邊')).toBeInTheDocument();
-    expect(screen.getByText('喜歡出沒')).toBeInTheDocument();
+    expect(screen.getByText('偶遇線索')).toBeInTheDocument();
     expect(screen.getByText('飯店右手邊門口的紙箱')).toBeInTheDocument();
     expect(screen.getByText('親人')).toBeInTheDocument();
     expect(screen.getByText('固定餵養')).toBeInTheDocument();
@@ -567,7 +567,7 @@ describe('Map page', () => {
 
     expect(screen.queryByText('25.03300, 121.56500')).not.toBeInTheDocument();
     expect(screen.queryByText('Google Maps')).not.toBeInTheDocument();
-    expect(await screen.findByRole('link', { name: '去找這隻貓' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: '去找這隻喵' })).toHaveAttribute(
       'href',
       buildGoogleMapsSearchUrl({
         lat: 25.033,
@@ -601,9 +601,9 @@ describe('Map page', () => {
       </MemoryRouter>
     );
 
-    await user.click(await screen.findByRole('button', { name: '去找這隻貓' }));
+    await user.click(await screen.findByRole('button', { name: '去找這隻喵' }));
 
-    expect(await screen.findByRole('link', { name: '去找這隻貓' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: '去找這隻喵' })).toHaveAttribute(
       'href',
       'https://maps.app.goo.gl/catspot'
     );
@@ -652,14 +652,14 @@ describe('Map page', () => {
     expect(screen.getByText('橘虎斑')).toBeInTheDocument();
     expect(screen.getByText('特徵')).toBeInTheDocument();
     expect(screen.getByText('白襪、耳朵缺一角，看到人會慢慢靠近。')).toBeInTheDocument();
-    expect(screen.getByText('喜歡出沒')).toBeInTheDocument();
+    expect(screen.getByText('偶遇線索')).toBeInTheDocument();
     expect(screen.getByText('下午常在咖啡廳門口的木椅旁睡覺。')).toBeInTheDocument();
     expect(screen.getByText('照護狀態')).toBeInTheDocument();
     expect(screen.getByText('已剪耳 / TNR')).toBeInTheDocument();
     expect(screen.getByText('出沒城市')).toBeInTheDocument();
     expect(screen.getByText('巷口咖啡店')).toBeInTheDocument();
     expect(screen.queryByText('台北市信義區貓咪路 1 號')).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '去找這隻貓' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '去找這隻喵' })).toBeInTheDocument();
     expect(screen.queryByText('Google Maps')).not.toBeInTheDocument();
   });
 
@@ -688,9 +688,9 @@ describe('Map page', () => {
       </MemoryRouter>
     );
 
-    await user.click(await screen.findByRole('button', { name: '去找這隻貓' }));
+    await user.click(await screen.findByRole('button', { name: '去找這隻喵' }));
 
-    expect(await screen.findByRole('heading', { name: '去找這隻貓' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: '去找這隻喵' })).toBeInTheDocument();
     expect(screen.queryByText('https://maps.app.goo.gl/abc123')).not.toBeInTheDocument();
   });
 

@@ -118,10 +118,10 @@ describe('Detail page', () => {
     );
 
     expect(screen.getByText('巷口店長')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '去找這隻貓' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '去找這隻喵' })).toBeInTheDocument();
     expect(screen.queryByText('台北市信義區貓咪路 1 號')).not.toBeInTheDocument();
     expect(screen.queryByText('Google Maps')).not.toBeInTheDocument();
-    expect(screen.queryByText('出發去找這隻貓')).not.toBeInTheDocument();
+    expect(screen.queryByText('出發去找這隻喵')).not.toBeInTheDocument();
     expect(screen.getByText('貓咪個人檔案')).toBeInTheDocument();
     expect(screen.getByText('喵，謝謝你收藏我。下次見面可以慢慢眨眼。')).toBeInTheDocument();
     expect(screen.getByText('牠給人的感覺')).toBeInTheDocument();
@@ -131,7 +131,7 @@ describe('Detail page', () => {
     expect(screen.getByText('橘虎斑')).toBeInTheDocument();
     expect(screen.getByText('米克斯短毛')).toBeInTheDocument();
     expect(screen.getByText('特徵')).toBeInTheDocument();
-    expect(screen.getByText('喜歡出沒')).toBeInTheDocument();
+    expect(screen.getByText('偶遇線索')).toBeInTheDocument();
     expect(screen.getByText('照護狀態')).toBeInTheDocument();
     expect(screen.getByText('出沒城市')).toBeInTheDocument();
     expect(screen.getByText('巷口咖啡店')).toBeInTheDocument();
@@ -168,8 +168,8 @@ describe('Detail page', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('去找這隻貓')).toBeInTheDocument();
-    expect(screen.queryByText('出發去找這隻貓')).not.toBeInTheDocument();
+    expect(screen.getByText('去找這隻喵')).toBeInTheDocument();
+    expect(screen.queryByText('出發去找這隻喵')).not.toBeInTheDocument();
     expect(screen.queryByText('https://maps.app.goo.gl/abc123')).not.toBeInTheDocument();
   });
 
@@ -199,7 +199,7 @@ describe('Detail page', () => {
     await user.click(screen.getByRole('button', { name: '補充貓咪資訊' }));
     await user.click(screen.getByRole('button', { name: '幫我取名' }));
     await user.type(screen.getByLabelText('特徵描述'), '右眼旁邊有一點深色花紋');
-    await user.type(screen.getByLabelText('出沒線索'), '下雨天會躲在店門口');
+    await user.type(screen.getByLabelText('偶遇線索'), '下雨天會躲在店門口');
     await user.click(screen.getByRole('button', { name: '高冷' }));
     await user.click(screen.getByRole('button', { name: '儲存貓咪資訊' }));
 
