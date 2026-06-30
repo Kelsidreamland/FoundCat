@@ -97,6 +97,7 @@ describe('useScrapbookStore catdex display name', () => {
       publicNumber: 88,
       collectedFromPublicId: 'public-cat-88',
       collectedAt: '2026-06-23T08:00:00.000Z',
+      privateNote: '下次去清邁想找牠',
       date: '2026-06-01T08:00:00.000Z',
       x: 0,
       y: 0,
@@ -114,6 +115,7 @@ describe('useScrapbookStore catdex display name', () => {
         catdexNumber: undefined,
         publicNumber: 88,
         collectedFromPublicId: 'public-cat-88',
+        privateNote: '下次去清邁想找牠',
       }),
     ]);
   });

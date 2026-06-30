@@ -39,6 +39,7 @@ create table if not exists public.cat_cards (
   personality_tags text[] not null default '{}',
   care_status_tags text[] not null default '{}',
   spot_note text,
+  private_note text,
   is_public boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -189,6 +190,7 @@ select
   lng,
   personality_tags,
   care_status_tags,
+  spot_note,
   created_at,
   updated_at
 from public.cat_cards
@@ -211,6 +213,7 @@ select
   lng,
   personality_tags,
   care_status_tags,
+  null::text as spot_note,
   created_at,
   updated_at
 from public.launch_rescue_cat_cards;

@@ -20,6 +20,7 @@ type PublicCatCardViewRow = {
   lng: number;
   personality_tags: CatPersonalityTag[] | null;
   care_status_tags: CatCareStatusTag[] | null;
+  spot_note: string | null;
 };
 
 export type LoadPublicCatCardsResult =
@@ -56,6 +57,7 @@ const publicRowToScrapbookItem = (row: PublicCatCardViewRow): ScrapbookItem => (
   },
   personalityTags: row.personality_tags ?? [],
   careStatusTags: row.care_status_tags ?? [],
+  spotNote: row.spot_note ?? undefined,
   isPublic: true,
 });
 

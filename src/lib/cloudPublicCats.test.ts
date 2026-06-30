@@ -51,6 +51,7 @@ describe('loadPublicCatCards', () => {
           lng: 100.5018,
           personality_tags: ['friendly'],
           care_status_tags: ['fed'],
+          spot_note: '晚餐時間常在便利店旁邊',
         },
       ],
       error: null,
@@ -75,6 +76,7 @@ describe('loadPublicCatCards', () => {
           },
           personalityTags: ['friendly'],
           careStatusTags: ['fed'],
+          spotNote: '晚餐時間常在便利店旁邊',
         }),
       ],
     });
