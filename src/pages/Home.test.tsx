@@ -238,7 +238,7 @@ describe('Home page', () => {
     expect(screen.queryByText('巷口咖啡店')).not.toBeInTheDocument();
   });
 
-  it('falls back to local cat cards when public cards cannot load', async () => {
+  it('keeps the home deck on a retryable world state when public cards cannot load', async () => {
     vi.mocked(loadPublicCatCards).mockResolvedValue({
       ok: false,
       reason: 'cloud_not_configured',
@@ -261,9 +261,44 @@ describe('Home page', () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('巷口咖啡店')).toBeInTheDocument();
-    expect(screen.queryByText('我的貓卡')).not.toBeInTheDocument();
+    expect(await screen.findByText('全世界貓卡暫時載入失敗')).toBeInTheDocument();
+    expect(screen.getByText('可以再試一次；你的本機貓卡仍在「我的貓卡」。')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '重新載入世界貓卡' })).toBeInTheDocument();
+    expect(screen.queryByText('巷口咖啡店')).not.toBeInTheDocument();
     expect(loadPublicCatCards).toHaveBeenCalledTimes(1);
+  });
+
+  it('reloads world cat cards from the retryable failed state', async () => {
+    const user = userEvent.setup();
+    vi.mocked(loadPublicCatCards)
+      .mockResolvedValueOnce({
+        ok: false,
+        reason: 'public_load_failed',
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        items: [
+          makeItem({
+            id: 'public-cat-88',
+            publicNumber: 88,
+            catName: '首爾店長貓',
+            location: { lat: 37.5665, lng: 126.978, name: '首爾咖啡店' },
+            isPublic: true,
+          }),
+        ],
+      });
+
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
+    );
+
+    await user.click(await screen.findByRole('button', { name: '重新載入世界貓卡' }));
+
+    expect(await screen.findByText('首爾店長貓')).toBeInTheDocument();
+    expect(screen.queryByText('全世界貓卡暫時載入失敗')).not.toBeInTheDocument();
+    expect(loadPublicCatCards).toHaveBeenCalledTimes(2);
   });
 
   it('keeps the home deck on the public empty state when the world feed loads with no cats', async () => {

@@ -114,12 +114,14 @@ export default function Home() {
   const t = translations[language];
   const [publicItems, setPublicItems] = useState<ScrapbookItem[]>([]);
   const [publicDeckStatus, setPublicDeckStatus] = useState<PublicDeckStatus>('loading');
+  const [publicReloadKey, setPublicReloadKey] = useState(0);
   const [collectedProfileItem, setCollectedProfileItem] = useState<ScrapbookItem | null>(null);
   const [profileSheetItem, setProfileSheetItem] = useState<ScrapbookItem | null>(null);
   const [savePrompt, setSavePrompt] = useState<SavePrompt | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    setPublicDeckStatus('loading');
 
     void loadPublicCatCards().then((result) => {
       if (cancelled) return;
@@ -137,17 +139,25 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [publicReloadKey]);
 
-  const isPublicDeck = publicDeckStatus !== 'failed';
+  const isPublicDeck = true;
   const isPublicDeckLoading = publicDeckStatus === 'loading';
   const visiblePublicItems = publicItems.filter(
     (publicItem) => !items.some((localItem) => isCollectedWorldCopy(publicItem, localItem))
   );
   const deckItems = isPublicDeck ? visiblePublicItems : items;
-  const emptyDeckLabel = language === 'zh'
-    ? '全世界地圖等第一批貓點\n先拍下你遇到的貓，公開後朋友就能在地圖上找到牠。'
-    : 'The world map is waiting for its first cats.\nCapture a cat you found, then publish it so friends can find the spot.';
+  const emptyDeckLabel = publicDeckStatus === 'failed'
+    ? (language === 'zh'
+        ? '全世界貓卡暫時載入失敗\n可以再試一次；你的本機貓卡仍在「我的貓卡」。'
+        : 'World cat cards could not load.\nTry again; your local cards are still in My Cat Cards.')
+    : (language === 'zh'
+        ? '全世界地圖等第一批貓點\n先拍下你遇到的貓，公開後朋友就能在地圖上找到牠。'
+        : 'The world map is waiting for its first cats.\nCapture a cat you found, then publish it so friends can find the spot.');
+
+  const handleRetryPublicDeck = useCallback(() => {
+    setPublicReloadKey((current) => current + 1);
+  }, []);
 
   const handleShareCard = async (item: ScrapbookItem) => {
     const { shareCatCardPoster } = await import('../lib/sharePoster');
@@ -247,20 +257,31 @@ export default function Home() {
           {isPublicDeckLoading ? (
             <HomeDeckLoading language={language} />
           ) : (
-            <CatCardDeck
-              items={deckItems}
-              language={language}
-              labels={{
-                empty: emptyDeckLabel,
-                previous: language === 'zh' ? '上一張' : 'Previous card',
-                next: language === 'zh' ? '下一張' : 'Next card',
-                shareCard: t.singleCardShare,
-                collectFeedback: language === 'zh' ? '已收藏到我的貓卡' : 'Saved to My Cat Cards',
-              }}
-              onShareCard={handleShareCard}
-              onCollectCard={handleCollectCard}
-              onOpenCard={handleOpenProfileCard}
-            />
+            <div className="space-y-3">
+              <CatCardDeck
+                items={deckItems}
+                language={language}
+                labels={{
+                  empty: emptyDeckLabel,
+                  previous: language === 'zh' ? '上一張' : 'Previous card',
+                  next: language === 'zh' ? '下一張' : 'Next card',
+                  shareCard: t.singleCardShare,
+                  collectFeedback: language === 'zh' ? '已收藏到我的貓卡' : 'Saved to My Cat Cards',
+                }}
+                onShareCard={handleShareCard}
+                onCollectCard={handleCollectCard}
+                onOpenCard={handleOpenProfileCard}
+              />
+              {publicDeckStatus === 'failed' ? (
+                <button
+                  type="button"
+                  onClick={handleRetryPublicDeck}
+                  className="mx-auto flex min-h-10 items-center justify-center rounded-[16px] border-2 border-[#1d1714] bg-[#f7c948] px-4 py-2 text-xs font-black text-[#1d1714] shadow-[3px_3px_0_rgba(29,23,20,0.82)] transition-transform active:translate-x-[1px] active:translate-y-[1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+                >
+                  {language === 'zh' ? '重新載入世界貓卡' : 'Reload world cat cards'}
+                </button>
+              ) : null}
+            </div>
           )}
         </section>
       </main>
