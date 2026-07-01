@@ -34,16 +34,16 @@ export const getCatInfoCopy = (language: 'zh' | 'en') => ({
   featurePlaceholder: language === 'zh'
     ? '例如：左耳白毛、尾巴短短、看到相機會慢慢眨眼'
     : 'Example: white patch on left ear, short tail, slow blinks at camera',
-  spotNote: language === 'zh' ? '出沒線索' : 'Spot clues',
+  spotNote: language === 'zh' ? '偶遇線索' : 'Spot clues',
   spotPlaceholder: language === 'zh'
     ? '例如：傍晚常在咖啡店門口紙箱睡覺'
     : 'Example: sleeps in the box by the cafe entrance in the evening',
   personality: language === 'zh' ? '牠給人的感覺' : 'How this cat feels',
   careStatus: language === 'zh' ? '照護狀態' : 'Care status',
   optionalFacts: language === 'zh' ? '其他資料' : 'Optional facts',
-  goFindCat: language === 'zh' ? '去找這隻貓' : 'Go find this cat',
+  goFindCat: language === 'zh' ? '去找這隻喵' : 'Go find this cat',
   featureHeading: language === 'zh' ? '特徵' : 'Features',
-  spotHeading: language === 'zh' ? '出沒線索' : 'Spot clues',
+  spotHeading: language === 'zh' ? '偶遇線索' : 'Spot clues',
   careHeading: language === 'zh' ? '照護' : 'Care',
 });
 

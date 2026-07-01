@@ -23,6 +23,7 @@ const localCat: ScrapbookItem = {
   personalityTags: ['friendly', 'foodie'],
   careStatusTags: ['tnr'],
   spotNote: '晚餐時間常在便利店旁邊',
+  privateNote: '下次去清邁想找牠',
     location: {
       lat: 13.7563,
       lng: 100.5018,
@@ -53,6 +54,7 @@ describe('cloud cat card mapping', () => {
       personality_tags: ['friendly', 'foodie'],
       care_status_tags: ['tnr'],
       spot_note: '晚餐時間常在便利店旁邊',
+      private_note: '下次去清邁想找牠',
       is_public: false,
     });
   });
@@ -77,7 +79,7 @@ describe('cloud cat card mapping', () => {
     });
   });
 
-  it('removes private note fields from the public map card', () => {
+  it('keeps public encounter clues but removes private note fields from the public map card', () => {
     const publicCard = toPublicCloudCatCard({
       ...toCloudCatCardUpsert(localCat, 'user-1', { isPublic: true }),
       public_number: 9,
@@ -99,9 +101,10 @@ describe('cloud cat card mapping', () => {
       lat: 13.7563,
       lng: 100.5018,
       personalityTags: ['friendly', 'foodie'],
+      spotNote: '晚餐時間常在便利店旁邊',
       careStatusTags: ['tnr'],
     });
-    expect(publicCard).not.toHaveProperty('spotNote');
+    expect(publicCard).not.toHaveProperty('privateNote');
   });
 
   it('filters public map cards to published cats with coordinates', () => {

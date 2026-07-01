@@ -116,7 +116,7 @@ describe('Catdex page', () => {
     expect(screen.getByText('固定餵養')).toBeInTheDocument();
     expect(screen.getByText('橘虎斑')).toBeInTheDocument();
     expect(screen.getByText('特徵：左耳白毛，尾巴短短')).toBeInTheDocument();
-    expect(screen.getByText('出沒線索：下午常在窗邊睡覺')).toBeInTheDocument();
+    expect(screen.getByText('偶遇線索：下午常在窗邊睡覺')).toBeInTheDocument();
   });
 
   it('groups saved cat cards by place so travelers can scan their collection', () => {
@@ -197,13 +197,13 @@ describe('Catdex page', () => {
       </MemoryRouter>
     );
 
-    const selfTab = screen.getByRole('button', { name: '我拍到的貓 1' });
-    const worldTab = screen.getByRole('button', { name: '收藏的世界貓卡 1' });
+    const selfTab = screen.getByRole('button', { name: '我遇到的貓 1' });
+    const worldTab = screen.getByRole('button', { name: '我收藏的貓 1' });
     expect(selfTab).toHaveAttribute('aria-pressed', 'true');
     expect(worldTab).toHaveAttribute('aria-pressed', 'false');
     expect(screen.getByTestId('catdex-collection-motion')).toHaveAttribute('data-motion-surface', 'catdex-collection');
     expect(screen.getByTestId('catdex-collection-motion')).toHaveAttribute('data-active-collection', 'self');
-    expect(screen.getByRole('heading', { name: '我拍到的貓' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '我遇到的貓' })).toBeInTheDocument();
     expect(screen.getByText('我的圖鑑編號')).toBeInTheDocument();
     expect(screen.getByText('No.001 起算，只整理自己親自拍到的貓。')).toBeInTheDocument();
     expect(screen.getByText('我拍到的小虎')).toBeInTheDocument();
@@ -215,13 +215,14 @@ describe('Catdex page', () => {
     expect(selfTab).toHaveAttribute('aria-pressed', 'false');
     expect(worldTab).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByTestId('catdex-collection-motion')).toHaveAttribute('data-active-collection', 'world');
-    expect(screen.getByRole('heading', { name: '收藏的世界貓卡' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '我收藏的貓' })).toBeInTheDocument();
     expect(screen.getByText('世界地圖編號')).toBeInTheDocument();
     expect(screen.getByText('保留 W-001 編號，不併入自己的 No 編號。')).toBeInTheDocument();
     expect(screen.getByText('收藏的首爾店長')).toBeInTheDocument();
     expect(screen.getByText('W-088')).toBeInTheDocument();
     expect(screen.getByText('收藏自全世界地圖')).toBeInTheDocument();
     expect(screen.queryByText('我拍到的小虎')).not.toBeInTheDocument();
+    expect(screen.queryByText('No.088')).not.toBeInTheDocument();
     expect(screen.queryByText('FOUND CAT 088')).not.toBeInTheDocument();
   });
 
@@ -246,7 +247,7 @@ describe('Catdex page', () => {
       </MemoryRouter>
     );
 
-    await user.click(screen.getByRole('button', { name: '收藏的世界貓卡 0' }));
+    await user.click(screen.getByRole('button', { name: '我收藏的貓 0' }));
 
     expect(screen.getByText('還沒有收藏世界貓卡')).toBeInTheDocument();
     expect(screen.getByText('回首頁左滑收藏喜歡的世界貓卡，牠們會保留 W 編號出現在這裡。')).toBeInTheDocument();
@@ -273,7 +274,7 @@ describe('Catdex page', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByRole('heading', { name: '去找這隻貓' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '去找這隻喵' })).toBeInTheDocument();
     expect(screen.getByText('短連結貓')).toBeInTheDocument();
     expect(screen.queryByText('https://maps.app.goo.gl/abc123')).not.toBeInTheDocument();
   });

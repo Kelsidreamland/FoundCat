@@ -23,6 +23,7 @@ export type CloudCatCardRow = {
   personality_tags: CatPersonalityTag[];
   care_status_tags: CatCareStatusTag[];
   spot_note: string | null;
+  private_note: string | null;
   is_public: boolean;
   created_at?: string;
   updated_at?: string;
@@ -45,6 +46,7 @@ export type PublicCloudCatCard = {
   lng: number;
   personalityTags: CatPersonalityTag[];
   careStatusTags: CatCareStatusTag[];
+  spotNote: string | null;
 };
 
 type CloudCatCardUpsertOptions = {
@@ -79,6 +81,7 @@ export function toCloudCatCardUpsert(
     personality_tags: item.personalityTags ?? [],
     care_status_tags: item.careStatusTags ?? [],
     spot_note: emptyToNull(item.spotNote),
+    private_note: emptyToNull(item.privateNote),
     is_public: options.isPublic ?? item.isPublic ?? false,
   };
 }
@@ -101,7 +104,8 @@ export const isOptionalCloudColumnSchemaError = (error: unknown) => {
 
   return (
     message.includes('cat_feature_note') ||
-    message.includes('location_map_url')
+    message.includes('location_map_url') ||
+    message.includes('private_note')
   ) && (
     message.includes('schema cache')
     || message.includes('could not find')
@@ -112,8 +116,14 @@ export const isOptionalCloudColumnSchemaError = (error: unknown) => {
 export const withoutOptionalCloudColumns = <T extends {
   cat_feature_note?: string | null;
   location_map_url?: string | null;
+  private_note?: string | null;
 }>(row: T) => {
-  const { cat_feature_note: _catFeatureNote, location_map_url: _locationMapUrl, ...fallbackRow } = row;
+  const {
+    cat_feature_note: _catFeatureNote,
+    location_map_url: _locationMapUrl,
+    private_note: _privateNote,
+    ...fallbackRow
+  } = row;
   return fallbackRow;
 };
 
@@ -142,6 +152,7 @@ export function toPublicCloudCatCard(row: CloudCatCardRow): PublicCloudCatCard {
     lng: row.lng,
     personalityTags: row.personality_tags,
     careStatusTags: row.care_status_tags,
+    spotNote: row.spot_note,
   };
 }
 

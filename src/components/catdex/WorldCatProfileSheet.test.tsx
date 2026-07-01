@@ -1,0 +1,113 @@
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { ScrapbookItem } from '../../store/useScrapbookStore';
+import WorldCatProfileSheet from './WorldCatProfileSheet';
+
+const makeItem = (overrides: Partial<ScrapbookItem> = {}): ScrapbookItem => ({
+  id: overrides.id ?? 'public-cat-1',
+  type: 'sticker',
+  imageData: overrides.imageData ?? 'data:image/png;base64,cat',
+  heroImageData: overrides.heroImageData,
+  publicNumber: overrides.publicNumber,
+  catdexNumber: overrides.catdexNumber,
+  date: overrides.date ?? '2026-05-11T08:00:00.000Z',
+  x: 0,
+  y: 0,
+  rotation: 0,
+  scale: 1,
+  zIndex: 1,
+  location: overrides.location,
+  catName: overrides.catName,
+  catFeatureNote: overrides.catFeatureNote,
+  personalityTags: overrides.personalityTags,
+  spotNote: overrides.spotNote,
+  careStatusTags: overrides.careStatusTags,
+  isPublic: overrides.isPublic,
+  collectedFromPublicId: overrides.collectedFromPublicId,
+});
+
+describe('WorldCatProfileSheet', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('shows world cat details and keeps save/find actions explicit', () => {
+    const item = makeItem({
+      id: 'public-cat-1',
+      publicNumber: 12,
+      catName: '窗邊小虎',
+      location: { lat: 18.7883, lng: 98.9853, name: '泰國 清邁', address: '清邁舊城測試路 123 號' },
+      personalityTags: ['friendly', 'foodie'],
+      catFeatureNote: '左耳有白毛，尾巴短短',
+      spotNote: '下午會趴在木窗旁邊看路人',
+      careStatusTags: ['fed'],
+      isPublic: true,
+    });
+    const onSave = vi.fn();
+    const onFind = vi.fn();
+
+    render(
+      <WorldCatProfileSheet
+        item={item}
+        language="zh"
+        isSaved={false}
+        onClose={vi.fn()}
+        onSave={onSave}
+        onFind={onFind}
+      />
+    );
+
+    const dialog = screen.getByRole('dialog', { name: '窗邊小虎 世界貓咪檔案' });
+    expect(dialog).toHaveTextContent('窗邊小虎');
+    expect(dialog).toHaveTextContent('泰國 清邁');
+    expect(dialog).toHaveTextContent('W-012');
+    expect(dialog).toHaveTextContent('牠給人的感覺');
+    expect(dialog).toHaveTextContent('親人');
+    expect(dialog).toHaveTextContent('貪吃');
+    expect(dialog).toHaveTextContent('特徵');
+    expect(dialog).toHaveTextContent('左耳有白毛，尾巴短短');
+    expect(dialog).toHaveTextContent('偶遇線索');
+    expect(dialog).toHaveTextContent('下午會趴在木窗旁邊看路人');
+    expect(dialog).toHaveTextContent('照護狀態');
+    expect(dialog).toHaveTextContent('固定餵養');
+    expect(dialog).not.toHaveTextContent('清邁舊城測試路 123 號');
+
+    fireEvent.click(screen.getByRole('button', { name: '去找這隻喵' }));
+    expect(onFind).toHaveBeenCalledWith(item);
+
+    fireEvent.click(screen.getByRole('button', { name: '收藏' }));
+    expect(onSave).toHaveBeenCalledWith(item);
+    expect(screen.getByRole('dialog', { name: '窗邊小虎 世界貓咪檔案' })).toBeInTheDocument();
+  });
+
+  it('shows only the mystery state when optional profile details are sparse', () => {
+    render(
+      <WorldCatProfileSheet
+        item={makeItem({
+          id: 'public-cat-2',
+          publicNumber: 2,
+          catName: '神秘貓',
+          location: { lat: 25, lng: 121, name: '台北' },
+          isPublic: true,
+        })}
+        language="zh"
+        isSaved
+        onClose={vi.fn()}
+        onSave={vi.fn()}
+        onFind={vi.fn()}
+      />
+    );
+
+    const dialog = screen.getByRole('dialog', { name: '神秘貓 世界貓咪檔案' });
+    expect(dialog).toHaveTextContent('神秘貓');
+    expect(dialog).toHaveTextContent('台北');
+    expect(dialog).toHaveTextContent('W-002');
+    expect(dialog).toHaveTextContent('這隻貓還很神秘');
+    expect(dialog).not.toHaveTextContent('牠給人的感覺');
+    expect(dialog).not.toHaveTextContent('特徵');
+    expect(dialog).not.toHaveTextContent('偶遇線索');
+    expect(dialog).not.toHaveTextContent('照護狀態');
+    expect(screen.getByRole('button', { name: '去找這隻喵' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '已收藏' })).toBeInTheDocument();
+  });
+});

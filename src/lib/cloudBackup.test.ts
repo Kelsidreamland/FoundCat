@@ -24,6 +24,8 @@ const makeCat = (overrides: Partial<ScrapbookItem> = {}): ScrapbookItem => ({
   zIndex: 1,
   catName: '巷口小橘',
   catFeatureNote: '左耳白毛，尾巴短短',
+  spotNote: '晚餐時間常在便利店旁邊',
+  privateNote: '下次去清邁想找牠',
   location: {
     lat: 13.7563,
     lng: 100.5018,
@@ -85,12 +87,34 @@ describe('backupLocalCatCards', () => {
         owner_id: 'user-1',
         cat_name: '巷口小橘',
         cat_feature_note: '左耳白毛，尾巴短短',
+        spot_note: '晚餐時間常在便利店旁邊',
+        private_note: '下次去清邁想找牠',
         location_name: '曼谷街角咖啡',
         is_public: false,
       }),
     ], {
       onConflict: 'id',
     });
+  });
+
+  it('retries without private_note when the production schema has not been migrated yet', async () => {
+    getSupabaseClient.mockResolvedValue({ from });
+    upsert
+      .mockResolvedValueOnce({ error: { message: "Could not find the 'private_note' column in the schema cache" } })
+      .mockResolvedValueOnce({ error: null });
+
+    await expect(backupLocalCatCards({ ownerId: 'user-1', items: [makeCat()] })).resolves.toEqual({
+      ok: true,
+      backedUpCount: 1,
+    });
+
+    expect(upsert).toHaveBeenCalledTimes(2);
+    expect(upsert).toHaveBeenNthCalledWith(1, [
+      expect.objectContaining({ private_note: '下次去清邁想找牠' }),
+    ], { onConflict: 'id' });
+    expect(upsert).toHaveBeenNthCalledWith(2, [
+      expect.not.objectContaining({ private_note: expect.anything() }),
+    ], { onConflict: 'id' });
   });
 
   it('retries without cat_feature_note when the production schema has not been migrated yet', async () => {

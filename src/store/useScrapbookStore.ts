@@ -34,6 +34,7 @@ export interface ScrapbookItem {
   catFeatureNote?: string;
   personalityTags?: CatPersonalityTag[];
   spotNote?: string;
+  privateNote?: string;
   careStatusTags?: CatCareStatusTag[];
   isPublic?: boolean;
   collectedFromPublicId?: string;

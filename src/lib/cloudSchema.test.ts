@@ -12,21 +12,25 @@ describe('FOUND CAT Supabase schema', () => {
     expect(schemaSql).toMatch(/where\s+is_public\s*=\s*true/i);
   });
 
-  it('does not expose private backup-only fields through the public cat map view', () => {
+  it('exposes public encounter clues without private backup-only fields through the public cat map view', () => {
     const publicViewSql = schemaSql.split(/create\s+or\s+replace\s+view\s+public\.public_cat_cards/i)[1] ?? '';
 
     expect(publicViewSql).not.toMatch(/\bowner_id\b/i);
     expect(publicViewSql).not.toMatch(/\blocation_address\b/i);
     expect(publicViewSql).not.toMatch(/\blocation_place_id\b/i);
-    expect(publicViewSql).not.toMatch(/\bspot_note\b/i);
+    expect(publicViewSql).toMatch(/\bspot_note\b/i);
+    expect(publicViewSql).not.toMatch(/\bprivate_note\b/i);
   });
 
-  it('stores and exposes cat feature notes without exposing private spot notes', () => {
+  it('stores and exposes cat feature notes and public encounter clues without exposing private notes', () => {
     expect(schemaSql).toMatch(/\bcat_feature_note\s+text\b/i);
+    expect(schemaSql).toMatch(/\bspot_note\s+text\b/i);
+    expect(schemaSql).toMatch(/\bprivate_note\s+text\b/i);
 
     const publicViewSql = schemaSql.split(/create\s+or\s+replace\s+view\s+public\.public_cat_cards/i)[1] ?? '';
     expect(publicViewSql).toMatch(/\bcat_feature_note\b/i);
-    expect(publicViewSql).not.toMatch(/\bspot_note\b/i);
+    expect(publicViewSql).toMatch(/\bspot_note\b/i);
+    expect(publicViewSql).not.toMatch(/\bprivate_note\b/i);
   });
 
   it('stores and exposes original Google Maps links without exposing full private addresses', () => {

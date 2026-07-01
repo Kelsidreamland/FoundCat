@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { PanInfo } from 'framer-motion';
+import { getPersonalityLabels } from '../../lib/catInfoDisplay';
 import { formatCatCardNumberForItem, getDeckNeighbors, sortCatCards } from '../../lib/catdexDeck';
+import { suggestCatName } from '../../lib/catNameGenerator';
 import { getReadableLocationName } from '../../lib/locationDisplay';
 import type { ScrapbookItem } from '../../store/useScrapbookStore';
 
@@ -17,20 +19,15 @@ interface CatCardDeckProps {
   };
   onShareCard: (item: ScrapbookItem) => void;
   onCollectCard?: (item: ScrapbookItem) => void;
+  onOpenCard?: (item: ScrapbookItem) => void;
 }
-
-const dateFormatter = (language: 'zh' | 'en') => {
-  return new Intl.DateTimeFormat(language === 'zh' ? 'zh-TW' : 'en-US', {
-    month: 'short',
-    day: 'numeric',
-  });
-};
 
 const SWIPE_THRESHOLD = 90;
 const SWIPE_VELOCITY_THRESHOLD = 650;
 const SWIPE_ANIMATION_MS = 220;
 const COLLECT_FEEDBACK_MS = 1400;
 const SWIPE_HINT_STORAGE_KEY = 'corner-cat-swipe-hint-seen';
+const OPEN_CLICK_DRAG_THRESHOLD = 8;
 
 type SwipeDirection = -1 | 1;
 
@@ -58,6 +55,7 @@ export default function CatCardDeck({
   labels,
   onShareCard,
   onCollectCard,
+  onOpenCard,
 }: CatCardDeckProps) {
   const cards = useMemo(() => sortCatCards(items), [items]);
   const cardSourceSignature = useMemo(() => cards.map((card) => card.id).join('|'), [cards]);
@@ -70,8 +68,9 @@ export default function CatCardDeck({
   const collectFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSwipeAnimatingRef = useRef(false);
   const activeIdRef = useRef<string | null>(null);
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
+  const suppressNextOpenClickRef = useRef(false);
   const { previous, active, next } = getDeckNeighbors(cards, activeIndex);
-  const formatter = dateFormatter(language);
   const hasMultipleCards = cards.length > 1;
   const showSwipeHint = hasMultipleCards && !isSwipeHintDismissed;
 
@@ -163,20 +162,53 @@ export default function CatCardDeck({
     const shouldCollect = info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -SWIPE_VELOCITY_THRESHOLD;
     const shouldGoNext = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > SWIPE_VELOCITY_THRESHOLD;
 
+    if (Math.abs(info.offset.x) > OPEN_CLICK_DRAG_THRESHOLD || Math.abs(info.offset.y) > OPEN_CLICK_DRAG_THRESHOLD) {
+      suppressNextOpenClickRef.current = true;
+    }
     if (shouldCollect) move(-1);
     if (shouldGoNext) move(1);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
-    if (!hasMultipleCards) return;
     if (event.key === 'ArrowRight') {
+      if (!hasMultipleCards) return;
       event.preventDefault();
       move(1);
     }
     if (event.key === 'ArrowLeft') {
+      if (!hasMultipleCards) return;
       event.preventDefault();
       move(-1);
     }
+    if (onOpenCard && (event.key === 'Enter' || event.key === ' ')) {
+      event.preventDefault();
+      onOpenCard(active);
+    }
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLElement>) => {
+    pointerStartRef.current = { x: event.clientX, y: event.clientY };
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
+    if (!pointerStartRef.current) return;
+    const deltaX = event.clientX - pointerStartRef.current.x;
+    const deltaY = event.clientY - pointerStartRef.current.y;
+    if (Math.hypot(deltaX, deltaY) > OPEN_CLICK_DRAG_THRESHOLD) {
+      suppressNextOpenClickRef.current = true;
+    }
+  };
+
+  const handlePointerUp = () => {
+    pointerStartRef.current = null;
+  };
+
+  const handleOpenClick = () => {
+    if (suppressNextOpenClickRef.current) {
+      suppressNextOpenClickRef.current = false;
+      return;
+    }
+    onOpenCard?.(active);
   };
 
   if (!active) {
@@ -200,9 +232,9 @@ export default function CatCardDeck({
   }
 
   const activeImage = active.heroImageData || active.imageData;
-  const activeDate = formatter.format(new Date(active.date));
   const activeLocation = getReadableLocationName(active, language);
-  const activeCatName = active.catName?.trim();
+  const activeCatName = active.catName?.trim() || suggestCatName(active, language);
+  const activePersonalityLabels = getPersonalityLabels(active.personalityTags, language).slice(0, 2);
   const motionState = swipeDirection === 1
     ? 'leaving-right'
     : swipeDirection === -1
@@ -261,12 +293,16 @@ export default function CatCardDeck({
                 : 'none'
           }
           className="absolute inset-x-[10px] bottom-0 top-0 z-10 flex touch-pan-y cursor-grab select-none flex-col overflow-hidden rounded-[24px] border-2 border-[#1d1714] bg-[#fffdf7] p-3 shadow-[7px_8px_0_#1d1714] active:cursor-grabbing"
-          tabIndex={hasMultipleCards ? 0 : undefined}
+          tabIndex={hasMultipleCards || onOpenCard ? 0 : undefined}
           drag={hasMultipleCards && !swipeDirection ? 'x' : false}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.26}
           onDragEnd={handleDragEnd}
           onKeyDown={handleKeyDown}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
           aria-label={language === 'zh' ? '貓咪卡片，可左右滑動或使用左右方向鍵' : 'Cat card, swipe or use left and right arrow keys'}
           initial={{ x: swipeDirection ? 46 * -swipeDirection : 0, y: 8, rotate: -1.2, scale: 0.985, opacity: 0.78 }}
           animate={{
@@ -283,6 +319,7 @@ export default function CatCardDeck({
             damping: 31,
           }}
           whileDrag={{ scale: 1.015, rotate: 0 }}
+          onClick={handleOpenClick}
         >
           <div className="h-[52%] min-h-[150px] overflow-hidden rounded-[18px] border-2 border-[#1d1714] bg-[#f9bd4d]">
             <img
@@ -293,25 +330,38 @@ export default function CatCardDeck({
             />
           </div>
 
-          {activeCatName ? (
-            <p className="mt-[12px] truncate text-[20px] font-black leading-tight text-[#1d1714]">
-              {activeCatName}
-            </p>
-          ) : null}
+          <p className="mt-[12px] truncate text-[20px] font-black leading-tight text-[#1d1714]">
+            {activeCatName}
+          </p>
 
-          <div className={`${activeCatName ? 'mt-2' : 'mt-[15px]'} flex items-end justify-between gap-3`}>
+          <div className="mt-2 flex items-end justify-between gap-3">
             <strong className="block text-[38px] font-black leading-[0.9]">
               {formatCatCardNumberForItem(active)}
             </strong>
             <span className="block text-right text-[11px] font-black leading-[1.42] text-[#76665a]">
               <span className="block">{activeLocation}</span>
-              <span className="block">{activeDate}</span>
             </span>
           </div>
 
+          {activePersonalityLabels.length > 0 ? (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {activePersonalityLabels.map((label) => (
+                <span
+                  key={label}
+                  className="rounded-full border border-[#221915]/12 bg-[#d9ecff]/75 px-2.5 py-1 text-[11px] font-black leading-none text-[#1d1714]"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+          ) : null}
+
           <button
             type="button"
-            onClick={() => onShareCard(active)}
+            onClick={(event) => {
+              event.stopPropagation();
+              onShareCard(active);
+            }}
             className="mt-auto flex w-full items-center justify-between gap-2 rounded-[16px] border-2 border-[#1d1714] bg-[#fff2cf] px-3 py-2.5 text-left text-xs font-black text-[#1d1714] shadow-[3px_3px_0_#1d1714] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
             aria-label={labels.shareCard}
           >

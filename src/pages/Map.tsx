@@ -11,7 +11,7 @@ import {
 import { translations } from '../translations';
 import { ArrowLeft, ArrowRight, Check, ExternalLink, MapPin, Maximize2, Navigation, PencilLine, Plus, Share2, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { formatCatCardNumberForItem } from '../lib/catdexDeck';
+import { formatCatCardNumberForItem, formatPublicCatCardNumber } from '../lib/catdexDeck';
 import { getFindCatCta, getReadableLocationName } from '../lib/locationDisplay';
 import { MapTreasureBrandMark } from '../components/brand/BrandMarks';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
@@ -101,10 +101,31 @@ const sameTags = <T extends string>(left: T[], right: T[]) => (
   left.length === right.length && left.every((tag, index) => tag === right[index])
 );
 
+function isCollectedWorldCopy(publicItem: ScrapbookItem, localItem: ScrapbookItem) {
+  if (localItem.collectedFromPublicId && localItem.collectedFromPublicId === publicItem.id) return true;
+  return Boolean(
+    localItem.collectedFromPublicId &&
+    localItem.publicNumber &&
+    publicItem.publicNumber &&
+    localItem.publicNumber === publicItem.publicNumber
+  );
+}
+
+function alreadyHasPublicCat(publicItem: ScrapbookItem, localItem: ScrapbookItem) {
+  if (isCollectedWorldCopy(publicItem, localItem)) return true;
+  if (localItem.id === publicItem.id) return true;
+  return Boolean(
+    localItem.isPublic &&
+    localItem.publicNumber &&
+    publicItem.publicNumber &&
+    localItem.publicNumber === publicItem.publicNumber
+  );
+}
+
 export default function Map() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { items, language, updateItem } = useScrapbookStore();
+  const { items, language, addItem, updateItem } = useScrapbookStore();
   const user = useAuthStore((state) => state.user);
   const isCloudConfigured = useAuthStore((state) => state.isConfigured);
   const t = translations[language];
@@ -123,6 +144,8 @@ export default function Map() {
   const [encounterDetailSavedMessage, setEncounterDetailSavedMessage] = useState<string | null>(null);
   const [isEncounterDetailsOpen, setIsEncounterDetailsOpen] = useState(false);
   const [publishStatus, setPublishStatus] = useState<PublishStatus>('idle');
+  const [isPublishLoginGateOpen, setIsPublishLoginGateOpen] = useState(false);
+  const [isPublishEmailPromptOpen, setIsPublishEmailPromptOpen] = useState(false);
   const focusedCatId = searchParams.get('cat');
   const initialMapMode: MapMode = searchParams.get('mode') === 'mine' || (focusedCatId && searchParams.get('mode') !== 'public')
     ? 'mine'
@@ -131,6 +154,7 @@ export default function Map() {
   const [publicItems, setPublicItems] = useState<ScrapbookItem[]>([]);
   const [publicLoadStatus, setPublicLoadStatus] = useState<PublicLoadStatus>('idle');
   const [publicReloadKey, setPublicReloadKey] = useState(0);
+  const [collectingPublicItemId, setCollectingPublicItemId] = useState<string | null>(null);
 
   const activeItems = mapMode === 'public' ? publicItems : items;
   const isPublicMapMode = mapMode === 'public';
@@ -184,17 +208,17 @@ export default function Map() {
       ? '例如：白襪、左耳白毛、尾巴短短、看到相機會慢慢眨眼'
       : 'Example: white socks, white patch on left ear, short tail, slow blinks at camera',
     featureHeading: language === 'zh' ? '特徵' : 'Features',
-    spotNote: language === 'zh' ? '出沒線索' : 'Spot clues',
+    spotNote: language === 'zh' ? '偶遇線索' : 'Spot clues',
     spotNotePlaceholder: language === 'zh'
       ? '例如：飯店右手邊門口的紙箱、對面 7-11 晚上常出現'
       : 'Example: cardboard box by the hotel entrance, often seen near 7-11 at night',
-    spotHeading: language === 'zh' ? '出沒線索' : 'Spot clues',
+    spotHeading: language === 'zh' ? '偶遇線索' : 'Spot clues',
     personality: language === 'zh' ? '牠給人的感覺' : 'How this cat felt',
     careStatus: language === 'zh' ? '照護狀態' : 'Care status',
     careHeading: language === 'zh' ? '照護' : 'Care',
     expandDetails: language === 'zh' ? '補充貓咪資訊' : 'Add cat info',
     expandDetailsHint: language === 'zh'
-      ? '名字、特徵、出沒線索'
+      ? '名字、特徵、偶遇線索'
       : 'Name, features, spot clues',
     dialogTitle: language === 'zh' ? '補充這隻貓的線索' : 'Add clues for this cat',
     dialogSubtitle: language === 'zh'
@@ -223,6 +247,8 @@ export default function Map() {
     setEncounterDetailSavedMessage(null);
     setIsEncounterDetailsOpen(false);
     setPublishStatus('idle');
+    setIsPublishLoginGateOpen(false);
+    setIsPublishEmailPromptOpen(false);
   }, [selectedItem]);
 
   const updateEncounterDetailDraft = useCallback((updater: (draft: EncounterDetailDraft) => EncounterDetailDraft) => {
@@ -304,6 +330,38 @@ export default function Map() {
     setPublicReloadKey((current) => current + 1);
   }, []);
 
+  const handleCollectPublicCat = useCallback(async (item: ScrapbookItem) => {
+    if (!item.isPublic || items.some((localItem) => alreadyHasPublicCat(item, localItem))) return;
+
+    setCollectingPublicItemId(item.id);
+    try {
+      await addItem({
+        type: item.type,
+        imageData: item.imageData,
+        heroImageData: item.heroImageData,
+        date: item.date,
+        x: item.x,
+        y: item.y,
+        rotation: item.rotation,
+        scale: item.scale,
+        location: item.location,
+        publicNumber: item.publicNumber,
+        collectedFromPublicId: item.id,
+        collectedAt: new Date().toISOString(),
+        catName: item.catName,
+        catFeatureNote: item.catFeatureNote,
+        catBreed: item.catBreed,
+        catColor: item.catColor,
+        personalityTags: item.personalityTags,
+        spotNote: item.spotNote,
+        careStatusTags: item.careStatusTags,
+        isPublic: false,
+      });
+    } finally {
+      setCollectingPublicItemId(null);
+    }
+  }, [addItem, items]);
+
   const selectSiblingInLocationGroup = useCallback((direction: 'previous' | 'next') => {
     if (!selectedItem || !selectedLocationGroup || selectedLocationGroup.items.length < 2) return;
 
@@ -320,6 +378,10 @@ export default function Map() {
 
   const handleTogglePublicVisibility = useCallback(async () => {
     if (!selectedItem || publishStatus === 'saving') return;
+    if (!user || !isCloudConfigured) {
+      setIsPublishLoginGateOpen(true);
+      return;
+    }
 
     const nextIsPublic = !selectedItem.isPublic;
     setPublishStatus('saving');
@@ -338,8 +400,10 @@ export default function Map() {
     await updateItem(selectedItem.id, {
       isPublic: result.isPublic,
     });
+    setIsPublishLoginGateOpen(false);
+    setIsPublishEmailPromptOpen(false);
     setPublishStatus(result.isPublic ? 'published' : 'unpublished');
-  }, [publishStatus, selectedItem, updateItem, user?.id]);
+  }, [isCloudConfigured, publishStatus, selectedItem, updateItem, user, user?.id]);
 
   useEffect(() => {
     if (mapMode !== 'public') return;
@@ -590,13 +654,15 @@ export default function Map() {
   const closePhotoLabel = language === 'zh' ? '關閉貓咪照片' : 'Close cat photo';
   const previousSamePlaceCatLabel = language === 'zh' ? '上一隻同地點貓咪' : 'Previous cat at this spot';
   const nextSamePlaceCatLabel = language === 'zh' ? '下一隻同地點貓咪' : 'Next cat at this spot';
-  const canPublishSelectedItem = Boolean(!isPublicMapMode && user && isCloudConfigured && selectedItem?.location);
-  const shouldShowPublishLoginHint = Boolean(
-    searchParams.get('publishHint') === '1' &&
-    selectedItem?.location &&
-    !isPublicMapMode &&
-    !user
+  const canPublishSelectedItem = Boolean(!isPublicMapMode && selectedItem?.location);
+  const isSelectedPublicCatCollected = Boolean(
+    selectedItem && isPublicMapMode && items.some((localItem) => alreadyHasPublicCat(selectedItem, localItem))
   );
+  const collectPublicCatCopy = {
+    save: language === 'zh' ? '收藏' : 'Save',
+    saved: language === 'zh' ? '已收藏' : 'Saved',
+    saving: language === 'zh' ? '收藏中...' : 'Saving...',
+  };
   const shouldShowPublishReadyHint = Boolean(
     searchParams.get('publishHint') === '1' &&
     selectedItem?.location &&
@@ -605,7 +671,6 @@ export default function Map() {
     isCloudConfigured
   );
   const shouldShowPublishSignInPrompt = Boolean(
-    !shouldShowPublishLoginHint &&
     !isPublicMapMode &&
     !user &&
     isCloudConfigured &&
@@ -638,25 +703,32 @@ export default function Map() {
         ? `${mapLocationGroups.length} 個打卡點`
         : `${mapLocationGroups.length} ${mapLocationGroups.length === 1 ? 'spot' : 'spots'}`);
   const publishCopy = {
-    publish: language === 'zh' ? '公開到全世界地圖' : 'Publish to World Map',
-    unpublish: language === 'zh' ? '從全世界地圖移除' : 'Remove from World Map',
+    title: language === 'zh' ? '讓更多人也遇見牠？' : 'Let more people find this cat?',
+    publish: language === 'zh' ? '公開到世界地圖' : 'Publish to World Map',
+    unpublish: language === 'zh' ? '從世界地圖移除' : 'Remove from World Map',
     saving: language === 'zh' ? '同步中...' : 'Syncing...',
-    published: language === 'zh' ? '已公開在全世界地圖' : 'Published to the world map',
+    published: (publicNumber: number | undefined) => {
+      const numberLabel = publicNumber ? ` ${formatPublicCatCardNumber(publicNumber)}` : '';
+      return language === 'zh'
+        ? `牠已加入世界地圖${numberLabel}`
+        : `This cat joined the World Map${numberLabel}`;
+    },
     publishedHint: language === 'zh'
-      ? '已同步到全世界地圖，現在可以去看看公開貓點。'
-      : 'Synced to the world map. You can now view public cat spots.',
+      ? '世界又多了一隻可以被偶遇的貓'
+      : 'The world has one more cat to stumble upon.',
     viewPublicMap: language === 'zh' ? '去全世界地圖查看' : 'View on World Map',
-    unpublished: language === 'zh' ? '已從全世界地圖移除' : 'Removed from the world map',
+    unpublished: language === 'zh' ? '已從世界地圖移除' : 'Removed from the world map',
     error: language === 'zh' ? '同步失敗，請稍後再試。' : 'Sync failed. Please try again later.',
     hint: language === 'zh'
-      ? '公開後，其他人可在全世界地圖看到這隻貓。'
+      ? '公開後，其他人可在世界地圖看到這隻貓。'
       : 'Once published, others can see this cat on the world map.',
   };
-  const publishLoginHintCopy = {
-    title: language === 'zh' ? '想讓大家也看到這隻貓？' : 'Want everyone to find this cat?',
+  const publishLoginGateCopy = {
     body: language === 'zh'
-      ? '登入後可以公開到全世界地圖，也能之後修改或撤回。'
-      : 'Sign in to publish it to the world map, then edit or remove it later.',
+      ? '登入後才能把這隻貓公開到世界地圖，也能備份你的貓卡。'
+      : 'Sign in to publish this cat to the World Map and back up your cat cards.',
+    action: language === 'zh' ? '用 Email 登入' : 'Sign in with Email',
+    secondaryAction: language === 'zh' ? '稍後再說' : 'Maybe later',
   };
   const shouldShowMapEmptyState = mapReady
     && itemsWithLocation.length === 0
@@ -907,39 +979,25 @@ export default function Map() {
                 />
               </div>
 
-              {shouldShowPublishLoginHint ? (
-                <div className="rounded-[16px] border border-white/55 bg-white/55 px-3 py-2.5 shadow-[3px_3px_0_rgba(47,95,179,0.08)] backdrop-blur-md">
-                  <p className="text-sm font-black leading-snug text-[#221915]">
-                    {publishLoginHintCopy.title}
-                  </p>
-                  <p className="mt-1 text-xs font-bold leading-relaxed text-[#5f5148]">
-                    {publishLoginHintCopy.body}
-                  </p>
-                </div>
-              ) : null}
-
               {shouldShowPublishReadyHint ? (
                 <p className="rounded-[16px] border border-[#2f5fb3]/20 bg-[#d9ecff]/60 px-3 py-2 text-xs font-black leading-relaxed text-[#2f5fb3] shadow-[3px_3px_0_rgba(47,95,179,0.08)]">
                   {language === 'zh'
-                    ? '現在可以公開這隻貓到全世界地圖。'
+                    ? '現在可以公開這隻貓到世界地圖。'
                     : 'You can now publish this cat to the World Map.'}
                 </p>
               ) : null}
 
               {shouldShowPublishSignInPrompt ? (
-                <div className="rounded-[16px] border border-[#221915]/12 bg-[#2f5fb3]/8 p-2.5 shadow-[3px_3px_0_rgba(47,95,179,0.08)]">
-                  <p className="text-xs font-bold leading-relaxed text-[#5f5148]">
-                    {language === 'zh'
-                      ? '登入後可以備份，也能把這隻貓公開到全世界地圖。'
-                      : 'Sign in to back up this cat and publish it to the world map.'}
-                  </p>
-                  <CloudBackupPrompt language={language} items={items} redirectTo={window.location.href} />
-                </div>
+                <p className="rounded-[16px] border border-[#2f5fb3]/15 bg-[#d9ecff]/45 px-3 py-2 text-xs font-bold leading-relaxed text-[#5f5148] shadow-[3px_3px_0_rgba(47,95,179,0.08)]">
+                  {language === 'zh'
+                    ? '點公開時會請你先登入，貓卡仍會保存在這台裝置。'
+                    : 'When you publish, you will be asked to sign in first. This cat stays saved on this device.'}
+                </p>
               ) : null}
 
               <div
                 data-testid="map-card-action-row"
-                className={`grid gap-2 text-[11px] font-black text-[#221915] ${canEditSelectedItem ? 'grid-cols-2' : 'grid-cols-1'}`}
+                className={`grid gap-2 text-[11px] font-black text-[#221915] ${canEditSelectedItem || isPublicMapMode ? 'grid-cols-2' : 'grid-cols-1'}`}
               >
                 {canEditSelectedItem ? (
                   <button
@@ -950,6 +1008,30 @@ export default function Map() {
                   >
                     <PencilLine size={14} className="text-[#2f5fb3]" />
                     <span>{language === 'zh' ? '編輯地點' : 'Edit'}</span>
+                  </button>
+                ) : null}
+                {isPublicMapMode ? (
+                  <button
+                    type="button"
+                    onClick={() => void handleCollectPublicCat(selectedItem)}
+                    disabled={isSelectedPublicCatCollected || collectingPublicItemId === selectedItem.id}
+                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-[14px] border border-[#221915]/15 bg-white px-2 py-2 text-[#221915] transition-colors hover:border-[#2f5fb3]/50 disabled:cursor-default disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
+                    aria-label={
+                      collectingPublicItemId === selectedItem.id
+                        ? collectPublicCatCopy.saving
+                        : isSelectedPublicCatCollected
+                          ? collectPublicCatCopy.saved
+                          : collectPublicCatCopy.save
+                    }
+                  >
+                    <Check size={14} className="text-[#2f5fb3]" />
+                    <span>
+                      {collectingPublicItemId === selectedItem.id
+                        ? collectPublicCatCopy.saving
+                        : isSelectedPublicCatCollected
+                          ? collectPublicCatCopy.saved
+                          : collectPublicCatCopy.save}
+                    </span>
                   </button>
                 ) : null}
                 {selectedGoogleMapsUrl ? (
@@ -994,6 +1076,11 @@ export default function Map() {
 
               {canPublishSelectedItem ? (
                 <div className="rounded-[16px] border border-[#221915]/12 bg-[#2f5fb3]/8 p-2.5 shadow-[3px_3px_0_rgba(47,95,179,0.08)]">
+                  {!selectedItem.isPublic ? (
+                    <p className="mb-2 text-sm font-black leading-snug text-[#221915]">
+                      {publishCopy.title}
+                    </p>
+                  ) : null}
                   <button
                     type="button"
                     onClick={() => void handleTogglePublicVisibility()}
@@ -1019,10 +1106,36 @@ export default function Map() {
                       <MapPin size={15} />
                     </span>
                   </button>
+                  {isPublishLoginGateOpen && !user ? (
+                    <div className="mt-2 rounded-[14px] border border-[#221915]/12 bg-white/85 p-2.5">
+                      <p className="text-xs font-bold leading-relaxed text-[#5f5148]">
+                        {publishLoginGateCopy.body}
+                      </p>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsPublishEmailPromptOpen(true)}
+                          className="inline-flex min-h-8 items-center justify-center rounded-full border border-[#221915]/15 bg-[#2f5fb3] px-3 py-1.5 text-[11px] font-black text-[#fffdf2] shadow-[2px_2px_0_rgba(47,95,179,0.14)] transition-transform active:translate-x-[1px] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
+                        >
+                          {publishLoginGateCopy.action}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsPublishLoginGateOpen(false)}
+                          className="inline-flex min-h-8 items-center justify-center rounded-full border border-[#221915]/15 bg-white px-3 py-1.5 text-[11px] font-black text-[#221915] shadow-[2px_2px_0_rgba(47,95,179,0.08)] transition-transform active:translate-x-[1px] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
+                        >
+                          {publishLoginGateCopy.secondaryAction}
+                        </button>
+                      </div>
+                      {isPublishEmailPromptOpen ? (
+                        <CloudBackupPrompt language={language} items={items} redirectTo={window.location.href} />
+                      ) : null}
+                    </div>
+                  ) : null}
                   {publishStatus === 'published' ? (
                     <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="text-xs font-black text-[#2f5fb3]">{publishCopy.published}</p>
+                        <p className="text-xs font-black text-[#2f5fb3]">{publishCopy.published(selectedItem.publicNumber)}</p>
                         <p className="mt-0.5 text-[11px] font-bold leading-snug text-[#5f5148]">
                           {publishCopy.publishedHint}
                         </p>

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import CatActionNav from '../components/catdex/CatActionNav';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import CatCardDeck from '../components/catdex/CatCardDeck';
 import CollectedCatProfileSheet from '../components/catdex/CollectedCatProfileSheet';
+import WorldCatProfileSheet from '../components/catdex/WorldCatProfileSheet';
 import CloudBackupPrompt from '../components/cloud/CloudBackupPrompt';
 import { loadPublicCatCards } from '../lib/cloudPublicCats';
 import type { ScrapbookItem } from '../store/useScrapbookStore';
@@ -10,6 +12,8 @@ import { useScrapbookStore } from '../store/useScrapbookStore';
 import { translations } from '../translations';
 
 const DONATION_URL = 'https://api.payuni.com.tw/api/uop/receive_info/2/3/NPPA226028039/mgYrU0DqoPbb6vatwL86Z';
+const FIRST_WORLD_SAVE_GUIDANCE_KEY = 'found-cat-first-world-save-guidance-seen';
+const WORLD_SAVE_CONTRIBUTION_PROMPT_KEY = 'found-cat-world-save-contribution-prompt-seen';
 
 const paperTexture = {
   backgroundImage: [
@@ -74,12 +78,45 @@ function alreadyHasPublicCat(publicItem: ScrapbookItem, localItem: ScrapbookItem
   );
 }
 
+function hasLocalStorageFlag(key: string) {
+  try {
+    if (typeof window === 'undefined') return true;
+    return window.localStorage.getItem(key) === 'true';
+  } catch {
+    return true;
+  }
+}
+
+function rememberLocalStorageFlag(key: string) {
+  try {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(key, 'true');
+  } catch {
+    // Storage availability should not block saving a cat.
+  }
+}
+
+function getWorldCatMapPath(item: ScrapbookItem) {
+  return `/map?mode=public&cat=${encodeURIComponent(item.collectedFromPublicId ?? item.id)}`;
+}
+
+function countSavedWorldCats(items: ScrapbookItem[]) {
+  return items.filter((item) => Boolean(item.collectedFromPublicId)).length;
+}
+
+type SavePrompt =
+  | { kind: 'first-world-save'; item: ScrapbookItem }
+  | { kind: 'contribution' };
+
 export default function Home() {
+  const navigate = useNavigate();
   const { items, isLoading, language, setLanguage, addItem } = useScrapbookStore();
   const t = translations[language];
   const [publicItems, setPublicItems] = useState<ScrapbookItem[]>([]);
   const [publicDeckStatus, setPublicDeckStatus] = useState<PublicDeckStatus>('loading');
   const [collectedProfileItem, setCollectedProfileItem] = useState<ScrapbookItem | null>(null);
+  const [profileSheetItem, setProfileSheetItem] = useState<ScrapbookItem | null>(null);
+  const [savePrompt, setSavePrompt] = useState<SavePrompt | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -117,7 +154,10 @@ export default function Home() {
     await shareCatCardPoster(item, language);
   };
 
-  const handleCollectCard = useCallback(async (item: ScrapbookItem) => {
+  const collectPublicCat = useCallback(async (
+    item: ScrapbookItem,
+    options: { showCollectedProfile: boolean; showSavePrompt: boolean }
+  ) => {
     if (!item.isPublic || items.some((localItem) => alreadyHasPublicCat(item, localItem))) return;
 
     const savedItem = await addItem({
@@ -142,8 +182,45 @@ export default function Home() {
       careStatusTags: item.careStatusTags,
       isPublic: false,
     });
-    setCollectedProfileItem(savedItem);
+    if (options.showCollectedProfile) {
+      setCollectedProfileItem(savedItem);
+    }
+
+    if (!options.showSavePrompt) return;
+
+    const savedWorldCatCount = countSavedWorldCats([...items, savedItem]);
+    if (savedWorldCatCount >= 3 && !hasLocalStorageFlag(WORLD_SAVE_CONTRIBUTION_PROMPT_KEY)) {
+      rememberLocalStorageFlag(WORLD_SAVE_CONTRIBUTION_PROMPT_KEY);
+      setSavePrompt({ kind: 'contribution' });
+      return;
+    }
+
+    if (!hasLocalStorageFlag(FIRST_WORLD_SAVE_GUIDANCE_KEY)) {
+      rememberLocalStorageFlag(FIRST_WORLD_SAVE_GUIDANCE_KEY);
+      setSavePrompt({ kind: 'first-world-save', item: savedItem });
+    }
   }, [addItem, items]);
+
+  const handleCollectCard = useCallback(async (item: ScrapbookItem) => {
+    await collectPublicCat(item, { showCollectedProfile: false, showSavePrompt: true });
+  }, [collectPublicCat]);
+
+  const isProfileSheetItemSaved = profileSheetItem
+    ? items.some((localItem) => alreadyHasPublicCat(profileSheetItem, localItem))
+    : false;
+
+  const handleProfileSave = useCallback(async (item: ScrapbookItem) => {
+    await collectPublicCat(item, { showCollectedProfile: false, showSavePrompt: false });
+  }, [collectPublicCat]);
+
+  const handleOpenProfileCard = useCallback((item: ScrapbookItem) => {
+    setSavePrompt(null);
+    setProfileSheetItem(item);
+  }, []);
+
+  const goFindWorldCat = useCallback((item: ScrapbookItem) => {
+    navigate(getWorldCatMapPath(item));
+  }, [navigate]);
 
   if (isLoading) {
     return <LoadingStamp text={t.loading} />;
@@ -182,6 +259,7 @@ export default function Home() {
               }}
               onShareCard={handleShareCard}
               onCollectCard={handleCollectCard}
+              onOpenCard={handleOpenProfileCard}
             />
           )}
         </section>
@@ -196,10 +274,45 @@ export default function Home() {
         }}
       />
 
+      {savePrompt ? (
+        <div className="fixed inset-x-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-[290] mx-auto max-w-sm rounded-[20px] border-2 border-[#1d1714] bg-[#fffdf2] p-4 text-[#1d1714] shadow-[6px_7px_0_rgba(29,23,20,0.82)]">
+          {savePrompt.kind === 'first-world-save' ? (
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-black leading-5">已收藏到我的貓卡</p>
+              <Link
+                to={getWorldCatMapPath(savePrompt.item)}
+                className="shrink-0 rounded-[16px] border-2 border-[#1d1714] bg-[#2f5fb3] px-4 py-2 text-sm font-black text-white shadow-[3px_3px_0_rgba(29,23,20,0.82)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+              >
+                去找這隻喵
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm font-black leading-6">你已收藏 3 隻世界貓，要不要也分享一隻你遇到的貓？</p>
+              <Link
+                to="/create"
+                className="inline-flex rounded-[16px] border-2 border-[#1d1714] bg-[#f7c948] px-4 py-2 text-sm font-black text-[#1d1714] shadow-[3px_3px_0_rgba(29,23,20,0.82)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+              >
+                我也遇到貓貓了！
+              </Link>
+            </div>
+          )}
+        </div>
+      ) : null}
+
       <CollectedCatProfileSheet
         item={collectedProfileItem}
         language={language}
         onClose={() => setCollectedProfileItem(null)}
+      />
+
+      <WorldCatProfileSheet
+        item={profileSheetItem}
+        language={language}
+        isSaved={isProfileSheetItemSaved}
+        onClose={() => setProfileSheetItem(null)}
+        onSave={handleProfileSave}
+        onFind={goFindWorldCat}
       />
     </div>
   );

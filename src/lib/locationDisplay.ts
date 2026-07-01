@@ -2,6 +2,7 @@ import type { ScrapbookItem } from '../store/useScrapbookStore';
 
 const COORDINATE_TEXT_PATTERN = /^-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?$/;
 const MAP_LINK_TEXT_PATTERN = /^(?:https?:\/\/)?(?:maps\.app\.goo\.gl|goo\.gl\/maps|(?:www\.)?google\.[^/]+\/maps|maps\.google\.[^/]+)/i;
+const FIND_CAT_CTA_ZH = '去找這隻喵';
 
 export const hasReadableLocationName = (locationName: string | null | undefined) => {
   const value = locationName?.trim();
@@ -25,9 +26,9 @@ export const getReadableLocationName = (
 ) => {
   if (hasReadableLocationName(item.location?.name)) return item.location!.name.trim();
   if (!item.location) return language === 'zh' ? '未記錄地點' : 'No location';
-  return language === 'zh' ? '去找這隻貓' : 'Go find this cat';
+  return getFindCatCta(language);
 };
 
 export const getFindCatCta = (language: 'zh' | 'en') => (
-  language === 'zh' ? '去找這隻貓' : 'Go find this cat'
+  language === 'zh' ? FIND_CAT_CTA_ZH : 'Go find this cat'
 );
