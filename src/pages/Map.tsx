@@ -733,22 +733,12 @@ export default function Map() {
   const shouldShowMapEmptyState = mapReady
     && itemsWithLocation.length === 0
     && !(isPublicMapMode && publicLoadStatus === 'loading');
-
-  if (mapError) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center p-8 text-center">
-        <MapPin size={48} className="text-cat-text-tertiary mb-4" />
-        <p className="text-cat-text-secondary mb-2">{mapError}</p>
-        <button
-          onClick={() => navigate('/')}
-          className="mt-4 flex items-center gap-2 text-cat-brand hover:text-cat-accent transition-colors font-bold"
-        >
-          <ArrowLeft size={18} />
-          <span>{t.goBack}</span>
-        </button>
-      </div>
-    );
-  }
+  const mapTileWarningCopy = language === 'zh'
+    ? '地圖底圖暫時載入失敗，仍可查看貓點並打開導航。'
+    : 'Map tiles failed to load, but cat spots and navigation still work.';
+  const openFallbackSpotLabel = (name: string) => (
+    language === 'zh' ? `打開${name}貓卡` : `Open cat card at ${name}`
+  );
 
   return (
     <div className="h-full flex flex-col relative bg-cat-bg">
@@ -834,6 +824,53 @@ export default function Map() {
           </div>
         </div>
       </div>
+
+      {mapError ? (
+        <div className="absolute left-4 right-4 top-[7.1rem] z-20 space-y-2">
+          <div
+            data-testid="map-tile-warning"
+            className="rounded-[18px] border border-[#221915]/12 bg-[#fffdf2]/90 px-3 py-2 text-xs font-bold leading-relaxed text-[#5f5148] shadow-[3px_3px_0_rgba(47,95,179,0.12)] backdrop-blur-md"
+          >
+            {mapTileWarningCopy}
+          </div>
+          {mapLocationGroups.length > 0 ? (
+            <div
+              aria-label={language === 'zh' ? '可查看的貓點' : 'Available cat spots'}
+              className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {mapLocationGroups.map((group) => {
+                const primaryItem = group.items[0];
+                const groupLocationName = getReadableLocationName(primaryItem, language);
+                const catCount = group.items.length;
+
+                return (
+                  <button
+                    key={group.key}
+                    type="button"
+                    onClick={() => setSelectedItemId(primaryItem.id)}
+                    aria-label={openFallbackSpotLabel(groupLocationName)}
+                    className="inline-flex max-w-[12rem] shrink-0 items-center gap-2 rounded-full border border-[#221915]/14 bg-white/90 py-1.5 pl-1.5 pr-3 text-left text-[11px] font-black text-[#221915] shadow-[2px_2px_0_rgba(247,201,72,0.22)] backdrop-blur-md transition-transform active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2f5fb3]/50"
+                  >
+                    <span
+                      className="h-8 w-8 shrink-0 rounded-full border-2 border-white bg-[#fff8f0] bg-cover bg-center shadow-sm"
+                      style={{ backgroundImage: `url(${primaryItem.imageData})` }}
+                      aria-hidden="true"
+                    />
+                    <span className="min-w-0">
+                      <span className="block truncate">{groupLocationName}</span>
+                      {catCount > 1 ? (
+                        <span className="block text-[10px] font-bold text-[#2f5fb3]">
+                          {language === 'zh' ? `${catCount} 隻貓` : `${catCount} cats`}
+                        </span>
+                      ) : null}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {shouldShowMapEmptyState && !isPublicMapMode ? (
         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
@@ -995,8 +1032,23 @@ export default function Map() {
                 </p>
               ) : null}
 
+              {selectedGoogleMapsUrl ? (
+                <div data-testid="map-card-primary-action">
+                  <a
+                    href={selectedGoogleMapsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={selectedFindCatCta}
+                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] border-2 border-[#221915] bg-[#f7c948] px-3 py-2.5 text-sm font-black text-[#221915] shadow-[4px_4px_0_rgba(47,95,179,0.18)] transition-transform active:translate-x-[1px] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
+                  >
+                    <Navigation size={17} className="text-[#2f5fb3]" />
+                    <span>{selectedFindCatCta}</span>
+                  </a>
+                </div>
+              ) : null}
+
               <div
-                data-testid="map-card-action-row"
+                data-testid="map-card-secondary-action-row"
                 className={`grid gap-2 text-[11px] font-black text-[#221915] ${canEditSelectedItem || isPublicMapMode ? 'grid-cols-2' : 'grid-cols-1'}`}
               >
                 {canEditSelectedItem ? (
@@ -1033,18 +1085,6 @@ export default function Map() {
                           : collectPublicCatCopy.save}
                     </span>
                   </button>
-                ) : null}
-                {selectedGoogleMapsUrl ? (
-                  <a
-                    href={selectedGoogleMapsUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={selectedFindCatCta}
-                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-[14px] border-2 border-[#221915] bg-[#f7c948] px-2 py-2 text-[#221915] shadow-[3px_3px_0_rgba(47,95,179,0.14)] transition-transform active:translate-x-[1px] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
-                  >
-                    <Navigation size={14} className="text-[#2f5fb3]" />
-                    <span>{selectedFindCatCta}</span>
-                  </a>
                 ) : null}
               </div>
 

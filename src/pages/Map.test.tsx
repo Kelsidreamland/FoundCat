@@ -13,6 +13,7 @@ import Map from './Map';
 
 const mapEaseTo = vi.fn();
 const mapFitBounds = vi.fn();
+let mapErrorCallback: ((event: { error: Error }) => void) | null = null;
 
 vi.mock('idb-keyval', () => ({
   get: vi.fn(),
@@ -70,6 +71,9 @@ vi.mock('maplibre-gl', () => ({
       this.addControl = vi.fn();
       this.on = vi.fn((event: string, callback: () => void) => {
         if (event === 'load') window.setTimeout(callback, 0);
+        if (event === 'error') {
+          mapErrorCallback = callback as (event: { error: Error }) => void;
+        }
       });
       this.easeTo = mapEaseTo;
       this.fitBounds = mapFitBounds;
@@ -211,6 +215,7 @@ describe('Map page', () => {
     });
     mapEaseTo.mockClear();
     mapFitBounds.mockClear();
+    mapErrorCallback = null;
   });
 
   afterEach(() => {
@@ -310,6 +315,35 @@ describe('Map page', () => {
     expect(loadPublicCatCards).toHaveBeenCalledTimes(1);
     expect(await screen.findByRole('button', { name: '曼谷街角咖啡' })).toBeInTheDocument();
     expect(getCurrentPosition).not.toHaveBeenCalled();
+  });
+
+  it('keeps cat spots usable when map tiles fail to load', async () => {
+    const user = userEvent.setup();
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    render(
+      <MemoryRouter initialEntries={['/map?mode=mine']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    await screen.findByTestId('cat-map-container');
+    expect(mapErrorCallback).toBeTruthy();
+
+    mapErrorCallback?.({ error: new Error('tile provider unavailable') });
+
+    expect(await screen.findByTestId('map-tile-warning')).toHaveTextContent('地圖底圖暫時載入失敗');
+    expect(screen.getByRole('button', { name: '我的地圖' })).toHaveAttribute('aria-pressed', 'true');
+    const fallbackSpotButton = screen.getByRole('button', { name: '打開巷口咖啡店貓卡' });
+    expect(fallbackSpotButton).toBeInTheDocument();
+    expect(screen.queryByText('Unable to load map tiles right now.')).not.toBeInTheDocument();
+
+    await user.click(fallbackSpotButton);
+
+    expect(await screen.findByRole('heading', { name: '巷口咖啡店' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '去找這隻喵' })).toBeInTheDocument();
+
+    consoleErrorSpy.mockRestore();
   });
 
   it('opens a focused public cat from a find link after public cats load', async () => {
@@ -446,9 +480,13 @@ describe('Map page', () => {
       'h-[clamp(220px,45dvh,360px)]'
     );
     expect(screen.getByTestId('map-card-scroll')).toHaveClass('min-h-0', 'flex-1', 'overflow-y-auto');
-    expect(screen.getByTestId('map-card-action-row').children).toHaveLength(2);
+    const primaryAction = screen.getByTestId('map-card-primary-action');
+    const secondaryActionRow = screen.getByTestId('map-card-secondary-action-row');
+    const findCatLink = screen.getByRole('link', { name: '去找這隻喵' });
+
+    expect(primaryAction).toContainElement(findCatLink);
+    expect(secondaryActionRow.children).toHaveLength(1);
     expect(screen.getByRole('button', { name: '編輯地點' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '去找這隻喵' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '補充貓咪資訊' })).toBeInTheDocument();
 
     await waitFor(() => {
@@ -1282,7 +1320,7 @@ describe('Map page', () => {
 
     await user.click(await screen.findByRole('button', { name: '巷口咖啡店' }));
 
-    const actionRow = screen.getByTestId('map-card-action-row');
+    const actionRow = screen.getByTestId('map-card-secondary-action-row');
     const notesButton = screen.getByRole('button', { name: '補充貓咪資訊' });
     const removeButton = screen.getByRole('button', { name: '從世界地圖移除' });
 
