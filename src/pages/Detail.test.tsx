@@ -1,6 +1,6 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { shareCatCardPoster } from '../lib/sharePoster';
 import type { ScrapbookItem } from '../store/useScrapbookStore';
@@ -41,6 +41,11 @@ const makeItem = (overrides: Partial<ScrapbookItem> = {}): ScrapbookItem => ({
   collectedAt: overrides.collectedAt,
   privateNote: overrides.privateNote,
 });
+
+function CurrentRoute() {
+  const location = useLocation();
+  return <div data-testid="current-route">{location.pathname}{location.search}</div>;
+}
 
 describe('Detail page', () => {
   beforeEach(() => {
@@ -275,6 +280,76 @@ describe('Detail page', () => {
         publicNumber: 88,
       });
     });
+  });
+
+  it('navigates saved world cats back to their public world-map spot', async () => {
+    const user = userEvent.setup();
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          id: 'saved-world-cat-88',
+          catdexNumber: undefined,
+          publicNumber: 88,
+          collectedFromPublicId: 'public-cat-88',
+          catName: '清邁店長',
+          location: {
+            lat: 18.7883,
+            lng: 98.9853,
+            name: 'Chiang Mai',
+          },
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/detail/saved-world-cat-88']}>
+        <CurrentRoute />
+        <Routes>
+          <Route path="/detail/:id" element={<Detail />} />
+          <Route path="/map" element={<div>Map page</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole('button', { name: '去找這隻喵' }));
+
+    expect(await screen.findByTestId('current-route')).toHaveTextContent('/map?mode=public&cat=public-cat-88');
+  });
+
+  it('keeps self-found cats navigating to my private map spot', async () => {
+    const user = userEvent.setup();
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          id: 'cat-1',
+          catdexNumber: 12,
+          catName: '巷口店長',
+          location: {
+            lat: 25.033,
+            lng: 121.565,
+            name: '巷口咖啡店',
+          },
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/detail/cat-1']}>
+        <CurrentRoute />
+        <Routes>
+          <Route path="/detail/:id" element={<Detail />} />
+          <Route path="/map" element={<div>Map page</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole('button', { name: '去找這隻喵' }));
+
+    expect(await screen.findByTestId('current-route')).toHaveTextContent('/map?cat=cat-1&mode=mine');
   });
 
   it('does not expose location editing for a saved world cat without location', () => {

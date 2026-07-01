@@ -107,7 +107,9 @@ export default function Detail() {
       navigate('/');
     }
   };
-  const mapTarget = `/map?cat=${encodeURIComponent(item.id)}&mode=mine`;
+  const mapTarget = isSavedWorldCat && item.collectedFromPublicId
+    ? `/map?mode=public&cat=${encodeURIComponent(item.collectedFromPublicId)}`
+    : `/map?cat=${encodeURIComponent(item.id)}&mode=mine`;
 
   const updateCatInfoDraft = (updater: (draft: CatInfoDraft) => CatInfoDraft) => {
     setCatInfoSavedMessage(null);
