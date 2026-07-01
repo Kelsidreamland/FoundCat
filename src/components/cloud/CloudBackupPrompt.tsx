@@ -256,12 +256,12 @@ export default function CloudBackupPrompt({
   };
 
   const dialog = isOpen ? (
-    <div className="fixed inset-0 z-[260] isolate flex items-end justify-center bg-[#1d1714]/36 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-6 backdrop-blur-[2px]">
+    <div className="fixed inset-0 z-[260] isolate flex items-end justify-center overflow-y-auto bg-[#1d1714]/36 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))] backdrop-blur-[2px]">
       <section
         role="dialog"
         aria-modal="true"
         aria-label={t.title}
-        className="w-full max-w-md rounded-t-[28px] border-2 border-[#1d1714] bg-[#fff7e8] p-4 text-[#1d1714] shadow-[0_-10px_36px_rgba(29,23,20,0.22)]"
+        className="max-h-[min(720px,calc(100dvh-1.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom)))] w-full max-w-md overflow-y-auto overscroll-contain rounded-t-[28px] border-2 border-[#1d1714] bg-[#fff7e8] p-4 text-[#1d1714] shadow-[0_-10px_36px_rgba(29,23,20,0.22)]"
       >
         <div className="flex items-start justify-between gap-3">
           <div>

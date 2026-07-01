@@ -122,10 +122,19 @@ describe('cat app brand copy', () => {
     expect(indexHtml).toContain('rel="prefetch" as="image" href="/cat-icon-512.png"');
   });
 
-  it('prioritizes the Traditional Chinese font before decorative rounded fonts', () => {
+  it('does not block launch on external Google font requests', () => {
+    const indexHtml = readFileSync(join(repoRoot, 'index.html'), 'utf8');
+
+    expect(indexHtml).not.toContain('fonts.googleapis.com');
+    expect(indexHtml).not.toContain('fonts.gstatic.com');
+  });
+
+  it('uses local system Traditional Chinese fonts before decorative rounded fonts', () => {
     const indexCss = readFileSync(join(repoRoot, 'src/index.css'), 'utf8');
 
-    expect(indexCss).toContain('font-family: "Noto Sans TC", "M PLUS Rounded 1c"');
+    expect(indexCss).toContain('"PingFang TC"');
+    expect(indexCss).toContain('"Microsoft JhengHei"');
+    expect(indexCss.indexOf('"PingFang TC"')).toBeLessThan(indexCss.indexOf('"Noto Sans TC"'));
     expect(indexCss.indexOf('"Noto Sans TC"')).toBeLessThan(indexCss.indexOf('"M PLUS Rounded 1c"'));
     expect(indexCss).not.toContain('body {\n  font-family: "M PLUS Rounded 1c", sans-serif;');
   });

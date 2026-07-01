@@ -26,6 +26,7 @@ const SWIPE_THRESHOLD = 90;
 const SWIPE_VELOCITY_THRESHOLD = 650;
 const SWIPE_ANIMATION_MS = 220;
 const COLLECT_FEEDBACK_MS = 1400;
+const SWIPE_HINT_AUTO_DISMISS_MS = 2400;
 const SWIPE_HINT_STORAGE_KEY = 'corner-cat-swipe-hint-seen';
 const OPEN_CLICK_DRAG_THRESHOLD = 8;
 
@@ -90,7 +91,7 @@ export default function CatCardDeck({
     swipeHintTimerRef.current = setTimeout(() => {
       setIsSwipeHintDismissed(true);
       swipeHintTimerRef.current = null;
-    }, 4800);
+    }, SWIPE_HINT_AUTO_DISMISS_MS);
 
     return () => {
       if (swipeHintTimerRef.current) {
@@ -245,12 +246,12 @@ export default function CatCardDeck({
     <section aria-label={language === 'zh' ? '貓咪卡片' : 'Cat cards'}>
       <div className="relative mt-2 h-[min(390px,calc(100dvh-240px))] min-h-[320px]">
         {showSwipeHint ? (
-          <div className="absolute right-4 top-4 z-30 flex items-center gap-2 rounded-full border border-[#2f5fb3]/15 bg-[#fffdf7]/78 px-3 py-2 text-[11px] font-medium tracking-[0.08em] text-[#7d6d5f]/80 shadow-[2px_3px_14px_rgba(47,95,179,0.10)] backdrop-blur-md">
+          <div className="absolute right-4 top-4 z-30 flex items-center gap-2 rounded-full border border-[#2f5fb3]/10 bg-[#fffdf7]/62 px-3 py-1.5 text-[10px] font-medium tracking-[0.08em] text-[#8f8173]/70 shadow-[1px_2px_10px_rgba(47,95,179,0.08)] backdrop-blur-md">
             <span>{language === 'zh' ? '左滑收藏，右滑看下一隻' : 'Swipe left to collect, right for next'}</span>
             <button
               type="button"
               onClick={dismissSwipeHint}
-              className="grid h-5 w-5 place-items-center rounded-full border border-[#2f5fb3]/10 bg-white/70 text-[#8a7a6a]/70 leading-none"
+              className="grid h-4 w-4 place-items-center rounded-full border border-[#2f5fb3]/10 bg-white/50 text-[#9b8a7a]/70 leading-none"
               aria-label={language === 'zh' ? '關閉左右滑動提示' : 'Close swipe hint'}
             >
               ×

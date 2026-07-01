@@ -410,6 +410,36 @@ describe('CatCardDeck', () => {
     expect(screen.queryByText('左滑收藏，右滑看下一隻')).not.toBeInTheDocument();
   });
 
+  it('auto-dismisses the first-use swipe hint quickly after recording it', () => {
+    vi.useFakeTimers();
+
+    render(
+      <CatCardDeck
+        items={[
+          makeItem({ id: 'cat-1', catdexNumber: 1 }),
+          makeItem({ id: 'cat-2', catdexNumber: 2 }),
+        ]}
+        language="zh"
+        labels={{
+          empty: '還沒有貓卡',
+          previous: '上一張',
+          next: '下一張',
+          shareCard: '分享這張卡與地址',
+        }}
+        onShareCard={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('左滑收藏，右滑看下一隻')).toBeInTheDocument();
+    expect(window.localStorage.getItem('corner-cat-swipe-hint-seen')).toBe('true');
+
+    act(() => {
+      vi.advanceTimersByTime(2600);
+    });
+
+    expect(screen.queryByText('左滑收藏，右滑看下一隻')).not.toBeInTheDocument();
+  });
+
   it('moves between cards with keyboard arrows as the non-visual fallback', () => {
     vi.useFakeTimers();
     render(
