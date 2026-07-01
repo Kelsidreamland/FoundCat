@@ -701,6 +701,44 @@ describe('Home page', () => {
     expect(screen.queryByText('首爾店長貓')).not.toBeInTheDocument();
   });
 
+  it('shows a collected-all world state instead of the first-cat empty state', async () => {
+    vi.mocked(loadPublicCatCards).mockResolvedValue({
+      ok: true,
+      items: [
+        makeItem({
+          id: 'public-cat-88',
+          publicNumber: 88,
+          catName: '首爾店長貓',
+          location: { lat: 37.5665, lng: 126.978, name: '首爾咖啡店' },
+          isPublic: true,
+        }),
+      ],
+    });
+    useScrapbookStore.setState({
+      items: [
+        makeItem({
+          id: 'local-copy-of-public-cat-88',
+          catdexNumber: undefined,
+          publicNumber: 88,
+          collectedFromPublicId: 'public-cat-88',
+          isPublic: false,
+        }),
+      ],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('目前的世界貓卡都收藏完了')).toBeInTheDocument();
+    expect(screen.getByText('晚點再回來，或拍下你遇到的貓，讓世界多一個貓點。')).toBeInTheDocument();
+    expect(screen.queryByText('全世界地圖等第一批貓點')).not.toBeInTheDocument();
+  });
+
   it('still shows my published world cats on the default home deck', async () => {
     vi.mocked(loadPublicCatCards).mockResolvedValue({
       ok: true,

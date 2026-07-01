@@ -147,10 +147,17 @@ export default function Home() {
     (publicItem) => !items.some((localItem) => isCollectedWorldCopy(publicItem, localItem))
   );
   const deckItems = isPublicDeck ? visiblePublicItems : items;
+  const hasCollectedAllVisibleWorldCats = publicDeckStatus === 'ready' &&
+    publicItems.length > 0 &&
+    visiblePublicItems.length === 0;
   const emptyDeckLabel = publicDeckStatus === 'failed'
     ? (language === 'zh'
         ? '全世界貓卡暫時載入失敗\n可以再試一次；你的本機貓卡仍在「我的貓卡」。'
         : 'World cat cards could not load.\nTry again; your local cards are still in My Cat Cards.')
+    : hasCollectedAllVisibleWorldCats
+      ? (language === 'zh'
+          ? '目前的世界貓卡都收藏完了\n晚點再回來，或拍下你遇到的貓，讓世界多一個貓點。'
+          : 'You collected all current world cats.\nCheck back later, or add a cat you found to grow the world map.')
     : (language === 'zh'
         ? '全世界地圖等第一批貓點\n先拍下你遇到的貓，公開後朋友就能在地圖上找到牠。'
         : 'The world map is waiting for its first cats.\nCapture a cat you found, then publish it so friends can find the spot.');
