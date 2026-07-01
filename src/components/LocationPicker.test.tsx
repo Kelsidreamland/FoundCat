@@ -164,6 +164,27 @@ describe('LocationPicker', () => {
     expect(screen.getByText('貼完整 Google Maps 連結最準，也可以搜尋店名地址，或直接點地圖放 pin。')).toBeInTheDocument();
   });
 
+  it('lets users choose a location input method and keeps the relevant control focused', async () => {
+    render(
+      <LocationPicker
+        language="zh"
+        onPicked={vi.fn()}
+        onClose={vi.fn()}
+      />
+    );
+
+    const locationInput = screen.getByLabelText('地點名稱');
+    expect(screen.getByRole('button', { name: '貼完整地圖連結' })).toHaveAttribute('aria-pressed', 'true');
+
+    fireEvent.click(screen.getByRole('button', { name: '搜尋店名地址' }));
+    expect(screen.getByRole('button', { name: '搜尋店名地址' })).toHaveAttribute('aria-pressed', 'true');
+    await waitFor(() => expect(locationInput).toHaveFocus());
+
+    fireEvent.click(screen.getByRole('button', { name: '點地圖放 pin' }));
+    expect(screen.getByRole('button', { name: '點地圖放 pin' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText('找不到店名時，直接點地圖放 pin，這樣才不會存到錯誤位置。')).toBeInTheDocument();
+  });
+
   it('tells users a full Google Maps coordinate link can be confirmed immediately', async () => {
     render(
       <LocationPicker

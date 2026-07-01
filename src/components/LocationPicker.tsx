@@ -37,6 +37,8 @@ type LocationPickerDraft = {
   selectedMapUrl?: string;
 };
 
+type LocationInputMethod = 'maps-link' | 'search' | 'pin';
+
 const LOCATION_PICKER_DRAFT_STORAGE_PREFIX = 'found-cat-location-picker-draft:';
 
 const getLocationPickerDraftStorageKey = (draftKey?: string) => {
@@ -120,6 +122,7 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
     : restoredDraft?.selectedLocation ?? null;
   const initialLocationName = initialLocation?.name ?? restoredDraft?.locationName ?? '';
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const locationInputRef = useRef<HTMLInputElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
   const selectedSuggestionNameRef = useRef<string | null>(initialLocation?.name ?? null);
@@ -143,6 +146,7 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
   const [searchStatus, setSearchStatus] = useState<'idle' | 'no-results' | 'error'>('idle');
   const [linkInputError, setLinkInputError] = useState(false);
+  const [activeInputMethod, setActiveInputMethod] = useState<LocationInputMethod>('maps-link');
 
   const defaultLocationName = language === 'zh' ? '貓咪出沒點' : 'Cat Spot';
   const parsedGoogleMapsLocation = useMemo(() => parseGoogleMapsLink(locationName), [locationName]);
@@ -167,6 +171,30 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
         : (language === 'zh'
             ? '貼完整 Google Maps 連結最準，也可以搜尋店名地址，或直接點地圖放 pin。'
             : 'A full Google Maps link is best. You can also search a place or tap the map.');
+  const methodHintCopy = activeInputMethod === 'pin'
+    ? (language === 'zh'
+        ? '找不到店名時，直接點地圖放 pin，這樣才不會存到錯誤位置。'
+        : 'If the place cannot be found, tap the map to place a pin so the spot is not saved incorrectly.')
+    : activeInputMethod === 'search'
+      ? (language === 'zh'
+          ? '輸入店名、地址或當地語言名稱，選到建議後會自動定位。'
+          : 'Type a shop, address, or local-language name. Choosing a suggestion places the pin.')
+      : (language === 'zh'
+          ? '貼完整 Google Maps 連結最準；短連結需要先在 Google Maps 打開再複製完整網址。'
+          : 'A full Google Maps link is most accurate. Short links need to be opened in Google Maps first.');
+
+  const focusLocationInput = useCallback(() => {
+    window.setTimeout(() => {
+      locationInputRef.current?.focus();
+    }, 0);
+  }, []);
+
+  const handleInputMethodSelect = useCallback((method: LocationInputMethod) => {
+    setActiveInputMethod(method);
+    if (method !== 'pin') {
+      focusLocationInput();
+    }
+  }, [focusLocationInput]);
 
   useEffect(() => {
     defaultLocationNameRef.current = defaultLocationName;
@@ -434,6 +462,7 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
   const handleLocationNameChange = useCallback((value: string) => {
     selectedSuggestionNameRef.current = null;
     setLinkInputError(false);
+    setActiveInputMethod(/(?:google\.[a-z.]+\/maps|maps\.app\.goo\.gl|goo\.gl\/maps)/i.test(value) ? 'maps-link' : 'search');
     if (!/(?:google\.[a-z.]+\/maps|maps\.app\.goo\.gl|goo\.gl\/maps)/i.test(value)) {
       setSelectedMapUrl(undefined);
     }
@@ -687,34 +716,48 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
         <div className="p-4 border-b border-cat-border-light bg-cat-bg/50">
           <p className="text-cat-text-tertiary text-xs mb-3">{t.tapMapHint}</p>
 
-          <div className="mb-3 grid grid-cols-3 gap-2" aria-label={language === 'zh' ? '地點輸入方式' : 'Location input methods'}>
+          <div className="mb-2 grid grid-cols-3 gap-2" aria-label={language === 'zh' ? '地點輸入方式' : 'Location input methods'}>
             {[
               {
+                id: 'maps-link' as const,
                 icon: Link2,
                 label: language === 'zh' ? '貼完整地圖連結' : 'Full Maps link',
               },
               {
+                id: 'search' as const,
                 icon: Search,
                 label: language === 'zh' ? '搜尋店名地址' : 'Search place',
               },
               {
+                id: 'pin' as const,
                 icon: MapPin,
                 label: language === 'zh' ? '點地圖放 pin' : 'Tap map pin',
               },
             ].map((method) => {
               const Icon = method.icon;
+              const isActive = activeInputMethod === method.id;
 
               return (
-                <div
+                <button
                   key={method.label}
-                  className="flex min-h-10 items-center justify-center gap-1.5 rounded-2xl border border-[#2f5fb3]/10 bg-white/62 px-2 text-center text-[11px] font-bold leading-4 text-cat-text-secondary shadow-[1px_2px_0_rgba(47,95,179,0.06)]"
+                  type="button"
+                  onClick={() => handleInputMethodSelect(method.id)}
+                  aria-pressed={isActive}
+                  className={`flex min-h-11 items-center justify-center gap-1.5 rounded-2xl border px-2 text-center text-[11px] font-black leading-4 shadow-[1px_2px_0_rgba(47,95,179,0.06)] transition-colors ${
+                    isActive
+                      ? 'border-[#2f5fb3]/25 bg-[#d9ecff]/72 text-[#2f5fb3]'
+                      : 'border-[#2f5fb3]/10 bg-white/62 text-cat-text-secondary hover:border-[#2f5fb3]/20 hover:bg-white/80'
+                  }`}
                 >
-                  <Icon size={13} className="shrink-0 text-[#2f5fb3]/65" />
+                  <Icon size={13} className={`shrink-0 ${isActive ? 'text-[#2f5fb3]' : 'text-[#2f5fb3]/65'}`} />
                   <span className="min-w-0">{method.label}</span>
-                </div>
+                </button>
               );
             })}
           </div>
+          <p className="mb-3 rounded-2xl border border-[#221915]/10 bg-white/55 px-3 py-2 text-xs font-bold leading-5 text-cat-text-secondary">
+            {methodHintCopy}
+          </p>
 
           <div className="flex gap-2 mb-3">
             <button
@@ -741,10 +784,12 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
             <div className="relative">
               <MapPin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-cat-text-tertiary" />
               <input
+                ref={locationInputRef}
                 type="text"
                 value={locationName}
                 onChange={(event) => handleLocationNameChange(event.target.value)}
                 placeholder={t.locationNamePlaceholder}
+                data-location-name-input="true"
                 className="w-full pl-10 pr-10 py-3 bg-white rounded-xl border border-cat-border-light text-cat-text-main placeholder:text-cat-text-tertiary focus:outline-none focus:ring-2 focus:ring-cat-brand"
               />
               {isSearching || isConfirmingLocation || isResolvingAddress ? (
