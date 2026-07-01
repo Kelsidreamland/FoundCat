@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ScrapbookItem } from '../../store/useScrapbookStore';
 import WorldCatProfileSheet from './WorldCatProfileSheet';
@@ -81,6 +81,8 @@ describe('WorldCatProfileSheet', () => {
   });
 
   it('shows only the mystery state when optional profile details are sparse', () => {
+    const onSave = vi.fn();
+
     render(
       <WorldCatProfileSheet
         item={makeItem({
@@ -93,7 +95,7 @@ describe('WorldCatProfileSheet', () => {
         language="zh"
         isSaved
         onClose={vi.fn()}
-        onSave={vi.fn()}
+        onSave={onSave}
         onFind={vi.fn()}
       />
     );
@@ -109,5 +111,94 @@ describe('WorldCatProfileSheet', () => {
     expect(dialog).not.toHaveTextContent('照護狀態');
     expect(screen.getByRole('button', { name: '去找這隻喵' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '已收藏' })).toBeInTheDocument();
+  });
+
+  it('does not save again after the world cat is already collected', () => {
+    const item = makeItem({
+      id: 'public-cat-saved',
+      publicNumber: 9,
+      catName: '已收藏小貓',
+      location: { lat: 25, lng: 121, name: '台北' },
+      isPublic: true,
+    });
+    const onSave = vi.fn();
+
+    render(
+      <WorldCatProfileSheet
+        item={item}
+        language="zh"
+        isSaved
+        onClose={vi.fn()}
+        onSave={onSave}
+        onFind={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '已收藏' }));
+
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('guards against rapid repeated save taps before the saved state refreshes', () => {
+    const item = makeItem({
+      id: 'public-cat-rapid',
+      publicNumber: 10,
+      catName: '快手小貓',
+      location: { lat: 25, lng: 121, name: '台北' },
+      isPublic: true,
+    });
+    const onSave = vi.fn(() => Promise.resolve());
+
+    render(
+      <WorldCatProfileSheet
+        item={item}
+        language="zh"
+        isSaved={false}
+        onClose={vi.fn()}
+        onSave={onSave}
+        onFind={vi.fn()}
+      />
+    );
+
+    const saveButton = screen.getByRole('button', { name: '收藏' });
+    fireEvent.click(saveButton);
+    fireEvent.click(saveButton);
+
+    expect(onSave).toHaveBeenCalledTimes(1);
+  });
+
+  it('unlocks the save button if saving fails', async () => {
+    const item = makeItem({
+      id: 'public-cat-retry',
+      publicNumber: 11,
+      catName: '重試小貓',
+      location: { lat: 25, lng: 121, name: '台北' },
+      isPublic: true,
+    });
+    const onSave = vi.fn()
+      .mockRejectedValueOnce(new Error('save failed'))
+      .mockResolvedValueOnce(undefined);
+
+    render(
+      <WorldCatProfileSheet
+        item={item}
+        language="zh"
+        isSaved={false}
+        onClose={vi.fn()}
+        onSave={onSave}
+        onFind={vi.fn()}
+      />
+    );
+
+    const saveButton = screen.getByRole('button', { name: '收藏' });
+    fireEvent.click(saveButton);
+
+    await waitFor(() => {
+      expect(saveButton).not.toBeDisabled();
+    });
+
+    fireEvent.click(saveButton);
+
+    expect(onSave).toHaveBeenCalledTimes(2);
   });
 });

@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bookmark, MapPin, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import {
   getCareStatusLabels,
   getPersonalityLabels,
@@ -13,7 +14,7 @@ export interface WorldCatProfileSheetProps {
   language: 'zh' | 'en';
   isSaved: boolean;
   onClose: () => void;
-  onSave: (item: ScrapbookItem) => void;
+  onSave: (item: ScrapbookItem) => void | Promise<void>;
   onFind: (item: ScrapbookItem) => void;
 }
 
@@ -74,6 +75,7 @@ export default function WorldCatProfileSheet({
   onSave,
   onFind,
 }: WorldCatProfileSheetProps) {
+  const [isSaving, setIsSaving] = useState(false);
   const copy = copyFor(language);
   const title = item?.catName?.trim() || copy.defaultName;
   const image = item?.heroImageData || item?.imageData;
@@ -87,6 +89,11 @@ export default function WorldCatProfileSheet({
     spotNote ||
     careLabels.length > 0
   );
+  const isSaveLocked = isSaved || isSaving;
+
+  useEffect(() => {
+    setIsSaving(false);
+  }, [item?.id]);
 
   return (
     <AnimatePresence>
@@ -194,8 +201,15 @@ export default function WorldCatProfileSheet({
               </button>
               <button
                 type="button"
-                onClick={() => onSave(item)}
-                className="inline-flex items-center justify-center gap-1.5 rounded-[18px] border-2 border-[#221915] bg-[#fff2cf] px-4 py-3 text-sm font-black text-[#1d1714] shadow-[3px_3px_0_rgba(29,23,20,0.86)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+                onClick={() => {
+                  if (isSaveLocked) return;
+                  setIsSaving(true);
+                  void Promise.resolve(onSave(item)).catch(() => {
+                    setIsSaving(false);
+                  });
+                }}
+                disabled={isSaveLocked}
+                className="inline-flex items-center justify-center gap-1.5 rounded-[18px] border-2 border-[#221915] bg-[#fff2cf] px-4 py-3 text-sm font-black text-[#1d1714] shadow-[3px_3px_0_rgba(29,23,20,0.86)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3] disabled:cursor-default disabled:bg-[#fff8e7] disabled:text-[#6d5f52]"
               >
                 <Bookmark size={15} fill={isSaved ? '#f7c948' : 'none'} strokeWidth={2.5} />
                 {isSaved ? copy.saved : copy.save}
