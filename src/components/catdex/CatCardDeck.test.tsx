@@ -381,7 +381,7 @@ describe('CatCardDeck', () => {
     fireEvent.click(screen.getByRole('button', { name: '關閉左右滑動提示' }));
 
     expect(screen.queryByText('左滑收藏，右滑看下一隻')).not.toBeInTheDocument();
-    expect(window.localStorage.getItem('corner-cat-swipe-hint-seen')).toBe('true');
+    expect(window.localStorage.getItem('found-cat-swipe-hint-seen')).toBe('true');
   });
 
   it('remembers the first-use swipe hint after it appears once', () => {
@@ -402,10 +402,33 @@ describe('CatCardDeck', () => {
 
     const { unmount } = render(<CatCardDeck {...props} />);
     expect(screen.getByText('左滑收藏，右滑看下一隻')).toBeInTheDocument();
-    expect(window.localStorage.getItem('corner-cat-swipe-hint-seen')).toBe('true');
+    expect(window.localStorage.getItem('found-cat-swipe-hint-seen')).toBe('true');
 
     unmount();
     render(<CatCardDeck {...props} />);
+
+    expect(screen.queryByText('左滑收藏，右滑看下一隻')).not.toBeInTheDocument();
+  });
+
+  it('honors the old Corner Cat swipe hint flag after the brand key migration', () => {
+    window.localStorage.setItem('corner-cat-swipe-hint-seen', 'true');
+
+    render(
+      <CatCardDeck
+        items={[
+          makeItem({ id: 'cat-1', catdexNumber: 1 }),
+          makeItem({ id: 'cat-2', catdexNumber: 2 }),
+        ]}
+        language="zh"
+        labels={{
+          empty: '還沒有貓卡',
+          previous: '上一張',
+          next: '下一張',
+          shareCard: '分享這張卡與地址',
+        }}
+        onShareCard={vi.fn()}
+      />
+    );
 
     expect(screen.queryByText('左滑收藏，右滑看下一隻')).not.toBeInTheDocument();
   });
@@ -431,7 +454,7 @@ describe('CatCardDeck', () => {
     );
 
     expect(screen.getByText('左滑收藏，右滑看下一隻')).toBeInTheDocument();
-    expect(window.localStorage.getItem('corner-cat-swipe-hint-seen')).toBe('true');
+    expect(window.localStorage.getItem('found-cat-swipe-hint-seen')).toBe('true');
 
     act(() => {
       vi.advanceTimersByTime(2600);

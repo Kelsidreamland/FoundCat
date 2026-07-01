@@ -61,6 +61,13 @@ describe('parseGoogleMapsLink', () => {
     });
   });
 
+  it('prefers dropped-pin DMS query coordinates over a broad ocean viewport center', () => {
+    expect(parseGoogleMapsLink('https://www.google.com/maps/@0,0,3z?q=18%C2%B047%E2%80%B242.6%E2%80%B3N%2098%C2%B058%E2%80%B203.1%E2%80%B3E')).toEqual({
+      lat: 18.795166666666667,
+      lng: 98.96752777777778,
+    });
+  });
+
   it('rejects non-coordinate URLs', () => {
     expect(parseGoogleMapsLink('https://example.com/maps/@25.033,121.565')).toBeNull();
   });

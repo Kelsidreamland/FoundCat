@@ -5,7 +5,7 @@ export interface ParsedGoogleMapsLink {
 }
 
 const COORDINATE_PATTERN = /(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/;
-const DMS_COORDINATE_PATTERN = /(\d{1,3})°\s*(\d{1,2})['’]\s*(\d{1,2}(?:\.\d+)?)"?\s*([NS])[\s+,-]*(\d{1,3})°\s*(\d{1,2})['’]\s*(\d{1,2}(?:\.\d+)?)"?\s*([EW])/i;
+const DMS_COORDINATE_PATTERN = /(\d{1,3})°\s*(\d{1,2})['’′]\s*(\d{1,2}(?:\.\d+)?)["”″]?\s*([NS])[\s+,-]*(\d{1,3})°\s*(\d{1,2})['’′]\s*(\d{1,2}(?:\.\d+)?)["”″]?\s*([EW])/i;
 const GOOGLE_MAPS_PLACE_COORDINATE_PATTERN = /!8m2!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/;
 const GOOGLE_MAPS_DATA_COORDINATE_PATTERN = /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/g;
 const GOOGLE_MAPS_LEGACY_COORDINATE_PATTERN = /!2d(-?\d+(?:\.\d+)?)!3d(-?\d+(?:\.\d+)?)/g;
@@ -32,6 +32,9 @@ const parseCoordinateText = (text: string) => {
 };
 
 const parseQueryCoordinateText = (text: string) => {
+  const dmsCoordinates = parseDmsCoordinateText(text);
+  if (dmsCoordinates) return dmsCoordinates;
+
   const locMatch = text.match(/(?:^|[^\w])loc:\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/i);
   if (locMatch) {
     return toCoordinate(locMatch[1], locMatch[2]);

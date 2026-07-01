@@ -589,6 +589,37 @@ describe('LocationPicker', () => {
     });
   });
 
+  it('confirms a Google Maps dropped-pin DMS link without falling back to the map center', async () => {
+    const onPicked = vi.fn();
+    vi.mocked(searchPlaces).mockResolvedValue([]);
+
+    render(
+      <LocationPicker
+        language="zh"
+        onPicked={onPicked}
+        onClose={vi.fn()}
+      />
+    );
+
+    const mapUrl = 'https://www.google.com/maps/@0,0,3z?q=18%C2%B047%E2%80%B242.6%E2%80%B3N%2098%C2%B058%E2%80%B203.1%E2%80%B3E';
+    fireEvent.change(screen.getByLabelText('地點名稱'), {
+      target: { value: mapUrl },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '確認地點' }));
+
+    expect(searchPlaces).not.toHaveBeenCalled();
+    expect(markerSetLngLat).toHaveBeenCalledWith([98.96752777777778, 18.795166666666667]);
+    expect(mapEaseTo).toHaveBeenCalledWith(
+      expect.objectContaining({ center: [98.96752777777778, 18.795166666666667], zoom: 16 })
+    );
+    expect(onPicked).toHaveBeenCalledWith({
+      lat: 18.795166666666667,
+      lng: 98.96752777777778,
+      name: mapUrl,
+      mapUrl,
+    });
+  });
+
   it('uses readable Google Maps search text to resolve pasted map URLs without coordinates', async () => {
     const onPicked = vi.fn();
 
