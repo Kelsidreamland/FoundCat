@@ -5,6 +5,7 @@ export interface ParsedGoogleMapsLink {
 }
 
 const COORDINATE_PATTERN = /(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/;
+const DMS_COORDINATE_PATTERN = /(\d{1,3})°\s*(\d{1,2})['’]\s*(\d{1,2}(?:\.\d+)?)"?\s*([NS])[\s+,-]*(\d{1,3})°\s*(\d{1,2})['’]\s*(\d{1,2}(?:\.\d+)?)"?\s*([EW])/i;
 const GOOGLE_MAPS_PLACE_COORDINATE_PATTERN = /!8m2!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/;
 const GOOGLE_MAPS_DATA_COORDINATE_PATTERN = /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/g;
 const GOOGLE_MAPS_LEGACY_COORDINATE_PATTERN = /!2d(-?\d+(?:\.\d+)?)!3d(-?\d+(?:\.\d+)?)/g;
@@ -25,6 +26,20 @@ const parseCoordinateText = (text: string) => {
 
   const lat = Number(match[1]);
   const lng = Number(match[2]);
+  if (!isValidCoordinate(lat, lng)) return null;
+
+  return { lat, lng };
+};
+
+const parseDmsCoordinateText = (text: string) => {
+  const match = decodeURIComponent(text).match(DMS_COORDINATE_PATTERN);
+  if (!match) return null;
+
+  const [, latDegrees, latMinutes, latSeconds, latHemisphere, lngDegrees, lngMinutes, lngSeconds, lngHemisphere] = match;
+  const latSign = latHemisphere.toUpperCase() === 'S' ? -1 : 1;
+  const lngSign = lngHemisphere.toUpperCase() === 'W' ? -1 : 1;
+  const lat = latSign * (Number(latDegrees) + Number(latMinutes) / 60 + Number(latSeconds) / 3600);
+  const lng = lngSign * (Number(lngDegrees) + Number(lngMinutes) / 60 + Number(lngSeconds) / 3600);
   if (!isValidCoordinate(lat, lng)) return null;
 
   return { lat, lng };
@@ -71,6 +86,7 @@ const cleanName = (value?: string | null) => {
     .trim();
 
   if (!decoded || parseCoordinateText(decoded)) return undefined;
+  if (parseDmsCoordinateText(decoded)) return undefined;
   return decoded;
 };
 
@@ -125,6 +141,7 @@ export const parseGoogleMapsLink = (rawInput: string): ParsedGoogleMapsLink | nu
   }
 
   const dataCoordinates = parseGoogleMapsDataCoordinates(url);
+  const dmsCoordinates = parseDmsCoordinateText(url.pathname);
   const pathCoordinates = parseCoordinateText(url.pathname);
   const queryCoordinateSource = [
     url.searchParams.get('q'),
@@ -134,7 +151,7 @@ export const parseGoogleMapsLink = (rawInput: string): ParsedGoogleMapsLink | nu
     url.searchParams.get('destination'),
   ].find((value) => value && parseCoordinateText(value));
   const queryCoordinates = queryCoordinateSource ? parseCoordinateText(queryCoordinateSource) : null;
-  const coordinates = dataCoordinates ?? pathCoordinates ?? queryCoordinates ?? directCoordinates;
+  const coordinates = dataCoordinates ?? dmsCoordinates ?? pathCoordinates ?? queryCoordinates ?? directCoordinates;
 
   if (!coordinates) return null;
 

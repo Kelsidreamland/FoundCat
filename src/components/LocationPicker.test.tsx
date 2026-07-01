@@ -158,10 +158,10 @@ describe('LocationPicker', () => {
 
     expect(screen.getAllByText(/貼上 Google Maps 連結/).length).toBeGreaterThan(0);
     expect(screen.getByPlaceholderText('貼上 Google Maps 連結、搜尋店名或地址')).toBeInTheDocument();
-    expect(screen.getByText('貼上 Google Maps')).toBeInTheDocument();
+    expect(screen.getByText('貼完整地圖連結')).toBeInTheDocument();
     expect(screen.getByText('搜尋店名地址')).toBeInTheDocument();
     expect(screen.getByText('點地圖放 pin')).toBeInTheDocument();
-    expect(screen.getByText('貼 Google Maps、搜尋店名地址，或直接點地圖放 pin。')).toBeInTheDocument();
+    expect(screen.getByText('貼完整 Google Maps 連結最準，也可以搜尋店名地址，或直接點地圖放 pin。')).toBeInTheDocument();
   });
 
   it('tells users a full Google Maps coordinate link can be confirmed immediately', async () => {
@@ -449,7 +449,7 @@ describe('LocationPicker', () => {
     fireEvent.change(screen.getByLabelText('地點名稱'), {
       target: { value: 'https://maps.app.goo.gl/abc123' },
     });
-    expect(await screen.findByText(/短連結目前無法直接定位/)).toBeInTheDocument();
+    expect(await screen.findByText('短連結讀不到座標。請先在 Google Maps 打開，複製完整網址；或保留這段文字，直接點地圖放 pin。')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: '確認地點' }));
 

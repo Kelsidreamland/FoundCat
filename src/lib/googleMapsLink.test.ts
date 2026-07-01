@@ -24,6 +24,13 @@ describe('parseGoogleMapsLink', () => {
     });
   });
 
+  it('parses Google Maps links with degree-minute-second coordinates', () => {
+    expect(parseGoogleMapsLink('https://www.google.com/maps/place/18%C2%B047%2742.6%22N+98%C2%B058%2703.1%22E/@18.7951,98.9675,17z')).toEqual({
+      lat: 18.795166666666667,
+      lng: 98.96752777777778,
+    });
+  });
+
   it('uses a readable Google Maps query name when coordinates come from the path', () => {
     expect(parseGoogleMapsLink('https://www.google.com/maps/search/G%20Nimman%20Chiang%20Mai/@18.795163,98.967533,18z')).toEqual({
       lat: 18.795163,

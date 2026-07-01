@@ -70,15 +70,15 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
         : 'Google Maps location detected. You can confirm it now.')
     : hasUnresolvedUrlInput
       ? (language === 'zh'
-          ? '短連結請先打開後複製完整網址，或直接點地圖選位置。'
-          : 'Open short links first and copy the full URL, or tap the map.')
+          ? '短連結讀不到座標。請先在 Google Maps 打開，複製完整網址；或保留這段文字，直接點地圖放 pin。'
+          : 'Short links do not expose coordinates. Open it in Google Maps and copy the full URL, or keep the text and tap the map.')
       : locationName.trim().length > 0
         ? (language === 'zh'
             ? '可以搜尋店名或地址；找不到時，保留這段文字再點地圖選位置。'
             : 'Search the place or address; if it is missing, keep this text and tap the map.')
         : (language === 'zh'
-            ? '貼 Google Maps、搜尋店名地址，或直接點地圖放 pin。'
-            : 'Paste Google Maps, search a place or address, or tap the map to drop a pin.');
+            ? '貼完整 Google Maps 連結最準，也可以搜尋店名地址，或直接點地圖放 pin。'
+            : 'A full Google Maps link is best. You can also search a place or tap the map.');
 
   useEffect(() => {
     defaultLocationNameRef.current = defaultLocationName;
@@ -569,7 +569,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
             {[
               {
                 icon: Link2,
-                label: language === 'zh' ? '貼上 Google Maps' : 'Paste Maps link',
+                label: language === 'zh' ? '貼完整地圖連結' : 'Full Maps link',
               },
               {
                 icon: Search,
@@ -728,15 +728,15 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
               ].join(' ')}
             >
               {language === 'zh'
-                ? '短連結目前無法直接定位。請在 Google Maps 打開後複製完整網址，或點地圖選位置。'
-                : 'Short links cannot be placed directly yet. Open it in Google Maps and copy the full URL, or tap the map directly.'}
+                ? '短連結目前無法直接定位。請先在 Google Maps 打開這個連結，複製完整網址；或保留這段文字，直接點地圖放 pin。'
+                : 'Short links cannot be placed directly. Open it in Google Maps and copy the full URL, or keep this text and tap the map.'}
             </p>
           ) : null}
           {linkInputError ? (
             <p className="mt-2 rounded-2xl border border-[#d97706]/25 bg-[#fff2cf]/75 px-3 py-2 text-xs font-black leading-5 text-[#7a4a08]">
               {language === 'zh'
-                ? '短連結目前無法直接定位。請在 Google Maps 打開後複製完整網址，或點地圖選位置，再按確認地點。'
-                : 'Short links cannot be placed directly yet. Open it in Google Maps and copy the full URL, or tap the map first.'}
+                ? '短連結目前無法直接定位。請先在 Google Maps 打開後複製完整網址；或保留這段文字，點地圖放 pin 後再確認。'
+                : 'Short links cannot be placed directly. Open it in Google Maps and copy the full URL, or tap the map before confirming.'}
             </p>
           ) : null}
         </div>
