@@ -651,6 +651,7 @@ export default function Create() {
           onPicked={handleLocationPicked}
           onClose={handleLocationSkipped}
           language={language}
+          draftKey={createdStickerId ?? undefined}
         />
       ) : null}
     </div>

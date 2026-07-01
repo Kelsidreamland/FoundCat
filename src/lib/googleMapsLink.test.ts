@@ -54,6 +54,13 @@ describe('parseGoogleMapsLink', () => {
     });
   });
 
+  it('prefers dropped-pin query coordinates over a broad viewport center', () => {
+    expect(parseGoogleMapsLink('https://www.google.com/maps/@0,0,3z?q=loc:18.795163,98.967533')).toEqual({
+      lat: 18.795163,
+      lng: 98.967533,
+    });
+  });
+
   it('rejects non-coordinate URLs', () => {
     expect(parseGoogleMapsLink('https://example.com/maps/@25.033,121.565')).toBeNull();
   });

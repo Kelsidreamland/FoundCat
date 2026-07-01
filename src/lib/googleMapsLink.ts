@@ -31,6 +31,15 @@ const parseCoordinateText = (text: string) => {
   return { lat, lng };
 };
 
+const parseQueryCoordinateText = (text: string) => {
+  const locMatch = text.match(/(?:^|[^\w])loc:\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/i);
+  if (locMatch) {
+    return toCoordinate(locMatch[1], locMatch[2]);
+  }
+
+  return parseCoordinateText(text);
+};
+
 const parseDmsCoordinateText = (text: string) => {
   const match = decodeURIComponent(text).match(DMS_COORDINATE_PATTERN);
   if (!match) return null;
@@ -149,9 +158,9 @@ export const parseGoogleMapsLink = (rawInput: string): ParsedGoogleMapsLink | nu
     url.searchParams.get('ll'),
     url.searchParams.get('center'),
     url.searchParams.get('destination'),
-  ].find((value) => value && parseCoordinateText(value));
-  const queryCoordinates = queryCoordinateSource ? parseCoordinateText(queryCoordinateSource) : null;
-  const coordinates = dataCoordinates ?? dmsCoordinates ?? pathCoordinates ?? queryCoordinates ?? directCoordinates;
+  ].find((value) => value && parseQueryCoordinateText(value));
+  const queryCoordinates = queryCoordinateSource ? parseQueryCoordinateText(queryCoordinateSource) : null;
+  const coordinates = dataCoordinates ?? dmsCoordinates ?? queryCoordinates ?? pathCoordinates ?? directCoordinates;
 
   if (!coordinates) return null;
 

@@ -180,6 +180,36 @@ describe('LocationPicker', () => {
     expect(await screen.findByText('已讀到 Google Maps 位置，可以直接確認地點。')).toBeInTheDocument();
   });
 
+  it('restores the typed location draft after the app is reloaded during location entry', async () => {
+    const { unmount } = render(
+      <LocationPicker
+        language="zh"
+        draftKey="pending-cat-id"
+        onPicked={vi.fn()}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText('地點名稱'), {
+      target: { value: 'https://www.google.com/maps/place/G+Nimman+Chiang+Mai/@18.795163,98.967533,18z' },
+    });
+    expect(await screen.findByText('已讀到 Google Maps 位置，可以直接確認地點。')).toBeInTheDocument();
+
+    unmount();
+
+    render(
+      <LocationPicker
+        language="zh"
+        draftKey="pending-cat-id"
+        onPicked={vi.fn()}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(screen.getByLabelText('地點名稱')).toHaveValue('https://www.google.com/maps/place/G+Nimman+Chiang+Mai/@18.795163,98.967533,18z');
+    expect(await screen.findByText('已讀到 Google Maps 位置，可以直接確認地點。')).toBeInTheDocument();
+  });
+
   it('tells users typed place text can be searched or pinned on the map', () => {
     render(
       <LocationPicker

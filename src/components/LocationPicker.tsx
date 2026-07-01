@@ -20,33 +20,121 @@ interface LocationResult {
 
 interface LocationPickerProps {
   initialLocation?: LocationResult;
+  draftKey?: string;
   onPicked: (location: LocationResult) => void;
   onClose: () => void;
   language: 'zh' | 'en';
 }
 
-export default function LocationPicker({ initialLocation, onPicked, onClose, language }: LocationPickerProps) {
+type LocationPickerDraft = {
+  locationName: string;
+  selectedLocation?: {
+    lat: number;
+    lng: number;
+  };
+  selectedAddress?: string;
+  selectedPlaceId?: string;
+  selectedMapUrl?: string;
+};
+
+const LOCATION_PICKER_DRAFT_STORAGE_PREFIX = 'found-cat-location-picker-draft:';
+
+const getLocationPickerDraftStorageKey = (draftKey?: string) => {
+  const key = draftKey?.trim();
+  return key ? `${LOCATION_PICKER_DRAFT_STORAGE_PREFIX}${encodeURIComponent(key)}` : null;
+};
+
+const isDraftCoordinate = (value: unknown): value is { lat: number; lng: number } => {
+  if (!value || typeof value !== 'object') return false;
+  const coordinate = value as Partial<{ lat: number; lng: number }>;
+  return Number.isFinite(coordinate.lat) && Number.isFinite(coordinate.lng);
+};
+
+const loadLocationPickerDraft = (draftKey?: string): LocationPickerDraft | null => {
+  const storageKey = getLocationPickerDraftStorageKey(draftKey);
+  if (!storageKey) return null;
+
+  try {
+    const rawValue = window.localStorage.getItem(storageKey);
+    if (!rawValue) return null;
+
+    const parsedValue = JSON.parse(rawValue) as Partial<LocationPickerDraft>;
+    const locationName = typeof parsedValue.locationName === 'string' ? parsedValue.locationName : '';
+    const selectedLocation = isDraftCoordinate(parsedValue.selectedLocation)
+      ? parsedValue.selectedLocation
+      : undefined;
+
+    if (!locationName.trim() && !selectedLocation) {
+      window.localStorage.removeItem(storageKey);
+      return null;
+    }
+
+    return {
+      locationName,
+      ...(selectedLocation ? { selectedLocation } : {}),
+      ...(typeof parsedValue.selectedAddress === 'string' ? { selectedAddress: parsedValue.selectedAddress } : {}),
+      ...(typeof parsedValue.selectedPlaceId === 'string' ? { selectedPlaceId: parsedValue.selectedPlaceId } : {}),
+      ...(typeof parsedValue.selectedMapUrl === 'string' ? { selectedMapUrl: parsedValue.selectedMapUrl } : {}),
+    };
+  } catch {
+    window.localStorage.removeItem(storageKey);
+    return null;
+  }
+};
+
+const saveLocationPickerDraft = (draftKey: string | undefined, draft: LocationPickerDraft) => {
+  const storageKey = getLocationPickerDraftStorageKey(draftKey);
+  if (!storageKey) return;
+
+  try {
+    if (!draft.locationName.trim() && !draft.selectedLocation) {
+      window.localStorage.removeItem(storageKey);
+      return;
+    }
+
+    window.localStorage.setItem(storageKey, JSON.stringify(draft));
+  } catch {
+    // Location draft recovery is best-effort; choosing a cat spot must still work if storage is full.
+  }
+};
+
+const clearLocationPickerDraft = (draftKey?: string) => {
+  const storageKey = getLocationPickerDraftStorageKey(draftKey);
+  if (!storageKey) return;
+
+  try {
+    window.localStorage.removeItem(storageKey);
+  } catch {
+    // Ignore storage errors.
+  }
+};
+
+export default function LocationPicker({ initialLocation, draftKey, onPicked, onClose, language }: LocationPickerProps) {
   const t = translations[language];
+  const restoredDraft = useMemo(
+    () => (initialLocation ? null : loadLocationPickerDraft(draftKey)),
+    [draftKey, initialLocation]
+  );
+  const initialSelectedLocation = initialLocation
+    ? { lat: initialLocation.lat, lng: initialLocation.lng }
+    : restoredDraft?.selectedLocation ?? null;
+  const initialLocationName = initialLocation?.name ?? restoredDraft?.locationName ?? '';
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
   const selectedSuggestionNameRef = useRef<string | null>(initialLocation?.name ?? null);
-  const locationNameRef = useRef(initialLocation?.name ?? '');
+  const locationNameRef = useRef(initialLocationName);
   const defaultLocationNameRef = useRef('');
-  const hasReliableSearchCenterRef = useRef(Boolean(initialLocation));
-  const pickedManualCoordinateRef = useRef(false);
-  const selectedLocationRef = useRef<{ lat: number; lng: number } | null>(
-    initialLocation ? { lat: initialLocation.lat, lng: initialLocation.lng } : null
-  );
+  const hasReliableSearchCenterRef = useRef(Boolean(initialSelectedLocation));
+  const pickedManualCoordinateRef = useRef(Boolean(restoredDraft?.selectedLocation && !initialLocation));
+  const selectedLocationRef = useRef<{ lat: number; lng: number } | null>(initialSelectedLocation);
   const languageRef = useRef(language);
   const reverseLookupIdRef = useRef(0);
-  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(
-    initialLocation ? { lat: initialLocation.lat, lng: initialLocation.lng } : null
-  );
-  const [selectedAddress, setSelectedAddress] = useState<string | undefined>(initialLocation?.address);
-  const [selectedPlaceId, setSelectedPlaceId] = useState<string | undefined>(initialLocation?.placeId);
-  const [selectedMapUrl, setSelectedMapUrl] = useState<string | undefined>(initialLocation?.mapUrl);
-  const [locationName, setLocationName] = useState(initialLocation?.name ?? '');
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(initialSelectedLocation);
+  const [selectedAddress, setSelectedAddress] = useState<string | undefined>(initialLocation?.address ?? restoredDraft?.selectedAddress);
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | undefined>(initialLocation?.placeId ?? restoredDraft?.selectedPlaceId);
+  const [selectedMapUrl, setSelectedMapUrl] = useState<string | undefined>(initialLocation?.mapUrl ?? restoredDraft?.selectedMapUrl);
+  const [locationName, setLocationName] = useState(initialLocationName);
   const [isLocating, setIsLocating] = useState(false);
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -91,6 +179,28 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
   useEffect(() => {
     locationNameRef.current = locationName;
   }, [locationName]);
+
+  useEffect(() => {
+    if (initialLocation) return;
+
+    saveLocationPickerDraft(draftKey, {
+      locationName,
+      ...(selectedLocation ? { selectedLocation } : {}),
+      ...(selectedAddress ? { selectedAddress } : {}),
+      ...(selectedPlaceId ? { selectedPlaceId } : {}),
+      ...(selectedMapUrl ? { selectedMapUrl } : {}),
+    });
+  }, [draftKey, initialLocation, locationName, selectedAddress, selectedLocation, selectedMapUrl, selectedPlaceId]);
+
+  const handleClose = useCallback(() => {
+    clearLocationPickerDraft(draftKey);
+    onClose();
+  }, [draftKey, onClose]);
+
+  const handlePicked = useCallback((location: LocationResult) => {
+    clearLocationPickerDraft(draftKey);
+    onPicked(location);
+  }, [draftKey, onPicked]);
 
   const getSearchCenter = useCallback(() => {
     if (!hasReliableSearchCenterRef.current) return undefined;
@@ -254,14 +364,34 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
 
     mapRef.current = map;
 
-    if (initialLocation) {
-      selectedSuggestionNameRef.current = initialLocation.name;
-      setMarkerAt(initialLocation.lat, initialLocation.lng, {
-        address: initialLocation.address,
-        placeId: initialLocation.placeId,
+    const restoredLocation = initialLocation
+      ? {
+          lat: initialLocation.lat,
+          lng: initialLocation.lng,
+          name: initialLocation.name,
+          address: initialLocation.address,
+          placeId: initialLocation.placeId,
+          mapUrl: initialLocation.mapUrl,
+        }
+      : restoredDraft?.selectedLocation
+        ? {
+            ...restoredDraft.selectedLocation,
+            name: restoredDraft.locationName || defaultLocationNameRef.current,
+            address: restoredDraft.selectedAddress,
+            placeId: restoredDraft.selectedPlaceId,
+            mapUrl: restoredDraft.selectedMapUrl,
+          }
+        : null;
+
+    if (restoredLocation) {
+      selectedSuggestionNameRef.current = restoredLocation.name;
+      setMarkerAt(restoredLocation.lat, restoredLocation.lng, {
+        address: restoredLocation.address,
+        placeId: restoredLocation.placeId,
+        mapUrl: restoredLocation.mapUrl,
       });
       map.easeTo({
-        center: [initialLocation.lng, initialLocation.lat],
+        center: [restoredLocation.lng, restoredLocation.lat],
         zoom: 15,
         duration: 0,
       });
@@ -273,7 +403,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
       map.remove();
       mapRef.current = null;
     };
-  }, [initialLocation, pickCoordinate, setMarkerAt]);
+  }, [defaultLocationName, initialLocation, pickCoordinate, restoredDraft, setMarkerAt]);
 
   const useCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -434,7 +564,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
         zoom: 16,
         duration: 800,
       });
-      onPicked(parsedGoogleMapsResult);
+      handlePicked(parsedGoogleMapsResult);
       return;
     }
 
@@ -465,7 +595,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
 
         if (firstMatch) {
           applySuggestion(firstMatch);
-          onPicked(buildLocationResult(firstMatch));
+          handlePicked(buildLocationResult(firstMatch));
           return;
         }
 
@@ -502,7 +632,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
       location.mapUrl = typedGoogleMapsUrl;
     }
 
-    onPicked(location);
+    handlePicked(location);
   }, [
     applySuggestion,
     buildLocationResult,
@@ -511,10 +641,10 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
     getFallbackCoordinate,
     getSearchCenter,
     googleMapsSearchText,
+    handlePicked,
     hasGoogleMapsUrlInput,
     hasUnresolvedUrlInput,
     language,
-    onPicked,
     searchQuery,
     selectedAddress,
     selectedLocation,
@@ -533,7 +663,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[200] bg-cat-dark/60 backdrop-blur-sm flex items-end sm:items-center justify-center"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <motion.div
         initial={{ y: '100%', opacity: 0 }}
@@ -545,7 +675,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
       >
         <div className="flex items-center justify-between p-4 border-b border-cat-border-light">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="w-10 h-10 rounded-full hover:bg-cat-bg flex items-center justify-center transition-colors"
             aria-label={t.skipForNow}
           >
@@ -605,7 +735,7 @@ export default function LocationPicker({ initialLocation, onPicked, onClose, lan
             </button>
 
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cat-card border border-cat-border-light text-cat-text-secondary text-sm font-semibold hover:bg-cat-bg transition-colors"
             >
               <span>{t.skipForNow}</span>
