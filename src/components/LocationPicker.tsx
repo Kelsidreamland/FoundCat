@@ -535,17 +535,6 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
     return location;
   }, [selectedMapUrl]);
 
-  const getFallbackCoordinate = useCallback(() => {
-    if (selectedLocationRef.current) return selectedLocationRef.current;
-
-    const center = mapRef.current?.getCenter();
-    if (center) {
-      return { lat: center.lat, lng: center.lng };
-    }
-
-    return { lat: DEFAULT_CENTER[1], lng: DEFAULT_CENTER[0] };
-  }, [selectedLocation]);
-
   const handleConfirm = useCallback(async () => {
     const query = searchQuery;
     const parsedGoogleMapsResult = buildParsedGoogleMapsLocationResult();
@@ -607,9 +596,13 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
       }
     }
 
-    const fallbackCoordinate = query.length >= 2 ? getFallbackCoordinate() : selectedLocation;
+    const fallbackCoordinate = selectedLocationRef.current ?? selectedLocation;
 
     if (!fallbackCoordinate) {
+      if (query.length >= 2) {
+        setSearchStatus('no-results');
+        return;
+      }
       window.alert(t.noLocationPicked);
       return;
     }
@@ -638,7 +631,6 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
     buildLocationResult,
     buildParsedGoogleMapsLocationResult,
     defaultLocationName,
-    getFallbackCoordinate,
     getSearchCenter,
     googleMapsSearchText,
     handlePicked,

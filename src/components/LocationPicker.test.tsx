@@ -430,7 +430,7 @@ describe('LocationPicker', () => {
     });
   });
 
-  it('saves the typed place name at the map center when search providers cannot find it', async () => {
+  it('does not save the typed place name at the default map center when search providers cannot find it', async () => {
     const onPicked = vi.fn();
     vi.mocked(searchPlaces).mockResolvedValue([]);
 
@@ -457,12 +457,10 @@ describe('LocationPicker', () => {
           limit: 5,
         })
       );
-      expect(onPicked).toHaveBeenCalledWith({
-        lat: 25.033,
-        lng: 121.565,
-        name: '成都貓咪咖啡館',
-      });
+      expect(screen.getByText('找不到即時建議。可以換完整地址搜尋，或先點地圖放 pin 再確認。')).toBeInTheDocument();
     });
+    expect(onPicked).not.toHaveBeenCalled();
+    expect(markerSetLngLat).not.toHaveBeenCalledWith([121.565, 25.033]);
   });
 
   it('does not save an unreadable Google Maps short link as an approximate map center', async () => {
