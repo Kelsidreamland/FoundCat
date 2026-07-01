@@ -683,7 +683,7 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[200] bg-cat-dark/60 backdrop-blur-sm flex items-end sm:items-center justify-center"
+      className="fixed inset-0 z-[200] flex items-end justify-center bg-cat-dark/60 backdrop-blur-sm sm:items-center"
       onClick={handleClose}
     >
       <motion.div
@@ -692,9 +692,10 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
         exit={{ y: '100%', opacity: 0 }}
         transition={{ type: 'spring', damping: 28, stiffness: 300 }}
         onClick={(event) => event.stopPropagation()}
-        className="w-full max-w-md bg-cat-card rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden"
+        data-testid="location-picker-panel"
+        className="flex max-h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem)] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-cat-card pb-[env(safe-area-inset-bottom)] shadow-2xl sm:max-h-[90vh] sm:rounded-3xl sm:pb-0"
       >
-        <div className="flex items-center justify-between p-4 border-b border-cat-border-light">
+        <div className="flex shrink-0 items-center justify-between border-b border-cat-border-light p-4">
           <button
             onClick={handleClose}
             className="w-10 h-10 rounded-full hover:bg-cat-bg flex items-center justify-center transition-colors"
@@ -713,7 +714,10 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
           </button>
         </div>
 
-        <div className="p-4 border-b border-cat-border-light bg-cat-bg/50">
+        <div
+          data-testid="location-picker-form"
+          className="max-h-[42dvh] shrink-0 overflow-y-auto border-b border-cat-border-light bg-cat-bg/50 p-4"
+        >
           <p className="text-cat-text-tertiary text-xs mb-3">{t.tapMapHint}</p>
 
           <div className="mb-2 grid grid-cols-3 gap-2" aria-label={language === 'zh' ? '地點輸入方式' : 'Location input methods'}>
@@ -908,9 +912,9 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
           ) : null}
         </div>
 
-        <div ref={mapContainerRef} className="flex-1 min-h-[300px] w-full" />
+        <div ref={mapContainerRef} data-testid="location-picker-map" className="min-h-[min(260px,32dvh)] w-full flex-1" />
 
-        <div className="p-4 border-t border-cat-border-light bg-cat-bg/50">
+        <div className="shrink-0 border-t border-cat-border-light bg-cat-bg/50 p-4">
           {selectedLocation ? (
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-cat-brand/10 flex items-center justify-center flex-shrink-0">

@@ -523,23 +523,29 @@ export default function Create() {
           </header>
 
           {previewMode ? (
-            <div className="flex flex-1 flex-col items-center justify-center px-6 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-20">
-              <div className="flex-1 flex items-center justify-center w-full max-w-sm">
+            <div
+              data-testid="create-preview-screen"
+              className="flex min-h-0 flex-1 flex-col items-center overflow-y-auto px-6 pb-3 pt-20"
+            >
+              <div className="flex min-h-0 flex-1 items-center justify-center w-full max-w-sm">
                 <motion.div
                   initial={{ scale: 0.85, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: 'spring', damping: 24, stiffness: 260 }}
-                  className="relative rounded-[18px] border-2 border-[#221915] bg-[#fffdf2] p-4 shadow-[8px_8px_0_rgba(47,95,179,0.24)]"
+                  className="relative rounded-[18px] border-2 border-[#221915] bg-[#fffdf2] p-3 shadow-[8px_8px_0_rgba(47,95,179,0.24)] sm:p-4"
                 >
                   <img
                     src={previewImage!}
                     alt={t.previewSticker || 'Sticker preview'}
-                    className="max-h-[46vh] max-w-full rounded-[12px] object-contain"
+                    className="max-h-[min(42dvh,360px)] max-w-full rounded-[12px] object-contain"
                   />
                 </motion.div>
               </div>
 
-              <div className="mt-6 flex w-full max-w-sm gap-3 rounded-[22px] border-2 border-[#221915] bg-[#fffdf2]/94 p-3 shadow-[6px_6px_0_rgba(47,95,179,0.2)]">
+              <div
+                data-testid="create-preview-actions"
+                className="mt-4 flex w-full max-w-sm gap-3 rounded-[22px] border-2 border-[#221915] bg-[#fffdf2]/94 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[6px_6px_0_rgba(47,95,179,0.2)] sm:mt-6"
+              >
                 <button
                   onClick={() => {
                     setPreviewMode(false);

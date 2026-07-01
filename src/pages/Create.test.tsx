@@ -204,6 +204,29 @@ describe('Create page', () => {
     expect(screen.getByRole('button', { name: '方形貓卡' })).toHaveClass('bg-[#2F5FB3]');
   });
 
+  it('keeps the cropped preview mobile-scrollable with a safe-area action sheet', async () => {
+    render(
+      <MemoryRouter>
+        <Create />
+      </MemoryRouter>
+    );
+
+    await userEvent.upload(
+      screen.getByLabelText('Upload from Album'),
+      new File(['cat'], 'cat.jpg', { type: 'image/jpeg' })
+    );
+
+    await screen.findByTestId('cropper');
+    await userEvent.click(screen.getByRole('button', { name: '方形貓卡' }));
+    await screen.findByAltText('預覽貓卡');
+
+    expect(screen.getByTestId('create-preview-screen')).toHaveClass('min-h-0', 'overflow-y-auto');
+    expect(screen.getByAltText('預覽貓卡')).toHaveClass('max-h-[min(42dvh,360px)]');
+    expect(screen.getByTestId('create-preview-actions')).toHaveClass(
+      'pb-[calc(0.75rem+env(safe-area-inset-bottom))]'
+    );
+  });
+
   it('saves the cropped preview as a recoverable draft before the cat card is confirmed', async () => {
     render(
       <MemoryRouter>

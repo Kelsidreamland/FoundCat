@@ -164,6 +164,23 @@ describe('LocationPicker', () => {
     expect(screen.getByText('貼完整 Google Maps 連結最準，也可以搜尋店名地址，或直接點地圖放 pin。')).toBeInTheDocument();
   });
 
+  it('keeps the location picker usable on short mobile screens', () => {
+    render(
+      <LocationPicker
+        language="zh"
+        onPicked={vi.fn()}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(screen.getByTestId('location-picker-panel')).toHaveClass(
+      'max-h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem)]',
+      'pb-[env(safe-area-inset-bottom)]'
+    );
+    expect(screen.getByTestId('location-picker-form')).toHaveClass('max-h-[42dvh]', 'overflow-y-auto');
+    expect(screen.getByTestId('location-picker-map')).toHaveClass('min-h-[min(260px,32dvh)]');
+  });
+
   it('lets users choose a location input method and keeps the relevant control focused', async () => {
     render(
       <LocationPicker
