@@ -78,9 +78,10 @@ describe('PWAUpdatePrompt', () => {
     await waitFor(() => {
       expect(registration.update).toHaveBeenCalled();
     });
-    expect(screen.getByTestId('version-check-chip')).toHaveClass('top-[calc(env(safe-area-inset-top)+3.05rem)]');
-    expect(screen.getByTestId('version-check-chip')).toHaveClass('right-4');
-    expect(screen.getByTestId('version-check-chip')).not.toHaveClass('bottom-[calc(env(safe-area-inset-bottom)+5.75rem)]');
+    expect(screen.getByTestId('version-check-chip')).toHaveClass('bottom-[calc(env(safe-area-inset-bottom)+5.75rem)]');
+    expect(screen.getByTestId('version-check-chip')).toHaveClass('left-3');
+    expect(screen.getByTestId('version-check-chip')).not.toHaveClass('top-[calc(env(safe-area-inset-top)+3.05rem)]');
+    expect(screen.getByTestId('version-check-chip')).not.toHaveClass('right-4');
     const updateButton = screen.getByRole('button', { name: /版本/ });
     expect(updateButton).toHaveTextContent(/^v/);
     expect(updateButton).not.toHaveTextContent('·');
@@ -92,6 +93,29 @@ describe('PWAUpdatePrompt', () => {
       expect(registration.update.mock.calls.length).toBeGreaterThan(automaticChecks);
     });
     expect(screen.getByText('檢查更新中...')).toBeInTheDocument();
+  });
+
+  it('hides the compact update checker while another dialog is open', async () => {
+    needRefreshState = false;
+    render(<PWAUpdatePrompt />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('version-check-chip')).toBeInTheDocument();
+    });
+
+    const dialog = document.createElement('div');
+    dialog.setAttribute('role', 'dialog');
+    document.body.appendChild(dialog);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('version-check-chip')).not.toBeInTheDocument();
+    });
+
+    dialog.remove();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('version-check-chip')).toBeInTheDocument();
+    });
   });
 
   it('keeps the later action accessible and secondary', async () => {
