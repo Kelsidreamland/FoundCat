@@ -61,16 +61,20 @@ describe('WorldCatProfileSheet', () => {
     expect(dialog).toHaveTextContent('窗邊小虎');
     expect(dialog).toHaveTextContent('泰國 清邁');
     expect(dialog).toHaveTextContent('W-012');
-    expect(dialog).toHaveTextContent('牠給人的感覺');
+    expect(dialog).toHaveTextContent('感覺');
     expect(dialog).toHaveTextContent('親人');
     expect(dialog).toHaveTextContent('貪吃');
     expect(dialog).toHaveTextContent('特徵');
     expect(dialog).toHaveTextContent('左耳有白毛，尾巴短短');
     expect(dialog).toHaveTextContent('偶遇線索');
     expect(dialog).toHaveTextContent('下午會趴在木窗旁邊看路人');
-    expect(dialog).toHaveTextContent('照護狀態');
+    expect(dialog).toHaveTextContent('照護');
     expect(dialog).toHaveTextContent('固定餵養');
     expect(dialog).not.toHaveTextContent('清邁舊城測試路 123 號');
+    expect(screen.getByRole('button', { name: '去找這隻喵' })).toHaveAttribute('title', '去找這隻喵');
+    expect(screen.getByRole('button', { name: '收藏' })).toHaveAttribute('title', '收藏');
+    expect(screen.getByTestId('world-cat-find-icon-action')).toBeInTheDocument();
+    expect(screen.getByTestId('world-cat-save-icon-action')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: '去找這隻喵' }));
     expect(onFind).toHaveBeenCalledWith(item);
@@ -80,7 +84,7 @@ describe('WorldCatProfileSheet', () => {
     expect(screen.getByRole('dialog', { name: '窗邊小虎 世界貓咪檔案' })).toBeInTheDocument();
   });
 
-  it('shows only the mystery state when optional profile details are sparse', () => {
+  it('shows short mystery copy when optional world cat details are missing', () => {
     const onSave = vi.fn();
 
     render(
@@ -88,7 +92,6 @@ describe('WorldCatProfileSheet', () => {
         item={makeItem({
           id: 'public-cat-2',
           publicNumber: 2,
-          catName: '神秘貓',
           location: { lat: 25, lng: 121, name: '台北' },
           isPublic: true,
         })}
@@ -100,17 +103,22 @@ describe('WorldCatProfileSheet', () => {
       />
     );
 
-    const dialog = screen.getByRole('dialog', { name: '神秘貓 世界貓咪檔案' });
-    expect(dialog).toHaveTextContent('神秘貓');
+    const dialog = screen.getByRole('dialog', { name: '神秘貓咪 世界貓咪檔案' });
+    expect(dialog).toHaveTextContent('神秘貓咪');
     expect(dialog).toHaveTextContent('台北');
     expect(dialog).toHaveTextContent('W-002');
-    expect(dialog).toHaveTextContent('這隻貓還很神秘');
+    expect(dialog).toHaveTextContent('這隻貓還很神秘。');
+    expect(dialog).toHaveTextContent('目前知道');
+    expect(dialog).toHaveTextContent('牠曾經在這裡出現。');
+    expect(dialog).toHaveTextContent('下一步');
+    expect(dialog).toHaveTextContent('去地圖看看牠在哪裡。');
     expect(dialog).not.toHaveTextContent('牠給人的感覺');
     expect(dialog).not.toHaveTextContent('特徵');
-    expect(dialog).not.toHaveTextContent('偶遇線索');
     expect(dialog).not.toHaveTextContent('照護狀態');
-    expect(screen.getByRole('button', { name: '去找這隻喵' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '已收藏' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '去找這隻喵' })).toHaveAttribute('title', '去找這隻喵');
+    expect(screen.getByRole('button', { name: '已收藏' })).toHaveAttribute('title', '已收藏');
+    expect(screen.getByTestId('world-cat-find-icon-action')).toBeInTheDocument();
+    expect(screen.getByTestId('world-cat-save-icon-action')).toBeInTheDocument();
   });
 
   it('does not save again after the world cat is already collected', () => {

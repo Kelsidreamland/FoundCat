@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bookmark, MapPin, X } from 'lucide-react';
+import { Heart, MapPin, Navigation, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
   getCareStatusLabels,
@@ -22,11 +22,17 @@ const copyFor = (language: 'zh' | 'en') => ({
   title: language === 'zh' ? '世界貓咪檔案' : 'World Cat Profile',
   close: language === 'zh' ? '關閉世界貓咪檔案' : 'Close world cat profile',
   defaultName: language === 'zh' ? '神秘貓咪' : 'Mystery cat',
-  vibe: language === 'zh' ? '牠給人的感覺' : 'Vibe',
+  vibe: language === 'zh' ? '感覺' : 'Vibe',
   features: language === 'zh' ? '特徵' : 'Features',
   spot: language === 'zh' ? '偶遇線索' : 'Spot clues',
-  care: language === 'zh' ? '照護狀態' : 'Care status',
-  mystery: language === 'zh' ? '這隻貓還很神秘' : 'This cat is still mysterious',
+  care: language === 'zh' ? '照護' : 'Care',
+  known: language === 'zh' ? '目前知道' : 'Known so far',
+  nextStep: language === 'zh' ? '下一步' : 'Next step',
+  cluePlaceholder: language === 'zh' ? '線索' : 'Clues',
+  mystery: language === 'zh' ? '這隻貓還很神秘。' : 'This cat is still mysterious.',
+  knownFact: language === 'zh' ? '牠曾經在這裡出現。' : 'This cat was seen here.',
+  nextStepCopy: language === 'zh' ? '去地圖看看牠在哪裡。' : 'Open the map to find this cat.',
+  fillLater: language === 'zh' ? '等你補充' : 'Add later',
   find: language === 'zh' ? '去找這隻喵' : 'Go find this cat',
   save: language === 'zh' ? '收藏' : 'Save',
   saved: language === 'zh' ? '已收藏' : 'Saved',
@@ -63,6 +69,43 @@ function ChipList({ labels }: { labels: string[] }) {
           {label}
         </span>
       ))}
+    </div>
+  );
+}
+
+function MysteryState({ copy }: { copy: ReturnType<typeof copyFor> }) {
+  return (
+    <div className="space-y-3">
+      <p className="rounded-[16px] border border-[#221915]/12 bg-[#fff8e7] px-3 py-2 text-sm font-bold leading-6 text-[#6d5f52]">
+        {copy.mystery}
+      </p>
+
+      <DetailSection title={copy.known}>
+        <p className="rounded-[16px] border border-[#2f5fb3]/18 bg-[#d9ecff]/52 px-3 py-2 text-sm font-bold leading-6 text-[#3d312a]">
+          {copy.knownFact}
+        </p>
+      </DetailSection>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-[16px] border border-[#221915]/12 bg-white/64 px-3 py-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
+            {copy.vibe}
+          </p>
+          <p className="mt-1 text-xs font-black text-[#6d5f52]">{copy.fillLater}</p>
+        </div>
+        <div className="rounded-[16px] border border-[#221915]/12 bg-white/64 px-3 py-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
+            {copy.cluePlaceholder}
+          </p>
+          <p className="mt-1 text-xs font-black text-[#6d5f52]">{copy.fillLater}</p>
+        </div>
+      </div>
+
+      <DetailSection title={copy.nextStep}>
+        <p className="rounded-[16px] border border-[#221915]/12 bg-[#fff2cf]/78 px-3 py-2 text-sm font-bold leading-6 text-[#3d312a]">
+          {copy.nextStepCopy}
+        </p>
+      </DetailSection>
     </div>
   );
 }
@@ -185,19 +228,20 @@ export default function WorldCatProfileSheet({
               ) : null}
 
               {!hasProfileDetails ? (
-                <p className="rounded-[16px] border border-[#221915]/12 bg-[#fff8e7] px-3 py-2 text-sm font-bold leading-6 text-[#6d5f52]">
-                  {copy.mystery}
-                </p>
+                <MysteryState copy={copy} />
               ) : null}
             </div>
 
-            <div className="sticky bottom-0 -mx-4 mt-5 grid grid-cols-[1fr_auto] gap-2 border-t border-[#221915]/10 bg-[#fffdf2]/96 px-4 pt-3 backdrop-blur-sm">
+            <div className="sticky bottom-0 -mx-4 mt-5 flex justify-end gap-2 border-t border-[#221915]/10 bg-[#fffdf2]/96 px-4 pt-3 backdrop-blur-sm">
               <button
                 type="button"
                 onClick={() => onFind(item)}
-                className="rounded-[18px] border-2 border-[#221915] bg-[#2f5fb3] px-4 py-3 text-sm font-black text-white shadow-[3px_3px_0_rgba(29,23,20,0.86)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+                aria-label={copy.find}
+                title={copy.find}
+                data-testid="world-cat-find-icon-action"
+                className="grid h-[52px] w-[52px] place-items-center rounded-full border-2 border-[#221915] bg-[#2f5fb3] text-white shadow-[3px_3px_0_rgba(29,23,20,0.86)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
               >
-                {copy.find}
+                <Navigation size={20} fill="currentColor" strokeWidth={2.4} aria-hidden="true" />
               </button>
               <button
                 type="button"
@@ -209,10 +253,12 @@ export default function WorldCatProfileSheet({
                   });
                 }}
                 disabled={isSaveLocked}
-                className="inline-flex items-center justify-center gap-1.5 rounded-[18px] border-2 border-[#221915] bg-[#fff2cf] px-4 py-3 text-sm font-black text-[#1d1714] shadow-[3px_3px_0_rgba(29,23,20,0.86)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3] disabled:cursor-default disabled:bg-[#fff8e7] disabled:text-[#6d5f52]"
+                aria-label={isSaved ? copy.saved : copy.save}
+                title={isSaved ? copy.saved : copy.save}
+                data-testid="world-cat-save-icon-action"
+                className="grid h-[52px] w-[52px] place-items-center rounded-full border-2 border-[#221915] bg-[#fff2cf] text-[#1d1714] shadow-[3px_3px_0_rgba(29,23,20,0.86)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3] disabled:cursor-default disabled:bg-[#fff8e7] disabled:text-[#6d5f52]"
               >
-                <Bookmark size={15} fill={isSaved ? '#f7c948' : 'none'} strokeWidth={2.5} />
-                {isSaved ? copy.saved : copy.save}
+                <Heart size={20} fill={isSaved ? '#f7c948' : 'none'} strokeWidth={2.5} aria-hidden="true" />
               </button>
             </div>
           </motion.section>
