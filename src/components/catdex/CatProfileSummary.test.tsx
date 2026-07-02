@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { cleanup, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 import type { ScrapbookItem } from '../../store/useScrapbookStore';
 import CatProfileSummary, { getCatProfileCopy } from './CatProfileSummary';
 import { getCatInfoCopy } from '../../lib/catInfoDisplay';
@@ -26,29 +26,48 @@ const makeItem = (overrides: Partial<ScrapbookItem> = {}): ScrapbookItem => ({
 });
 
 describe('CatProfileSummary', () => {
-  it('shows the mysterious empty-state copy only once for sparse cat profiles', () => {
+  afterEach(() => cleanup());
+
+  it('shows a compact mystery profile when users only saved a photo and location', () => {
     render(
       <CatProfileSummary
-        item={makeItem()}
+        item={makeItem({ location: { lat: 25.033, lng: 121.565, name: '東京' } })}
         language="zh"
-        showPlace={false}
       />
     );
 
     expect(screen.getByText('貓咪個人檔案')).toBeInTheDocument();
-    expect(screen.getAllByText('牠還很神秘，等下一位貓奴補充。')).toHaveLength(1);
+    expect(screen.getByText('這隻貓還很神秘。')).toBeInTheDocument();
+    expect(screen.getByText('目前知道')).toBeInTheDocument();
+    expect(screen.getByText('牠曾經在這裡出現。')).toBeInTheDocument();
+    expect(screen.getByText('下一步')).toBeInTheDocument();
+    expect(screen.getByText('去地圖看看牠在哪裡。')).toBeInTheDocument();
+    expect(screen.getByText('感覺')).toBeInTheDocument();
+    expect(screen.getByText('線索')).toBeInTheDocument();
+    expect(screen.getAllByText('等你補充')).toHaveLength(2);
+    expect(screen.queryByText('牠還很神秘，等下一位貓奴補充。')).not.toBeInTheDocument();
   });
 
-  it('labels spot notes as encounter clues in Chinese profiles', () => {
+  it('uses short profile labels for filled cat details', () => {
     render(
       <CatProfileSummary
-        item={makeItem({ spotNote: '傍晚常在咖啡店門口紙箱睡覺' })}
+        item={makeItem({
+          personalityTags: ['friendly'],
+          spotNote: '早上在咖啡店門口',
+          catFeatureNote: '橘白色，尾巴末端有白點',
+          careStatusTags: ['fed'],
+        })}
         language="zh"
         showPlace={false}
       />
     );
 
+    expect(screen.getByText('感覺')).toBeInTheDocument();
     expect(screen.getByText('偶遇線索')).toBeInTheDocument();
+    expect(screen.getByText('特徵')).toBeInTheDocument();
+    expect(screen.getByText('照護')).toBeInTheDocument();
+    expect(screen.queryByText('牠給人的感覺')).not.toBeInTheDocument();
+    expect(screen.queryByText('外型小檔案')).not.toBeInTheDocument();
     expect(screen.queryByText('喜歡出沒')).not.toBeInTheDocument();
   });
 

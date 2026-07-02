@@ -23,18 +23,24 @@ interface CatProfileSummaryProps {
 export const getCatProfileCopy = (language: 'zh' | 'en') => ({
   title: language === 'zh' ? '貓咪個人檔案' : 'Cat Profile',
   catTalkLabel: language === 'zh' ? '貓咪回話' : 'Cat says',
-  personality: language === 'zh' ? '牠給人的感覺' : 'Vibe',
-  look: language === 'zh' ? '外型小檔案' : 'Look',
+  personality: language === 'zh' ? '感覺' : 'Vibe',
+  look: language === 'zh' ? '外型' : 'Look',
   features: language === 'zh' ? '特徵' : 'Features',
   spot: language === 'zh' ? '偶遇線索' : 'Favorite spot',
-  care: language === 'zh' ? '照護狀態' : 'Care notes',
-  place: language === 'zh' ? '出沒城市' : 'Area',
+  care: language === 'zh' ? '照護' : 'Care',
+  place: language === 'zh' ? '城市' : 'Area',
+  known: language === 'zh' ? '目前知道' : 'Known so far',
+  nextStep: language === 'zh' ? '下一步' : 'Next step',
+  cluePlaceholder: language === 'zh' ? '線索' : 'Clues',
   unknownPlace: language === 'zh' ? '某個可愛街角' : 'A cute corner',
-  defaultName: language === 'zh' ? '剛收藏的貓咪' : 'Saved cat',
+  defaultName: language === 'zh' ? '神秘貓咪' : 'Mystery cat',
   close: language === 'zh' ? '繼續看貓' : 'Keep swiping',
   openCatdex: language === 'zh' ? '查看我的貓卡' : 'View My Cat Cards',
   saved: language === 'zh' ? '已收藏' : 'Saved',
-  noDetails: language === 'zh' ? '牠還很神秘，等下一位貓奴補充。' : 'Still mysterious. More notes can be added later.',
+  mysterySpeech: language === 'zh' ? '這隻貓還很神秘。' : 'This cat is still mysterious.',
+  knownFact: language === 'zh' ? '牠曾經在這裡出現。' : 'This cat was seen here.',
+  nextStepCopy: language === 'zh' ? '去地圖看看牠在哪裡。' : 'Open the map to find this cat.',
+  fillLater: language === 'zh' ? '等你補充' : 'Add later',
 });
 
 export const getCatSpeech = (item: ScrapbookItem, language: 'zh' | 'en') => {
@@ -53,7 +59,7 @@ export const getCatSpeech = (item: ScrapbookItem, language: 'zh' | 'en') => {
     return language === 'zh' ? '喵，我同意被收藏，但不保證立刻理你。' : 'Meow. You may save me, but attention is not guaranteed.';
   }
 
-  return language === 'zh' ? '喵，謝謝你收藏我。' : 'Meow, thanks for saving me.';
+  return getCatProfileCopy(language).mysterySpeech;
 };
 
 export const getBroadPlaceLabel = (item: ScrapbookItem, language: 'zh' | 'en') => {
@@ -102,6 +108,49 @@ function ProfileChips({
           {label}
         </span>
       ))}
+    </div>
+  );
+}
+
+function MysteryProfileState({
+  copy,
+  compact = false,
+}: {
+  copy: ReturnType<typeof getCatProfileCopy>;
+  compact?: boolean;
+}) {
+  return (
+    <div className={compact ? 'space-y-2.5' : 'space-y-3'}>
+      <ProfileSection title={copy.known} compact={compact}>
+        <p className={`rounded-[16px] border border-[#2f5fb3]/18 bg-[#d9ecff]/52 px-3 py-2 font-bold text-[#3d312a] ${
+          compact ? 'text-xs leading-relaxed' : 'text-sm leading-6'
+        }`}>
+          {copy.knownFact}
+        </p>
+      </ProfileSection>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-[16px] border border-[#221915]/12 bg-white/64 px-3 py-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
+            {copy.personality}
+          </p>
+          <p className="mt-1 text-xs font-black text-[#6d5f52]">{copy.fillLater}</p>
+        </div>
+        <div className="rounded-[16px] border border-[#221915]/12 bg-white/64 px-3 py-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
+            {copy.cluePlaceholder}
+          </p>
+          <p className="mt-1 text-xs font-black text-[#6d5f52]">{copy.fillLater}</p>
+        </div>
+      </div>
+
+      <ProfileSection title={copy.nextStep} compact={compact}>
+        <p className={`rounded-[16px] border border-[#221915]/12 bg-[#fff2cf]/78 px-3 py-2 font-bold text-[#3d312a] ${
+          compact ? 'text-xs leading-relaxed' : 'text-sm leading-6'
+        }`}>
+          {copy.nextStepCopy}
+        </p>
+      </ProfileSection>
     </div>
   );
 }
@@ -204,9 +253,7 @@ export default function CatProfileSummary({
       ) : null}
 
       {!hasAnyProfileDetail ? (
-        <p className="rounded-[16px] border border-[#221915]/12 bg-[#fff8e7] px-3 py-2 text-sm font-bold leading-6 text-[#6d5f52]">
-          {copy.noDetails}
-        </p>
+        <MysteryProfileState copy={copy} compact={compact} />
       ) : null}
     </section>
   );
