@@ -26,7 +26,7 @@ export const getCatProfileCopy = (language: 'zh' | 'en') => ({
   personality: language === 'zh' ? '感覺' : 'Vibe',
   look: language === 'zh' ? '外型' : 'Look',
   features: language === 'zh' ? '特徵' : 'Features',
-  spot: language === 'zh' ? '偶遇線索' : 'Favorite spot',
+  spot: language === 'zh' ? '偶遇線索' : 'Spot clues',
   care: language === 'zh' ? '照護' : 'Care',
   place: language === 'zh' ? '城市' : 'Area',
   known: language === 'zh' ? '目前知道' : 'Known so far',
