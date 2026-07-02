@@ -219,7 +219,9 @@ export default function Home() {
   }, [addItem, items]);
 
   const handleCollectCard = useCallback(async (item: ScrapbookItem) => {
-    await collectPublicCat(item, { showCollectedProfile: false, showSavePrompt: true });
+    await collectPublicCat(item, { showCollectedProfile: false, showSavePrompt: false });
+    setSavePrompt(null);
+    setProfileSheetItem(item);
   }, [collectPublicCat]);
 
   const isProfileSheetItemSaved = profileSheetItem
