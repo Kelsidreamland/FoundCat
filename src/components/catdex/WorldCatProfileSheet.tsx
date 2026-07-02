@@ -33,6 +33,7 @@ const copyFor = (language: 'zh' | 'en') => ({
   knownFact: language === 'zh' ? '牠曾經在這裡出現。' : 'This cat was seen here.',
   nextStepCopy: language === 'zh' ? '去地圖看看牠在哪裡。' : 'Open the map to find this cat.',
   fillLater: language === 'zh' ? '等你補充' : 'Add later',
+  summary: language === 'zh' ? '檔案摘要' : 'Profile note',
   find: language === 'zh' ? '去找這隻喵' : 'Go find this cat',
   save: language === 'zh' ? '收藏' : 'Save',
   saved: language === 'zh' ? '已收藏' : 'Saved',
@@ -73,40 +74,21 @@ function ChipList({ labels }: { labels: string[] }) {
   );
 }
 
+function getProfileSummary(
+  copy: ReturnType<typeof copyFor>,
+  labels: string[],
+  hasProfileDetails: boolean
+) {
+  if (labels.length > 0) return labels.slice(0, 2).join(' / ');
+  if (hasProfileDetails) return copy.knownFact;
+  return copy.mystery;
+}
+
 function MysteryState({ copy }: { copy: ReturnType<typeof copyFor> }) {
   return (
-    <div className="space-y-3">
-      <p className="rounded-[16px] border border-[#221915]/12 bg-[#fff8e7] px-3 py-2 text-sm font-bold leading-6 text-[#6d5f52]">
-        {copy.mystery}
-      </p>
-
-      <DetailSection title={copy.known}>
-        <p className="rounded-[16px] border border-[#2f5fb3]/18 bg-[#d9ecff]/52 px-3 py-2 text-sm font-bold leading-6 text-[#3d312a]">
-          {copy.knownFact}
-        </p>
-      </DetailSection>
-
-      <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-[16px] border border-[#221915]/12 bg-white/64 px-3 py-2">
-          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
-            {copy.vibe}
-          </p>
-          <p className="mt-1 text-xs font-black text-[#6d5f52]">{copy.fillLater}</p>
-        </div>
-        <div className="rounded-[16px] border border-[#221915]/12 bg-white/64 px-3 py-2">
-          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
-            {copy.cluePlaceholder}
-          </p>
-          <p className="mt-1 text-xs font-black text-[#6d5f52]">{copy.fillLater}</p>
-        </div>
-      </div>
-
-      <DetailSection title={copy.nextStep}>
-        <p className="rounded-[16px] border border-[#221915]/12 bg-[#fff2cf]/78 px-3 py-2 text-sm font-bold leading-6 text-[#3d312a]">
-          {copy.nextStepCopy}
-        </p>
-      </DetailSection>
-    </div>
+    <p className="rounded-[18px] border border-[#221915]/12 bg-white/62 px-3 py-2.5 text-sm font-bold leading-6 text-[#6d5f52]">
+      {copy.knownFact}
+    </p>
   );
 }
 
@@ -132,6 +114,7 @@ export default function WorldCatProfileSheet({
     spotNote ||
     careLabels.length > 0
   );
+  const profileSummary = getProfileSummary(copy, personalityLabels, hasProfileDetails);
   const isSaveLocked = isSaved || isSaving;
 
   useEffect(() => {
@@ -174,8 +157,11 @@ export default function WorldCatProfileSheet({
               </button>
             </div>
 
-            <div className="mt-4 grid grid-cols-[96px_1fr] items-end gap-3">
-              <div className="relative aspect-square overflow-hidden rounded-[20px] border-2 border-[#221915] bg-[#f7c948] shadow-[4px_4px_0_rgba(47,95,179,0.20)]">
+            <div className="mt-4">
+              <div
+                data-testid="world-cat-photo-frame"
+                className="relative h-[clamp(190px,36dvh,280px)] overflow-hidden rounded-[24px] border-2 border-[#221915] bg-[#f7c948] shadow-[5px_5px_0_rgba(47,95,179,0.20)]"
+              >
                 {image ? (
                   <img
                     src={image}
@@ -187,18 +173,33 @@ export default function WorldCatProfileSheet({
                   <div className="grid h-full w-full place-items-center text-3xl font-black">?</div>
                 )}
               </div>
-              <div className="min-w-0 rounded-[20px] border border-[#221915]/14 bg-[#fff8e7] p-3">
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#2f5fb3]">
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-[#2f5fb3] px-3 py-1 text-[11px] font-black text-white">
                   {formatCatCardNumberForItem(item)}
-                </p>
-                <p className="mt-1 inline-flex max-w-full items-center gap-1.5 truncate text-sm font-black leading-5 text-[#1d1714]">
+                </span>
+                <span
+                  data-testid="world-cat-location-pill"
+                  className="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-full border border-[#2f5fb3]/18 bg-[#d9ecff]/72 px-3 py-1.5 text-xs font-black text-[#1d1714]"
+                >
                   <MapPin size={14} className="shrink-0" strokeWidth={2.5} />
                   <span className="truncate">{getReadableLocationName(item, language)}</span>
-                </p>
+                </span>
               </div>
             </div>
 
-            <div className="mt-5 space-y-4">
+            <div className="mt-5 space-y-3.5">
+              <section
+                data-testid="world-cat-profile-summary"
+                className="rounded-[18px] border border-[#221915]/12 bg-[#fff8e7] px-3 py-2.5"
+              >
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
+                  {copy.summary}
+                </p>
+                <p className="mt-1 text-sm font-black leading-6 text-[#1d1714]">
+                  {profileSummary}
+                </p>
+              </section>
+
               {personalityLabels.length > 0 ? (
                 <DetailSection title={copy.vibe}>
                   <ChipList labels={personalityLabels} />

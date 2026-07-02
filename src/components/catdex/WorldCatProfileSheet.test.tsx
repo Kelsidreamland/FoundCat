@@ -61,6 +61,10 @@ describe('WorldCatProfileSheet', () => {
     expect(dialog).toHaveTextContent('窗邊小虎');
     expect(dialog).toHaveTextContent('泰國 清邁');
     expect(dialog).toHaveTextContent('W-012');
+    expect(screen.getByTestId('world-cat-photo-frame')).toHaveClass('h-[clamp(190px,36dvh,280px)]');
+    expect(screen.getByTestId('world-cat-profile-summary')).toHaveTextContent('親人');
+    expect(screen.getByTestId('world-cat-profile-summary')).toHaveTextContent('貪吃');
+    expect(screen.getByTestId('world-cat-location-pill')).toHaveTextContent('泰國 清邁');
     expect(dialog).toHaveTextContent('感覺');
     expect(dialog).toHaveTextContent('親人');
     expect(dialog).toHaveTextContent('貪吃');
@@ -107,11 +111,13 @@ describe('WorldCatProfileSheet', () => {
     expect(dialog).toHaveTextContent('神秘貓咪');
     expect(dialog).toHaveTextContent('台北');
     expect(dialog).toHaveTextContent('W-002');
+    expect(screen.getByTestId('world-cat-photo-frame')).toHaveClass('h-[clamp(190px,36dvh,280px)]');
+    expect(screen.getByTestId('world-cat-profile-summary')).toHaveTextContent('這隻貓還很神秘。');
     expect(dialog).toHaveTextContent('這隻貓還很神秘。');
-    expect(dialog).toHaveTextContent('目前知道');
     expect(dialog).toHaveTextContent('牠曾經在這裡出現。');
-    expect(dialog).toHaveTextContent('下一步');
-    expect(dialog).toHaveTextContent('去地圖看看牠在哪裡。');
+    expect(dialog).not.toHaveTextContent('目前知道');
+    expect(dialog).not.toHaveTextContent('等你補充');
+    expect(dialog).not.toHaveTextContent('下一步');
     expect(dialog).not.toHaveTextContent('牠給人的感覺');
     expect(dialog).not.toHaveTextContent('特徵');
     expect(dialog).not.toHaveTextContent('照護狀態');
