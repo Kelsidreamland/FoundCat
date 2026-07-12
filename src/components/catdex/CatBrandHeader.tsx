@@ -26,7 +26,7 @@ export default function CatBrandHeader({
   toggleLabel,
   showLanguageToggle = Boolean(language && onToggleLanguage && toggleLabel),
   showClose = false,
-  closeLabel = '關閉回首頁',
+  closeLabel = language === 'en' ? 'Close and return home' : '關閉回首頁',
   logoLabel = language === 'en' ? 'Return home' : '回到首頁',
   donationUrl,
   donationLabel = '捐贈',
