@@ -33,7 +33,7 @@ describe('cat app brand copy', () => {
 
   it('uses one product name across supported languages', () => {
     expect(translations.zh.appName).toBe('轉角遇到貓');
-    expect(translations.en.appName).toBe('轉角遇到貓');
+    expect(translations.en.appName).toBe('FOUND CAT');
   });
 
   it('does not expose old product names in user-facing brand surfaces', () => {

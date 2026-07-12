@@ -25,12 +25,18 @@ const getShareCardTitle = (item: ScrapbookItem, language: 'zh' | 'en') => {
   return item.catName?.trim() || item.location?.name || (language === 'zh' ? '未命名貓咪' : 'Unnamed cat');
 };
 
-const normalizeMapDisplayName = (value: string | undefined, fallback: string) => {
+const normalizeMapDisplayName = (value: string | undefined, fallback: string, language: 'zh' | 'en') => {
   const trimmed = value?.trim();
   if (!trimmed) return fallback;
-  if (trimmed === '我的轉角貓圖鑑' || trimmed === 'My FOUND CAT Catdex' || trimmed === 'My Corner Cat Catdex') {
+  if (
+    trimmed === '我的轉角貓圖鑑' ||
+    trimmed === '我的轉角貓地圖' ||
+    trimmed === 'My FOUND CAT Catdex' ||
+    trimmed === 'My Corner Cat Catdex'
+  ) {
     return fallback;
   }
+  if (language === 'en' && /[\u3400-\u9fff]/.test(trimmed)) return fallback;
   return value ?? fallback;
 };
 
@@ -44,7 +50,7 @@ export default function ShareCatdex() {
   } = useScrapbookStore();
   const t = translations[language];
   const mappedItems = useMemo(() => sortCatCards(items).filter((item) => item.location), [items]);
-  const [draftName, setDraftName] = useState(() => normalizeMapDisplayName(catdexDisplayName, t.catdexDisplayName));
+  const [draftName, setDraftName] = useState(() => normalizeMapDisplayName(catdexDisplayName, t.catdexDisplayName, language));
   const [selectedIds, setSelectedIds] = useState<Set<string> | null>(null);
   const [includeMemo, setIncludeMemo] = useState(false);
   const [hasCopiedLink, setHasCopiedLink] = useState(false);
@@ -58,12 +64,16 @@ export default function ShareCatdex() {
   };
 
   useEffect(() => {
-    const normalized = normalizeMapDisplayName(catdexDisplayName, t.catdexDisplayName);
-    if (normalized !== draftName && (catdexDisplayName === '我的轉角貓圖鑑' || catdexDisplayName === 'My FOUND CAT Catdex' || catdexDisplayName === 'My Corner Cat Catdex')) {
+    const normalized = normalizeMapDisplayName(catdexDisplayName, t.catdexDisplayName, language);
+    const isLegacyDefault = catdexDisplayName === '我的轉角貓圖鑑'
+      || catdexDisplayName === '我的轉角貓地圖'
+      || catdexDisplayName === 'My FOUND CAT Catdex'
+      || catdexDisplayName === 'My Corner Cat Catdex';
+    if (isLegacyDefault && normalized !== draftName) {
       setDraftName(normalized);
       void setCatdexDisplayName(normalized);
     }
-  }, [catdexDisplayName, draftName, setCatdexDisplayName, t.catdexDisplayName]);
+  }, [catdexDisplayName, language, setCatdexDisplayName, t.catdexDisplayName]);
 
   const toggleItem = (id: string) => {
     setSelectedIds((current) => {

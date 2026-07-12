@@ -236,7 +236,7 @@ describe('Map page', () => {
       </MemoryRouter>
     );
 
-    const mapBrandMark = await screen.findByRole('img', { name: 'AI Moodboard V1 L4 貓咪地圖圖標' });
+    const mapBrandMark = await screen.findByRole('img', { name: 'FOUND CAT 貓咪地圖圖標' });
     expect(mapBrandMark).toBeInTheDocument();
     expect(mapBrandMark).toHaveTextContent('FOUND CAT');
     expect(mapBrandMark).not.toHaveTextContent(/Corner|Stickerbook/i);

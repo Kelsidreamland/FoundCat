@@ -308,22 +308,28 @@ export default function Home() {
         <div className="fixed inset-x-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-[290] mx-auto max-w-sm rounded-[20px] border-2 border-[#1d1714] bg-[#fffdf2] p-4 text-[#1d1714] shadow-[6px_7px_0_rgba(29,23,20,0.82)]">
           {savePrompt.kind === 'first-world-save' ? (
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-black leading-5">已收藏到我的貓卡</p>
+              <p className="min-w-0 text-sm font-black leading-5">
+                {language === 'zh' ? '已收藏到我的貓卡' : 'Saved to My Cat Cards'}
+              </p>
               <Link
                 to={getWorldCatMapPath(savePrompt.item)}
                 className="shrink-0 rounded-[16px] border-2 border-[#1d1714] bg-[#2f5fb3] px-4 py-2 text-sm font-black text-white shadow-[3px_3px_0_rgba(29,23,20,0.82)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
               >
-                去找這隻喵
+                {language === 'zh' ? '去找這隻喵' : 'Find this cat'}
               </Link>
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-sm font-black leading-6">你已收藏 3 隻世界貓，要不要也分享一隻你遇到的貓？</p>
+              <p className="text-sm font-black leading-6">
+                {language === 'zh'
+                  ? '你已收藏 3 隻世界貓，要不要也分享一隻你遇到的貓？'
+                  : 'You saved 3 world cats. Want to share one you found?'}
+              </p>
               <Link
                 to="/create"
                 className="inline-flex rounded-[16px] border-2 border-[#1d1714] bg-[#f7c948] px-4 py-2 text-sm font-black text-[#1d1714] shadow-[3px_3px_0_rgba(29,23,20,0.82)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
               >
-                我也遇到貓貓了！
+                {language === 'zh' ? '我也遇到貓貓了！' : 'I found a cat too!'}
               </Link>
             </div>
           )}

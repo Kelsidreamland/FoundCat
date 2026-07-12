@@ -76,8 +76,12 @@ export default function SharedCatMap() {
         <section className="rounded-[28px] border-2 border-[#221915] bg-[#fffdf2] p-4 shadow-[8px_8px_0_rgba(47,95,179,0.24)]">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-[18px] font-black leading-none text-[#221915]">轉角遇到貓</p>
-              <p className="mt-1 text-[11px] font-black uppercase tracking-[0.24em] text-[#2f5fb3]">FOUND CAT</p>
+              <p className="text-[18px] font-black leading-none text-[#221915]">
+                {isZh ? '轉角遇到貓' : 'FOUND CAT'}
+              </p>
+              <p className="mt-1 text-[11px] font-black uppercase tracking-[0.24em] text-[#2f5fb3]">
+                {isZh ? 'FOUND CAT' : 'CAT MAP'}
+              </p>
             </div>
             <button
               type="button"
@@ -142,7 +146,7 @@ export default function SharedCatMap() {
 
             {payload.includeMemo && activeCat.memo ? (
               <div className="mt-4 rounded-[18px] border border-[#221915]/12 bg-white/80 p-3">
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">Memo</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">{isZh ? '備註' : 'Memo'}</p>
                 <p className="mt-2 text-sm font-semibold leading-relaxed text-[#221915]">{activeCat.memo}</p>
               </div>
             ) : null}

@@ -188,7 +188,9 @@ export default function Catdex() {
                 <div className="mb-3 flex items-end justify-between gap-3 border-b border-[#221915]/25 pb-2">
                   <div className="min-w-0">
                     <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#2f5fb3]">
-                      {isWorldSaved ? 'SAVED WORLD PLACE' : 'FOUND CAT PLACE'}
+                      {isWorldSaved
+                        ? (language === 'zh' ? '世界貓點' : 'SAVED WORLD PLACE')
+                        : (language === 'zh' ? '遇見地點' : 'FOUND CAT PLACE')}
                     </p>
                     <h3
                       id={groupHeadingId}
@@ -295,7 +297,7 @@ export default function Catdex() {
   const activeCollection = activeCollectionTab === 'world'
     ? {
         title: worldTabLabel,
-        eyebrow: 'SAVED FROM WORLD MAP',
+        eyebrow: language === 'zh' ? '來自世界地圖' : 'SAVED FROM WORLD MAP',
         description: language === 'zh'
           ? '從全世界地圖收藏回來，保留原本的 W 編號。'
           : 'Cats saved from the World Map, keeping their original W-numbers.',
@@ -304,7 +306,7 @@ export default function Catdex() {
       }
     : {
         title: selfTabLabel,
-        eyebrow: 'MY FOUND CATS',
+        eyebrow: language === 'zh' ? '我遇見的貓' : 'MY FOUND CATS',
         description: language === 'zh'
           ? '自己拍到、自己編號的貓咪圖鑑。'
           : 'Cats you photographed yourself, with your own private numbers.',
@@ -350,15 +352,16 @@ export default function Catdex() {
       <CatBrandHeader
         title={t.appName}
         subtitle={t.appSubtitle}
+        language={language}
         showLanguageToggle={false}
         showClose
-        closeLabel="關閉回首頁"
+        closeLabel={language === 'zh' ? '關閉回首頁' : 'Close and return home'}
       />
 
       <main className="mb-[calc(4.25rem+env(safe-area-inset-bottom))] min-h-0 flex-1 overflow-y-auto px-5 pb-5 scrollbar-hide">
         <section className="mx-auto mb-5 max-w-sm">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#2f5fb3]">
-            FOUND CATS ARCHIVE
+            {language === 'zh' ? '貓卡收藏' : 'FOUND CATS ARCHIVE'}
           </p>
           <h1 className="mt-1 text-3xl font-black leading-none text-[#1d1714]">
             {t.catdex}

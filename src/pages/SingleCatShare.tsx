@@ -62,8 +62,12 @@ export default function SingleCatShare() {
             <div className="pointer-events-none absolute -right-10 top-6 h-24 w-44 rotate-[18deg] border-y-2 border-[#2f5fb3]/35" />
             <div className="relative flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-[18px] font-black leading-none text-[#221915]">轉角遇到貓</p>
-                <p className="mt-1 text-[11px] font-black uppercase tracking-[0.24em] text-[#2f5fb3]">FOUND CAT</p>
+                <p className="text-[18px] font-black leading-none text-[#221915]">
+                  {isZh ? '轉角遇到貓' : 'FOUND CAT'}
+                </p>
+                <p className="mt-1 text-[11px] font-black uppercase tracking-[0.24em] text-[#2f5fb3]">
+                  {isZh ? 'FOUND CAT' : 'CAT CARD'}
+                </p>
               </div>
               <button
                 type="button"
@@ -120,12 +124,12 @@ export default function SingleCatShare() {
 
           {payload.includeMemo && payload.memo ? (
             <div className="mt-4 rounded-[18px] border border-[#221915]/12 bg-white/80 p-4">
-              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">Memo</p>
+              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">{isZh ? '備註' : 'Memo'}</p>
               <p className="mt-2 text-sm font-semibold leading-relaxed text-[#221915]">{payload.memo}</p>
             </div>
           ) : (
             <div className="mt-4 rounded-[18px] border border-[#221915]/12 bg-white/70 p-4">
-              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">Memo</p>
+              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">{isZh ? '備註' : 'Memo'}</p>
               <p className="mt-2 text-sm font-semibold leading-relaxed text-[#76665a]">
                 {isZh ? '分享者沒有公開出沒備註。' : 'The finder did not share a memo.'}
               </p>

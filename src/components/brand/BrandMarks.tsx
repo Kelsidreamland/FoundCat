@@ -1,12 +1,13 @@
 interface BrandMarkProps {
   className?: string;
+  language?: 'zh' | 'en';
 }
 
-export function PostcardCatBrandMark({ className }: BrandMarkProps) {
+export function PostcardCatBrandMark({ className, language = 'zh' }: BrandMarkProps) {
   return (
     <svg
       role="img"
-      aria-label="轉角遇到貓 FOUND CAT Logo"
+      aria-label={language === 'en' ? 'FOUND CAT logo' : '轉角遇到貓 FOUND CAT Logo'}
       viewBox="0 0 311 276"
       preserveAspectRatio="xMidYMid meet"
       className={`${className ?? ''} overflow-visible text-[#18346c] drop-shadow-[2px_4px_0_rgba(47,95,179,0.12)]`}
@@ -39,11 +40,11 @@ export function PostcardCatBrandMark({ className }: BrandMarkProps) {
   );
 }
 
-export function MapTreasureBrandMark({ className }: BrandMarkProps) {
+export function MapTreasureBrandMark({ className, language = 'zh' }: BrandMarkProps) {
   return (
     <svg
       role="img"
-      aria-label="AI Moodboard V1 L4 貓咪地圖圖標"
+      aria-label={language === 'en' ? 'FOUND CAT map icon' : 'FOUND CAT 貓咪地圖圖標'}
       viewBox="0 0 222 267"
       preserveAspectRatio="xMidYMid meet"
       className={`${className ?? ''} overflow-visible text-[#18346c] drop-shadow-[2px_4px_0_rgba(47,95,179,0.12)]`}

@@ -102,7 +102,7 @@ export default function Detail() {
   }
 
   const handleDelete = () => {
-    if (window.confirm('確定要刪除這個圖鑑嗎？')) {
+    if (window.confirm(language === 'zh' ? '確定要刪除這個圖鑑嗎？' : 'Delete this cat card?')) {
       removeItem(item.id);
       navigate('/');
     }
@@ -185,9 +185,10 @@ export default function Detail() {
       <CatBrandHeader
         title={t.appName}
         subtitle={t.appSubtitle}
+        language={language}
         showLanguageToggle={false}
         showClose
-        closeLabel="關閉回首頁"
+        closeLabel={language === 'zh' ? '關閉回首頁' : 'Close and return home'}
       />
 
       <div className="absolute right-5 top-[4.3rem] z-30 flex gap-2">
@@ -203,7 +204,7 @@ export default function Detail() {
         <button
           onClick={handleDelete}
           className="w-10 h-10 bg-[#fffdf2]/90 text-red-500 rounded-full flex items-center justify-center shadow-cat-whisper border border-red-100 hover:bg-red-50 transition-colors focus-visible:ring-2 focus-visible:ring-red-400 outline-none"
-          aria-label="Delete item"
+          aria-label={language === 'zh' ? '刪除貓卡' : 'Delete cat card'}
         >
           <Trash2 size={20} />
         </button>
@@ -374,7 +375,7 @@ export default function Detail() {
           {isSavedWorldCat ? (
             <section className="rounded-[22px] border-2 border-[#221915] bg-[#fffdf2] p-4 text-left shadow-[5px_5px_0_rgba(47,95,179,0.18)]">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="text-base font-black text-[#1d1714]">我的備註</h2>
+                <h2 className="text-base font-black text-[#1d1714]">{language === 'zh' ? '我的備註' : 'My note'}</h2>
                 <button
                   type="button"
                   onClick={() => {
@@ -384,16 +385,16 @@ export default function Detail() {
                   className="inline-flex items-center gap-1.5 rounded-full border border-[#221915] bg-[#fff2cf] px-3 py-1.5 text-xs font-black text-[#221915] shadow-[2px_2px_0_rgba(29,23,20,0.7)]"
                 >
                   <PencilLine size={14} />
-                  編輯我的備註
+                  {language === 'zh' ? '編輯我的備註' : 'Edit my note'}
                 </button>
               </div>
 
               {isEditingPrivateNote ? (
                 <div className="mt-3 space-y-3">
                   <label className="block">
-                    <span className="sr-only">我的備註</span>
+                    <span className="sr-only">{language === 'zh' ? '我的備註' : 'My note'}</span>
                     <textarea
-                      aria-label="我的備註"
+                      aria-label={language === 'zh' ? '我的備註' : 'My note'}
                       value={privateNoteDraft}
                       onChange={(event) => {
                         setPrivateNoteSavedMessage(null);
@@ -408,7 +409,7 @@ export default function Detail() {
                     onClick={handleSavePrivateNote}
                     className="w-full rounded-2xl border-2 border-[#221915] bg-[#2f5fb3] px-4 py-3 text-sm font-black text-white shadow-[4px_4px_0_rgba(29,23,20,0.88)]"
                   >
-                    儲存我的備註
+                    {language === 'zh' ? '儲存我的備註' : 'Save my note'}
                   </button>
                 </div>
               ) : (

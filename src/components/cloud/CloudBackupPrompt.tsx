@@ -274,7 +274,7 @@ export default function CloudBackupPrompt({
             type="button"
             onClick={() => setIsOpen(false)}
             aria-label={t.close}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-[#1d1714] bg-[#fffdf2] shadow-[2px_2px_0_rgba(29,23,20,0.6)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 border-[#1d1714] bg-[#fffdf2] shadow-[2px_2px_0_rgba(29,23,20,0.6)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
           >
             <X size={18} strokeWidth={2.7} aria-hidden="true" />
           </button>
@@ -282,19 +282,19 @@ export default function CloudBackupPrompt({
 
         {isSignedIn ? (
           <div className="mt-4 rounded-[20px] border-2 border-[#1d1714]/70 bg-[#fffdf2] p-4 shadow-[4px_4px_0_rgba(47,95,179,0.18)]">
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <CheckCircle2 size={22} strokeWidth={2.7} className="text-[#2f5fb3]" aria-hidden="true" />
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-black">{t.signedInTitle}</p>
-                {userEmail ? <p className="text-xs font-bold text-[#6d5f52]">{userEmail}</p> : null}
+                {userEmail ? <p className="break-all text-xs font-bold text-[#6d5f52]">{userEmail}</p> : null}
               </div>
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
+            <div className="mt-4 grid grid-cols-1 gap-2 min-[380px]:grid-cols-2">
               <button
                 type="button"
                 onClick={() => void handleBackup()}
                 disabled={backupStatus === 'backing_up'}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-full border-2 border-[#1d1714] bg-[#2f5fb3] px-4 text-xs font-black text-[#fffdf2] shadow-[3px_3px_0_rgba(29,23,20,0.72)] disabled:cursor-wait disabled:bg-[#8fa7d6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border-2 border-[#1d1714] bg-[#2f5fb3] px-3 text-center text-xs font-black leading-4 text-[#fffdf2] shadow-[3px_3px_0_rgba(29,23,20,0.72)] disabled:cursor-wait disabled:bg-[#8fa7d6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3] sm:px-4"
               >
                 <UploadCloud size={14} strokeWidth={2.7} aria-hidden="true" />
                 {backupStatus === 'backing_up'
@@ -307,7 +307,7 @@ export default function CloudBackupPrompt({
                 type="button"
                 onClick={() => void handleRestore()}
                 disabled={restoreStatus === 'restoring'}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-full border-2 border-[#1d1714] bg-[#fff2cf] px-4 text-xs font-black text-[#1d1714] shadow-[3px_3px_0_rgba(29,23,20,0.72)] disabled:cursor-wait disabled:bg-[#d7d1c3] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border-2 border-[#1d1714] bg-[#fff2cf] px-3 text-center text-xs font-black leading-4 text-[#1d1714] shadow-[3px_3px_0_rgba(29,23,20,0.72)] disabled:cursor-wait disabled:bg-[#d7d1c3] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3] sm:px-4"
               >
                 <DownloadCloud size={14} strokeWidth={2.7} aria-hidden="true" />
                 {restoreStatus === 'restoring' ? t.restoring : t.restoreNow}
@@ -417,7 +417,7 @@ export default function CloudBackupPrompt({
                 placeholder={t.emailPlaceholder}
                 type="email"
                 autoComplete="email"
-                className="h-12 w-full rounded-[16px] border-2 border-[#1d1714] bg-[#fffdf2] px-3 text-sm font-bold shadow-[3px_3px_0_rgba(29,23,20,0.55)] outline-none focus:border-[#2f5fb3]"
+                className="h-12 w-full rounded-[16px] border-2 border-[#1d1714] bg-[#fffdf2] px-3 text-base font-bold shadow-[3px_3px_0_rgba(29,23,20,0.55)] outline-none focus:border-[#2f5fb3]"
               />
             </label>
             {error === 'sign_in_failed' ? (
@@ -444,7 +444,7 @@ export default function CloudBackupPrompt({
           type="button"
           onClick={() => setIsOpen(true)}
           aria-label={isSignedIn ? t.compactSignedInCta : t.compactCta}
-          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[#1d1714]/24 bg-[#fffdf2]/88 px-2.5 text-[0.68rem] font-black tracking-[0.04em] text-[#1d1714] shadow-[2px_2px_0_rgba(47,95,179,0.14)] backdrop-blur-sm transition-transform active:translate-y-[1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+          className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border border-[#1d1714]/24 bg-[#fffdf2]/88 px-2.5 text-[0.68rem] font-black tracking-[0.04em] text-[#1d1714] shadow-[2px_2px_0_rgba(47,95,179,0.14)] backdrop-blur-sm transition-transform active:translate-y-[1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
         >
           <Cloud size={13} strokeWidth={2.8} className="text-[#2f5fb3]" aria-hidden="true" />
           <span>{isSignedIn ? t.compactSignedInCta : t.compactCta}</span>

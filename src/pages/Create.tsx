@@ -404,9 +404,10 @@ export default function Create() {
         <CatBrandHeader
           title={t.appName}
           subtitle={t.appSubtitle}
+          language={language}
           showLanguageToggle={false}
           showClose
-          closeLabel="關閉回首頁"
+          closeLabel={language === 'zh' ? '關閉回首頁' : 'Close and return home'}
         />
 
         <main className="relative z-10 min-h-0 flex-1 overflow-y-auto px-5 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-3 sm:pt-5">
@@ -417,7 +418,7 @@ export default function Create() {
                 <div className="mb-5 flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <p className="mb-2 text-[10px] font-black uppercase tracking-[0.26em] text-[#2F5FB3]">
-                      Found Cat Entry
+                      {language === 'zh' ? '貓咪紀錄' : 'FOUND CAT ENTRY'}
                     </p>
                     <p className="text-[25px] font-black leading-tight text-[#221915]">
                       {t.recordNewPage}
@@ -441,7 +442,7 @@ export default function Create() {
                     draggable={false}
                   />
                   <div className="absolute bottom-3 right-3 rounded-[4px] border-2 border-[#221915] bg-[#FFFDF2] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#221915]">
-                    Found Cat
+                    {language === 'zh' ? '轉角遇到貓' : 'FOUND CAT'}
                   </div>
                 </div>
 
@@ -468,7 +469,7 @@ export default function Create() {
                       capture="environment"
                       className="sr-only"
                       disabled={isProcessing}
-                      aria-label="Take Photo"
+                      aria-label={language === 'zh' ? '拍下這隻貓' : 'Take photo'}
                     />
                   </label>
 
@@ -489,7 +490,7 @@ export default function Create() {
                       accept="image/*"
                       className="sr-only"
                       disabled={isProcessing}
-                      aria-label="Upload from Album"
+                      aria-label={language === 'zh' ? '從相簿選貓照' : 'Upload from album'}
                     />
                   </label>
                 </div>
@@ -625,7 +626,7 @@ export default function Create() {
                   value={zoom}
                   onChange={(e) => setZoom(parseFloat(e.target.value))}
                   className="h-1.5 flex-1 appearance-none rounded-full bg-[#d9ecff] accent-[#2F5FB3] outline-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#221915] [&::-webkit-slider-thumb]:bg-[#2F5FB3] [&::-webkit-slider-thumb]:shadow-md"
-                  aria-label="Zoom level"
+                  aria-label={language === 'zh' ? '縮放程度' : 'Zoom level'}
                 />
                 <ZoomIn size={16} className="shrink-0 text-[#2F5FB3]" />
               </div>

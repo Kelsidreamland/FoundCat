@@ -759,18 +759,19 @@ export default function Map() {
         <CatBrandHeader
           title={t.appName}
           subtitle={t.appSubtitle}
+          language={language}
           showLanguageToggle={false}
           showClose
-          closeLabel="關閉回首頁"
+          closeLabel={language === 'zh' ? '關閉回首頁' : 'Close and return home'}
         />
 
-        <div className="absolute left-4 right-4 top-[4.3rem] flex items-center justify-between gap-2">
-          <div className="flex min-w-0 rounded-full border border-[#221915]/15 bg-[#fffdf2]/88 p-1 text-[11px] font-black text-[#221915] shadow-[2px_2px_0_rgba(47,95,179,0.12)] backdrop-blur-sm">
+        <div className="absolute left-3 right-3 top-[4.3rem] flex flex-wrap items-center justify-between gap-2 sm:left-4 sm:right-4">
+          <div className="flex min-h-11 min-w-0 rounded-full border border-[#221915]/15 bg-[#fffdf2]/88 p-1 text-[11px] font-black text-[#221915] shadow-[2px_2px_0_rgba(47,95,179,0.12)] backdrop-blur-sm">
             <button
               type="button"
               onClick={() => handleMapModeChange('mine')}
               aria-pressed={mapMode === 'mine'}
-              className={`rounded-full px-2.5 py-1.5 transition-colors ${
+                className={`min-h-9 rounded-full px-2.5 py-1.5 transition-colors ${
                 mapMode === 'mine' ? 'bg-[#2f5fb3] text-[#fffdf2]' : 'text-[#221915]/70'
               }`}
             >
@@ -780,7 +781,7 @@ export default function Map() {
               type="button"
               onClick={() => handleMapModeChange('public')}
               aria-pressed={mapMode === 'public'}
-              className={`rounded-full px-2.5 py-1.5 transition-colors ${
+                className={`min-h-9 rounded-full px-2.5 py-1.5 transition-colors ${
                 mapMode === 'public' ? 'bg-[#2f5fb3] text-[#fffdf2]' : 'text-[#221915]/70'
               }`}
             >
@@ -788,8 +789,8 @@ export default function Map() {
             </button>
           </div>
 
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="min-w-0 truncate rounded-full border border-[#221915]/15 bg-[#fffdf2]/88 px-2.5 py-1 text-[11px] font-black text-[#221915] shadow-[2px_2px_0_rgba(47,95,179,0.12)]">
+          <div className="ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-1.5">
+            <span className="min-w-0 max-w-[9rem] truncate rounded-full border border-[#221915]/15 bg-[#fffdf2]/88 px-2.5 py-2 text-[11px] font-black text-[#221915] shadow-[2px_2px_0_rgba(47,95,179,0.12)]">
               {mapCountLabel}
             </span>
             {isPublicMapMode && publicMapStatusTitle ? (
@@ -799,14 +800,14 @@ export default function Map() {
                   onClick={handleRetryPublicMap}
                   data-testid="public-map-status-chip"
                   aria-label={mapModeCopy.publicRetry}
-                  className="max-w-[9.5rem] truncate rounded-full border border-[#221915]/12 bg-[#fffdf2]/88 px-2.5 py-1 text-[10px] font-black text-[#5c5148] shadow-[2px_2px_0_rgba(247,201,72,0.2)] transition-transform active:translate-y-[1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2f5fb3]"
+                  className="min-h-10 max-w-[9.5rem] truncate rounded-full border border-[#221915]/12 bg-[#fffdf2]/88 px-2.5 py-2 text-[10px] font-black text-[#5c5148] shadow-[2px_2px_0_rgba(247,201,72,0.2)] transition-transform active:translate-y-[1px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2f5fb3]"
                 >
                   {publicMapStatusTitle}
                 </button>
               ) : (
                 <span
                   data-testid="public-map-status-chip"
-                  className="max-w-[9.5rem] truncate rounded-full border border-[#221915]/12 bg-[#fffdf2]/88 px-2.5 py-1 text-[10px] font-black text-[#5c5148] shadow-[2px_2px_0_rgba(247,201,72,0.2)]"
+                  className="min-h-10 max-w-[9.5rem] truncate rounded-full border border-[#221915]/12 bg-[#fffdf2]/88 px-2.5 py-2 text-[10px] font-black text-[#5c5148] shadow-[2px_2px_0_rgba(247,201,72,0.2)]"
                 >
                   {publicMapStatusTitle}
                 </span>
@@ -875,7 +876,7 @@ export default function Map() {
       {shouldShowMapEmptyState && !isPublicMapMode ? (
         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
           <div className="mx-4 max-w-xs rounded-[24px] border-2 border-[#221915] bg-[#fffdf2]/92 p-6 text-center shadow-[8px_8px_0_rgba(47,95,179,0.22)] backdrop-blur-sm pointer-events-auto">
-            <MapTreasureBrandMark className="mx-auto mb-3 h-32 w-36 object-contain" />
+            <MapTreasureBrandMark language={language} className="mx-auto mb-3 h-32 w-36 object-contain" />
             <p className="text-[#221915] font-black mb-1">{t.noMapRecords}</p>
             <p className="text-cat-text-tertiary text-sm mb-4">{t.mapHint}</p>
             <button
@@ -1056,7 +1057,7 @@ export default function Map() {
                     type="button"
                     onClick={() => setLocationEditItemId(selectedItem.id)}
                     className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-[14px] border border-[#221915]/15 bg-[#fff2cf] px-2 py-2 text-[#221915] transition-colors hover:border-[#2f5fb3]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
-                    aria-label="編輯地點"
+                    aria-label={language === 'zh' ? '編輯地點' : 'Edit location'}
                   >
                     <PencilLine size={14} className="text-[#2f5fb3]" />
                     <span>{language === 'zh' ? '編輯地點' : 'Edit'}</span>
@@ -1224,7 +1225,7 @@ export default function Map() {
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#2f5fb3]">
-                    Found Cat Notes
+                    {language === 'zh' ? 'FOUND CAT 貓咪筆記' : 'FOUND CAT NOTES'}
                   </p>
                   <h2 className="mt-1 text-xl font-black leading-tight text-[#221915]">
                     {encounterCopy.dialogTitle}

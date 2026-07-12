@@ -695,19 +695,19 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
         data-testid="location-picker-panel"
         className="flex max-h-[calc(100dvh_-_env(safe-area-inset-top)_-_0.75rem)] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-cat-card pb-[env(safe-area-inset-bottom)] shadow-2xl sm:max-h-[90vh] sm:rounded-3xl sm:pb-0"
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-cat-border-light p-4">
+        <div className="grid shrink-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-b border-cat-border-light p-3 sm:p-4">
           <button
             onClick={handleClose}
-            className="w-10 h-10 rounded-full hover:bg-cat-bg flex items-center justify-center transition-colors"
+            className="grid h-11 w-11 place-items-center rounded-full hover:bg-cat-bg transition-colors"
             aria-label={t.skipForNow}
           >
             <X size={20} className="text-cat-text-secondary" />
           </button>
-          <h2 className="font-bold text-cat-text-main text-lg">{t.pickLocation}</h2>
+          <h2 className="min-w-0 text-center text-base font-bold leading-5 text-cat-text-main sm:text-lg">{t.pickLocation}</h2>
           <button
             onClick={handleConfirm}
             disabled={!canConfirm || isConfirmingLocation}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-cat-brand text-white rounded-full font-bold text-sm disabled:opacity-40 transition-opacity hover:opacity-90"
+            className="inline-flex min-h-11 max-w-[8.5rem] items-center justify-center gap-1.5 rounded-full bg-[#2f5fb3] px-3 py-2 text-center text-xs font-bold leading-4 text-white transition-opacity hover:opacity-90 disabled:opacity-40 sm:px-4 sm:text-sm"
           >
             {isConfirmingLocation ? <Loader2 size={14} className="animate-spin" /> : null}
             {t.confirmLocation}
@@ -763,10 +763,10 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
             {methodHintCopy}
           </p>
 
-          <div className="flex gap-2 mb-3">
+          <div className="mb-3 flex flex-wrap gap-2">
             <button
               onClick={useCurrentLocation}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cat-card border border-cat-border-light text-cat-text-main text-sm font-semibold hover:bg-cat-bg transition-colors"
+              className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-cat-card px-3 py-2 text-center text-sm font-semibold text-cat-text-main transition-colors hover:bg-cat-bg sm:flex-none sm:px-4"
               disabled={isLocating}
             >
               {isLocating ? <Loader2 size={16} className="animate-spin" /> : <LocateFixed size={16} />}
@@ -775,7 +775,7 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
 
             <button
               onClick={handleClose}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cat-card border border-cat-border-light text-cat-text-secondary text-sm font-semibold hover:bg-cat-bg transition-colors"
+              className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-cat-card px-3 py-2 text-center text-sm font-semibold text-cat-text-secondary transition-colors hover:bg-cat-bg sm:flex-none sm:px-4"
             >
               <span>{t.skipForNow}</span>
             </button>
@@ -794,7 +794,7 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
                 onChange={(event) => handleLocationNameChange(event.target.value)}
                 placeholder={t.locationNamePlaceholder}
                 data-location-name-input="true"
-                className="w-full pl-10 pr-10 py-3 bg-white rounded-xl border border-cat-border-light text-cat-text-main placeholder:text-cat-text-tertiary focus:outline-none focus:ring-2 focus:ring-cat-brand"
+                className="w-full rounded-xl border border-cat-border-light bg-white py-3 pl-10 pr-10 text-base text-cat-text-main placeholder:text-cat-text-tertiary focus:outline-none focus:ring-2 focus:ring-[#2f5fb3]"
               />
               {isSearching || isConfirmingLocation || isResolvingAddress ? (
                 <Loader2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-cat-text-tertiary" />

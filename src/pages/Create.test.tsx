@@ -152,12 +152,12 @@ describe('Create page', () => {
     );
 
     await userEvent.upload(
-      screen.getByLabelText('Upload from Album'),
+      screen.getByLabelText('從相簿選貓照'),
       new File(['cat'], 'cat.jpg', { type: 'image/jpeg' })
     );
 
     await screen.findByTestId('cropper');
-    await waitFor(() => expect(screen.getByLabelText('Zoom level')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByLabelText('縮放程度')).toBeInTheDocument());
     expect(screen.getByRole('button', { name: '方形貓卡' })).toBeInTheDocument();
     expect(screen.queryByText(/AI|去背/)).not.toBeInTheDocument();
   });
@@ -195,7 +195,7 @@ describe('Create page', () => {
     );
 
     await userEvent.upload(
-      screen.getByLabelText('Upload from Album'),
+      screen.getByLabelText('從相簿選貓照'),
       new File(['cat'], 'cat.jpg', { type: 'image/jpeg' })
     );
 
@@ -212,7 +212,7 @@ describe('Create page', () => {
     );
 
     await userEvent.upload(
-      screen.getByLabelText('Upload from Album'),
+      screen.getByLabelText('從相簿選貓照'),
       new File(['cat'], 'cat.jpg', { type: 'image/jpeg' })
     );
 
@@ -235,7 +235,7 @@ describe('Create page', () => {
     );
 
     await userEvent.upload(
-      screen.getByLabelText('Upload from Album'),
+      screen.getByLabelText('從相簿選貓照'),
       new File(['cat'], 'cat.jpg', { type: 'image/jpeg' })
     );
 
@@ -335,7 +335,7 @@ describe('Create page', () => {
     );
 
     await userEvent.upload(
-      screen.getByLabelText('Upload from Album'),
+      screen.getByLabelText('從相簿選貓照'),
       new File(['cat'], 'cat.jpg', { type: 'image/jpeg' })
     );
 
@@ -462,7 +462,7 @@ describe('Create page', () => {
     );
 
     await userEvent.upload(
-      screen.getByLabelText('Upload from Album'),
+      screen.getByLabelText('從相簿選貓照'),
       new File(['cat'], 'cat.jpg', { type: 'image/jpeg' })
     );
 
@@ -523,7 +523,7 @@ describe('Create page', () => {
     );
 
     await userEvent.upload(
-      screen.getByLabelText('Upload from Album'),
+      screen.getByLabelText('從相簿選貓照'),
       new File(['cat'], 'cat.jpg', { type: 'image/jpeg' })
     );
 
@@ -555,7 +555,7 @@ describe('Create page', () => {
     );
 
     await userEvent.upload(
-      screen.getByLabelText('Upload from Album'),
+      screen.getByLabelText('從相簿選貓照'),
       new File(['cat'], 'cat.jpg', { type: 'image/jpeg' })
     );
 

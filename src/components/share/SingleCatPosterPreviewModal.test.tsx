@@ -67,6 +67,18 @@ describe('SingleCatPosterPreviewModal', () => {
     expect(screen.getByRole('button', { name: '儲存圖片' })).toBeInTheDocument();
   });
 
+  it('keeps the share preview controls in English mode', async () => {
+    render(<SingleCatPosterPreviewModal item={item} language="en" onClose={vi.fn()} />);
+
+    expect(await screen.findByRole('dialog', { name: 'Share this cat' })).toBeInTheDocument();
+    expect(screen.getByText('Shared page preview')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Spot memo' })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Include the spot memo on the shared page' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Share poster' })).toBeInTheDocument();
+    expect(screen.queryByText('分享這隻貓')).not.toBeInTheDocument();
+    expect(screen.queryByText('出沒備註')).not.toBeInTheDocument();
+  });
+
   it('uses the saved Google Maps link in the preview when the cat card has one', async () => {
     render(
       <SingleCatPosterPreviewModal
