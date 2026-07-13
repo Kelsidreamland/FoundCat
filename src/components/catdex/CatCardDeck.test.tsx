@@ -1,7 +1,8 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { getPaperCardDragVisuals } from '../../lib/catCardMotion';
 import type { ScrapbookItem } from '../../store/useScrapbookStore';
-import CatCardDeck, { getPaperCardDragVisuals } from './CatCardDeck';
+import CatCardDeck from './CatCardDeck';
 
 const makeItem = (overrides: Partial<ScrapbookItem>): ScrapbookItem => ({
   id: overrides.id ?? 'cat-1',
