@@ -231,7 +231,7 @@ export default function Detail() {
           className="mx-auto mt-5 w-full max-w-sm space-y-3 text-center"
         >
           {item.catName?.trim() ? (
-            <h1 className="text-2xl font-black leading-tight text-[#1d1714]">
+            <h1 className="font-cat-display text-2xl font-bold leading-tight text-[#1d1714]">
               {item.catName.trim()}
             </h1>
           ) : null}

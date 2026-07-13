@@ -42,7 +42,7 @@ export default function CollectedCatProfileSheet({
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#2f5fb3]">
                   {copy.title}
                 </p>
-                <h2 className="mt-1 truncate text-2xl font-black leading-none text-[#1d1714]">
+                <h2 className="font-cat-display mt-1 truncate text-2xl font-bold leading-none text-[#1d1714]">
                   {title}
                 </h2>
               </div>

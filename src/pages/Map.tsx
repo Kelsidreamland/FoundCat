@@ -939,19 +939,19 @@ export default function Map() {
                 <div className="min-w-0">
                   {selectedCardNumber ? (
                     <div className="mb-1.5 inline-flex max-w-full items-center gap-2 rounded-full border border-[#221915]/12 bg-[#fffdf2]/82 py-1 pl-1 pr-2 shadow-[2px_2px_0_rgba(47,95,179,0.08)]">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] ${
+                      <span className={`font-cat-number rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                         isPublicMapMode
                           ? 'bg-[#d9ecff] text-[#2f5fb3]'
                           : 'bg-[#fff2cf] text-[#221915]'
                       }`}>
                         {selectedNumberLabel}
                       </span>
-                      <span className="text-xs font-black uppercase tracking-[0.12em] text-[#2f5fb3]">
+                      <span className="font-cat-number text-xs font-bold uppercase text-[#2f5fb3]">
                         {selectedCardNumber}
                       </span>
                     </div>
                   ) : null}
-                  <h2 className="mt-1 truncate text-lg font-black text-[#221915]">{selectedDisplayName}</h2>
+                  <h2 className="font-cat-display mt-1 truncate text-lg font-bold text-[#221915]">{selectedDisplayName}</h2>
                   {selectedCardNumber ? (
                     <p className="mt-0.5 truncate text-[11px] font-bold text-[#6d5f52]">{selectedNumberHint}</p>
                   ) : null}

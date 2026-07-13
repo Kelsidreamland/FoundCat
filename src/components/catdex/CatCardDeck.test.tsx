@@ -97,6 +97,8 @@ describe('CatCardDeck', () => {
 
     expect(screen.getByText('窗邊小虎')).toBeInTheDocument();
     expect(screen.getByText('W-012')).toBeInTheDocument();
+    expect(screen.getByText('窗邊小虎')).toHaveClass('font-cat-display');
+    expect(screen.getByText('W-012')).toHaveClass('font-cat-number');
     expect(screen.getByText('泰國 清邁')).toBeInTheDocument();
     expect(screen.getByText('親人')).toBeInTheDocument();
     expect(screen.getByText('貪吃')).toBeInTheDocument();

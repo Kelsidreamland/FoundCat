@@ -49,7 +49,7 @@ function DetailSection({
 }) {
   return (
     <section>
-      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2f5fb3]">
+      <p className="font-cat-display text-[10px] font-bold uppercase text-[#2f5fb3]">
         {title}
       </p>
       <div className="mt-2">{children}</div>
@@ -143,7 +143,7 @@ export default function WorldCatProfileSheet({
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#2f5fb3]">
                   {copy.title}
                 </p>
-                <h2 className="mt-1 truncate text-2xl font-black leading-none text-[#1d1714]">
+                <h2 className="font-cat-display mt-1 truncate text-2xl font-bold leading-none text-[#1d1714]">
                   {title}
                 </h2>
               </div>
@@ -174,7 +174,7 @@ export default function WorldCatProfileSheet({
                 )}
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-[#2f5fb3] px-3 py-1 text-[11px] font-black text-white">
+                <span className="font-cat-number rounded-full bg-[#2f5fb3] px-3 py-1 text-[11px] font-bold text-white">
                   {formatCatCardNumberForItem(item)}
                 </span>
                 <span

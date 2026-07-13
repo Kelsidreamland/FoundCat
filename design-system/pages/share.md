@@ -39,6 +39,7 @@ Share is a utility page, but it should still feel like a FOUND CAT field-journal
 - Use off-white paper surfaces, ink borders, controlled blue accents, and yellow only as a warm supporting highlight.
 - Do not add new logo artwork on this page.
 - Keep icons consistent with the rest of the app: Lucide or repo-native SVG, no emoji icons.
+- Generated poster titles and cat names use `FoundCat Round`; card numbers and short English artifact labels use `FoundCat Number`. Long poster copy remains in the body font.
 
 ## Avoid
 

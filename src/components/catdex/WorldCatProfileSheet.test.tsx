@@ -61,6 +61,9 @@ describe('WorldCatProfileSheet', () => {
     expect(dialog).toHaveTextContent('窗邊小虎');
     expect(dialog).toHaveTextContent('泰國 清邁');
     expect(dialog).toHaveTextContent('W-012');
+    expect(screen.getByText('窗邊小虎')).toHaveClass('font-cat-display');
+    expect(screen.getByText('W-012')).toHaveClass('font-cat-number');
+    expect(screen.getByText('偶遇線索')).toHaveClass('font-cat-display');
     expect(screen.getByTestId('world-cat-photo-frame')).toHaveClass('h-[clamp(190px,36dvh,280px)]');
     expect(screen.getByTestId('world-cat-profile-summary')).toHaveTextContent('親人');
     expect(screen.getByTestId('world-cat-profile-summary')).toHaveTextContent('貪吃');

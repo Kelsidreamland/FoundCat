@@ -50,6 +50,21 @@ export default defineConfig({
         skipWaiting: true,
         globIgnores: [
           '**/*.wasm',
+          '**/fonts/**/*.css',
+          '**/fonts/**/*.woff2',
+        ],
+        runtimeCaching: [
+          {
+            urlPattern: /\/fonts\/.*\.(?:css|woff2)(?:\?.*)?$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'found-cat-fonts-v3750',
+              expiration: {
+                maxEntries: 32,
+                maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+            },
+          },
         ],
         maximumFileSizeToCacheInBytes: 5000000 // 5MB
       },

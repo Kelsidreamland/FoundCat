@@ -28,6 +28,12 @@ Home is the emotional entry point. It should make the user want to collect the c
    - icon-first;
    - capture remains central primary action.
 
+## Typography
+
+- Cat names use `font-cat-display` / `FoundCat Round`.
+- `W-` and `No.` numbers use `font-cat-number` / `FoundCat Number`.
+- Location and action copy remain in the body font so the card stays easy to scan.
+
 ## Empty State
 
 When no cats exist:

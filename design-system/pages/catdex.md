@@ -15,6 +15,7 @@ Catdex is the collection view. It should feel like a found-cat archive, not a fi
 - Use ink borders and small blue accents.
 - Prefer cat image and catdex number over long text.
 - Location can appear as a small corner clue.
+- Cat names use `FoundCat Round`; archive numbers use `FoundCat Number`.
 
 ## Empty State
 

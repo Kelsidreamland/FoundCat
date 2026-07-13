@@ -80,7 +80,7 @@ Rules:
 
 ## Typography
 
-Primary font stack:
+Body font stack:
 
 ```css
 "Noto Sans TC", "M PLUS Rounded 1c", "PingFang TC", "Microsoft JhengHei", sans-serif
@@ -88,11 +88,15 @@ Primary font stack:
 
 Usage:
 
-- H1/Product: 24-30px on mobile, weight 900, tight line height.
+- Cat identity display: `FoundCat Round` (寒蟬圓黑體), weight 700. Use for cat names, short profile headings, `偶遇線索`, and Chinese poster titles.
+- Card numbers and short artifact English: `FoundCat Number`, weight 700, tabular numbers. Use for `W-029`, `No.029`, `WORLD CAT`, and short `FOUND CAT` labels.
+- H1/Product: 24-30px on mobile, weight 900, tight line height. Product logo artwork is unchanged.
 - Section labels: 10-12px, weight 900, uppercase English allowed for artifact labels such as `FOUND CAT ENTRY`.
 - Body: 13-15px, weight 600-800, line-height 1.45-1.7.
 - Avoid negative letter spacing.
 - Do not use viewport-based font scaling.
+- Do not apply `FoundCat Round` to paragraphs, forms, addresses, or long notes.
+- Self-host the complete Unicode-split WOFF2 set with `font-display: swap`; browsers load only the shards needed by visible text instead of preloading the full CJK family.
 
 Tone:
 

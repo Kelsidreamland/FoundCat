@@ -43,6 +43,7 @@ When adding or editing a location:
   - personality tags;
   - care status tags.
 - After saving cat info, close the editor and return to the tapped-cat card with the updated name, memo, and tag chips visible.
+- Cat names and short profile headings use `FoundCat Round`; card numbers use `FoundCat Number`. Addresses, notes, and action copy remain in the body font.
 
 ## Avoid
 

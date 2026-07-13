@@ -333,12 +333,12 @@ export default function CatCardDeck({
             />
           </div>
 
-          <p className="mt-[12px] truncate text-[20px] font-black leading-tight text-[#1d1714]">
+          <p className="font-cat-display mt-[12px] truncate text-[20px] font-bold leading-tight text-[#1d1714]">
             {activeCatName}
           </p>
 
           <div className="mt-2 flex items-end justify-between gap-3">
-            <strong className="block text-[38px] font-black leading-[0.9]">
+            <strong className="font-cat-number block text-[38px] font-bold leading-[0.9]">
               {formatCatCardNumberForItem(active)}
             </strong>
             <span className="block text-right text-[11px] font-black leading-[1.42] text-[#76665a]">

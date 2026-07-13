@@ -80,8 +80,8 @@ export default function SingleCatShare() {
             </div>
             <div className="relative mt-6 flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <h1 className="text-[30px] font-black leading-none text-[#221915]">{title}</h1>
-                <p className="mt-3 text-[13px] font-black uppercase tracking-[0.18em] text-[#2f5fb3]">{payload.numberLabel}</p>
+                <h1 className="font-cat-display text-[30px] font-bold leading-none text-[#221915]">{title}</h1>
+                <p className="font-cat-number mt-3 text-[13px] font-bold uppercase text-[#2f5fb3]">{payload.numberLabel}</p>
               </div>
               <div className="grid h-16 w-16 shrink-0 rotate-[-4deg] place-items-center rounded-[18px] border-2 border-[#221915] bg-[#fffdf2] text-3xl shadow-[4px_4px_0_rgba(34,25,21,0.18)]">
                 <span aria-hidden="true">貓</span>

@@ -24,3 +24,16 @@ body,
   min-height: 100%;
   width: 100%;
 }
+
+@layer utilities {
+  .font-cat-display {
+    font-family: 'FoundCat Round', -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+    font-synthesis: none;
+  }
+
+  .font-cat-number {
+    font-family: 'FoundCat Number', 'FoundCat Round', "Arial Rounded MT Bold", ui-rounded, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-synthesis: none;
+    font-variant-numeric: tabular-nums;
+  }
+}

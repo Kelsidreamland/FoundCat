@@ -79,7 +79,7 @@ function ProfileSection({
 }) {
   return (
     <section>
-      <p className={`font-black uppercase tracking-[0.16em] text-[#2f5fb3] ${compact ? 'text-[9px]' : 'text-[10px]'}`}>
+      <p className={`font-cat-display font-bold uppercase text-[#2f5fb3] ${compact ? 'text-[9px]' : 'text-[10px]'}`}>
         {title}
       </p>
       <div className={compact ? 'mt-1.5' : 'mt-2'}>{children}</div>
@@ -190,7 +190,7 @@ export default function CatProfileSummary({
             </p>
           </div>
           {showNumber ? (
-            <span className="shrink-0 rounded-full bg-[#2f5fb3] px-3 py-1 text-[11px] font-black text-white">
+            <span className="font-cat-number shrink-0 rounded-full bg-[#2f5fb3] px-3 py-1 text-[11px] font-bold text-white">
               {formatCatCardNumberForItem(item)}
             </span>
           ) : null}

@@ -38,6 +38,17 @@ type SharePosterResult = 'shared-file' | 'shared-text' | 'downloaded' | 'aborted
 
 const posterWidth = 1080;
 const posterHeight = 1350;
+const posterDisplayFont = (size: number) => `700 ${size}px "FoundCat Round", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif`;
+const posterNumberFont = (size: number) => `700 ${size}px "FoundCat Number", "Arial Rounded MT Bold", system-ui, sans-serif`;
+
+export const ensurePosterFontsReady = async (displayText = '') => {
+  if (typeof document === 'undefined' || !document.fonts?.load) return;
+  const displaySample = ['轉角遇到貓', displayText.trim()].filter(Boolean).join(' ');
+  await Promise.allSettled([
+    document.fonts.load('700 48px "FoundCat Round"', displaySample),
+    document.fonts.load('700 48px "FoundCat Number"', 'W-029 FOUND CAT'),
+  ]);
+};
 
 const colors = {
   ink: '#1d1714',
@@ -306,10 +317,10 @@ const drawQrCode = async (
 
 const drawBrandFooter = async (ctx: CanvasRenderingContext2D, url = APP_SHARE_URL) => {
   drawText(ctx, '轉角遇到貓', 72, 1238, {
-    font: '900 48px "Noto Sans TC", system-ui, sans-serif',
+    font: posterDisplayFont(48),
   });
   drawText(ctx, 'FOUND CAT', 72, 1288, {
-    font: '900 28px system-ui, sans-serif',
+    font: posterNumberFont(28),
     color: colors.muted,
   });
   await drawQrCode(ctx, url, 836, 1168, 160);
@@ -400,6 +411,7 @@ export const createCatCardPosterBlob = async (
   language: Language,
   shareUrl = APP_SHARE_URL
 ) => {
+  await ensurePosterFontsReady(item.catName);
   const { canvas, ctx } = createPosterCanvas();
   const number = formatCatCardNumberForItem(item);
   const imageSrc = item.heroImageData || item.imageData;
@@ -424,11 +436,11 @@ export const createCatCardPosterBlob = async (
   strokeRoundRect(ctx, 112, 128, 856, 660, 44);
 
   drawText(ctx, number, 112, 878, {
-    font: '900 92px system-ui, sans-serif',
+    font: posterNumberFont(92),
   });
   if (catName) {
     drawText(ctx, catName, 112, 946, {
-      font: '900 46px "Noto Sans TC", system-ui, sans-serif',
+      font: posterDisplayFont(46),
       color: colors.ink,
     });
     drawText(ctx, locationName, 112, 998, {
@@ -450,7 +462,7 @@ export const createCatCardPosterBlob = async (
 
   fillRoundRect(ctx, 742, 838, 226, 78, 26, colors.cobalt);
   drawText(ctx, 'CAT CARD', 855, 888, {
-    font: '900 28px system-ui, sans-serif',
+    font: posterNumberFont(28),
     color: '#fffdf7',
     align: 'center',
   });
@@ -464,6 +476,7 @@ export const createCatdexPosterBlob = async ({
   items,
   language,
 }: CatdexPosterInput) => {
+  await ensurePosterFontsReady(language === 'zh' ? '分享我的貓咪地圖' : 'Share My Cat Map');
   const { canvas, ctx } = createPosterCanvas();
   const cards = sortCatCards(items).slice(-4).reverse();
   const countLabel = language === 'zh' ? `${items.length} 隻貓` : `${items.length} cats`;
@@ -471,7 +484,7 @@ export const createCatdexPosterBlob = async ({
   drawPosterBackground(ctx);
 
   drawText(ctx, language === 'zh' ? '分享我的貓咪地圖' : 'Share My Cat Map', 72, 142, {
-    font: '900 72px "Noto Sans TC", system-ui, sans-serif',
+    font: language === 'zh' ? posterDisplayFont(72) : posterNumberFont(72),
   });
   drawText(ctx, displayName, 72, 206, {
     font: '900 34px "Noto Sans TC", system-ui, sans-serif',
@@ -539,6 +552,7 @@ export const createCatMapPosterBlob = async ({
   includeMemo,
   shareUrl = APP_SHARE_URL,
 }: CatMapPosterInput & { shareUrl?: string }) => {
+  await ensurePosterFontsReady(language === 'zh' ? '分享我的貓咪地圖' : 'Share My Cat Map');
   const { canvas, ctx } = createPosterCanvas();
   const mappedItems = sortCatCards(items).filter((item) => item.location);
   const countLabel = language === 'zh' ? `${mappedItems.length} 個貓咪出沒點` : `${mappedItems.length} cat spots`;
@@ -547,7 +561,7 @@ export const createCatMapPosterBlob = async ({
   drawPosterBackground(ctx);
 
   drawText(ctx, language === 'zh' ? '分享我的貓咪地圖' : 'Share My Cat Map', 72, 140, {
-    font: '900 70px "Noto Sans TC", system-ui, sans-serif',
+    font: language === 'zh' ? posterDisplayFont(70) : posterNumberFont(70),
   });
   drawText(ctx, title, 72, 202, {
     font: '900 32px "Noto Sans TC", system-ui, sans-serif',
@@ -584,7 +598,7 @@ export const createCatMapPosterBlob = async ({
     fillRoundRect(ctx, x, y, 126, 104, 28, colors.card);
     strokeRoundRect(ctx, x, y, 126, 104, 28, colors.ink, 5);
     drawText(ctx, formatCatCardNumberForItem(item), x + 63, y + 45, {
-      font: '900 26px system-ui, sans-serif',
+      font: posterNumberFont(26),
       color: colors.cobalt,
       align: 'center',
       baseline: 'middle',

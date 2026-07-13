@@ -45,6 +45,33 @@ describe('share poster helpers', () => {
     });
   });
 
+  it('uses the approved rounded display font for generated poster titles', async () => {
+    const load = vi.fn(async () => undefined);
+    Object.defineProperty(document, 'fonts', {
+      configurable: true,
+      value: { load },
+    });
+
+    await import('./sharePoster').then(({ ensurePosterFontsReady }) => ensurePosterFontsReady('窗邊小虎'));
+
+    expect(load).toHaveBeenCalledWith('700 48px "FoundCat Round"', '轉角遇到貓 窗邊小虎');
+    expect(load).toHaveBeenCalledWith('700 48px "FoundCat Number"', 'W-029 FOUND CAT');
+  });
+
+  it('falls back without blocking poster generation when fonts are unavailable offline', async () => {
+    const load = vi.fn(async () => {
+      throw new Error('offline');
+    });
+    Object.defineProperty(document, 'fonts', {
+      configurable: true,
+      value: { load },
+    });
+
+    await expect(
+      import('./sharePoster').then(({ ensurePosterFontsReady }) => ensurePosterFontsReady('分享我的貓咪地圖'))
+    ).resolves.toBeUndefined();
+  });
+
   afterEach(() => {
     Object.defineProperty(navigator, 'share', {
       configurable: true,

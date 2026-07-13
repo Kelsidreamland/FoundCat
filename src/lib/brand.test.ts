@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { PNG } from 'pngjs';
@@ -137,6 +137,46 @@ describe('cat app brand copy', () => {
     expect(indexCss.indexOf('"PingFang TC"')).toBeLessThan(indexCss.indexOf('"Noto Sans TC"'));
     expect(indexCss.indexOf('"Noto Sans TC"')).toBeLessThan(indexCss.indexOf('"M PLUS Rounded 1c"'));
     expect(indexCss).not.toContain('body {\n  font-family: "M PLUS Rounded 1c", sans-serif;');
+  });
+
+  it('self-hosts the approved rounded display type without making it the body font', () => {
+    const indexCss = readFileSync(join(repoRoot, 'src/index.css'), 'utf8');
+    const indexHtml = readFileSync(join(repoRoot, 'index.html'), 'utf8');
+    const fontCssPath = join(repoRoot, 'public/fonts/chill-round-gothic/font.css');
+    const designSystem = readFileSync(join(repoRoot, 'design-system/MASTER.md'), 'utf8');
+    const displayFontDir = join(repoRoot, 'public/fonts/chill-round-gothic');
+    const fontCss = existsSync(fontCssPath) ? readFileSync(fontCssPath, 'utf8') : '';
+    const fontShards = existsSync(displayFontDir)
+      ? readdirSync(displayFontDir).filter((fileName) => fileName.endsWith('.woff2'))
+      : [];
+
+    expect(indexCss).toContain("font-family: 'FoundCat Round'");
+    expect(indexHtml).toContain('href="/fonts/chill-round-gothic/font.css?v=3.750"');
+    expect(indexCss).not.toContain('@import url("/fonts/chill-round-gothic/font.css")');
+    expect(fontCss).toContain("font-family: 'FoundCat Round'");
+    expect(fontCss).toContain("url('/fonts/chill-round-gothic/");
+    expect(fontCss).toContain('font-display: swap');
+    expect(fontCss).toContain('U+7cec');
+    expect(fontCss).toContain('U+9ebb');
+    expect(fontCss).toContain('?v=3.750');
+    expect(indexCss).toContain('.font-cat-display');
+    expect(indexCss).toContain('.font-cat-number');
+    expect(`${indexCss}\n${fontCss}`).not.toContain('font.emtech.cc');
+    expect(indexCss).not.toMatch(/body\s*\{[^}]*FoundCat Round/s);
+    expect(existsSync(join(displayFontDir, 'LICENSE.txt'))).toBe(true);
+    expect(existsSync(join(displayFontDir, 'font.css'))).toBe(true);
+    expect(fontShards).toHaveLength(302);
+    expect(designSystem).toContain('FoundCat Round');
+    expect(designSystem).toContain('寒蟬圓黑體');
+  });
+
+  it('keeps versioned font shards out of PWA precache while caching them on demand', () => {
+    const viteConfig = readFileSync(join(repoRoot, 'vite.config.ts'), 'utf8');
+
+    expect(viteConfig).toContain("'**/fonts/**/*.css'");
+    expect(viteConfig).toContain("'**/fonts/**/*.woff2'");
+    expect(viteConfig).toContain("cacheName: 'found-cat-fonts-v3750'");
+    expect(viteConfig).toContain("handler: 'CacheFirst'");
   });
 
   it('uses transparent AI Moodboard V1 brand marks in app headers', () => {

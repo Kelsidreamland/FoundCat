@@ -232,10 +232,10 @@ export default function Catdex() {
                         <div className="mt-3 flex justify-center">
                           {isWorldSaved ? (
                             <div className="inline-flex min-w-[116px] flex-col border-2 border-black bg-[#fffdf2] px-3 py-2 text-right shadow-[4px_4px_0_rgba(0,0,0,0.88)]">
-                              <span className="text-[10px] font-black uppercase leading-none text-black">
+                              <span className="font-cat-number text-[10px] font-bold uppercase leading-none text-black">
                                 {formatPublicCatCardNumber(item.publicNumber)}
                               </span>
-                              <span className="mt-1 text-[11px] font-bold leading-none text-[#2f5fb3]">
+                              <span className="font-cat-number mt-1 text-[11px] font-bold leading-none text-[#2f5fb3]">
                                 WORLD CAT
                               </span>
                             </div>
@@ -244,7 +244,7 @@ export default function Catdex() {
                           )}
                         </div>
                         {item.catName?.trim() ? (
-                          <p className="mt-2 truncate text-center text-sm font-black text-[#221915]">
+                          <p className="font-cat-display mt-2 truncate text-center text-sm font-bold text-[#221915]">
                             {item.catName.trim()}
                           </p>
                         ) : null}
