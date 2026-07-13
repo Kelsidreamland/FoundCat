@@ -325,3 +325,12 @@ Review the final diff findings-first, confirm every design-spec requirement maps
 - Placeholder scan: no TBD or deferred implementation remains; every code change names an exact file, behavior, command, and expected result.
 - Type consistency: shared helpers consistently accept `boolean | null`; surface attributes use `paper-card`, `paper-sheet`, `paper-sheet-backdrop`, `collection-stamp`, and the two navigation roles.
 
+## Execution Record
+
+- [x] Shared paper-motion presets and normal/reduced-motion unit coverage.
+- [x] Home card deck: MotionValue drag response, paper stack settling, collection stamp, and unchanged swipe behavior.
+- [x] World and collected profile sheets: shared backdrop and paper-sheet rhythm with existing actions intact.
+- [x] Map selected-cat sheet: shared sheet rhythm while preserving fixed mobile geometry and internal scrolling.
+- [x] Bottom navigation: tactile press feedback on all three destinations without adding visible labels.
+- [x] Automated verification: `npm test` (50 files, 383 tests), `npm run check`, `npm run build`, and `npm run check:cloud` passed before final integration.
+- [x] Browser smoke: 390 x 844 Home and Map had no horizontal overflow or page-height overflow; map navigation completed; browser console was clear. The live local dataset had no world cards, so actual drag interaction remained covered by the focused interaction suite.
