@@ -1,10 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import {
+  animate,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useTransform,
+} from 'framer-motion';
 import type { PanInfo } from 'framer-motion';
 import { getPersonalityLabels } from '../../lib/catInfoDisplay';
 import { formatCatCardNumberForItem, getDeckNeighbors, sortCatCards } from '../../lib/catdexDeck';
 import { suggestCatName } from '../../lib/catNameGenerator';
 import { getReadableLocationName } from '../../lib/locationDisplay';
+import { paperMotion } from '../../lib/uiMotion';
 import type { ScrapbookItem } from '../../store/useScrapbookStore';
 
 interface CatCardDeckProps {
@@ -30,8 +37,26 @@ const SWIPE_HINT_AUTO_DISMISS_MS = 2400;
 const SWIPE_HINT_STORAGE_KEY = 'found-cat-swipe-hint-seen';
 const LEGACY_SWIPE_HINT_STORAGE_KEY = 'corner-cat-swipe-hint-seen';
 const OPEN_CLICK_DRAG_THRESHOLD = 8;
+const RESTING_CARD_SHADOW = '7px 8px 0 #1d1714';
+const LIFTED_CARD_SHADOW = '9px 11px 0 rgba(47, 95, 179, 0.82)';
 
 type SwipeDirection = -1 | 1;
+
+export function getPaperCardDragVisuals(reduced: boolean | null) {
+  if (reduced) {
+    return {
+      rotate: [0, 0, 0],
+      scale: [1, 1, 1],
+      shadow: [RESTING_CARD_SHADOW, RESTING_CARD_SHADOW, RESTING_CARD_SHADOW],
+    };
+  }
+
+  return {
+    rotate: [-8, -1.2, 8],
+    scale: [1.015, 1, 1.015],
+    shadow: [LIFTED_CARD_SHADOW, RESTING_CARD_SHADOW, LIFTED_CARD_SHADOW],
+  };
+}
 
 function hasSeenSwipeHint() {
   try {
@@ -66,10 +91,29 @@ export default function CatCardDeck({
   const [swipeDirection, setSwipeDirection] = useState<SwipeDirection | null>(null);
   const [isSwipeHintDismissed, setIsSwipeHintDismissed] = useState(hasSeenSwipeHint);
   const [collectFeedback, setCollectFeedback] = useState<string | null>(null);
+  const prefersReducedMotion = useReducedMotion();
+  const dragVisuals = getPaperCardDragVisuals(prefersReducedMotion);
+  const dragX = useMotionValue(0);
+  const cardRotate = useTransform(
+    dragX,
+    [-180, 0, 180],
+    dragVisuals.rotate
+  );
+  const cardScale = useTransform(
+    dragX,
+    [-180, 0, 180],
+    dragVisuals.scale
+  );
+  const cardShadow = useTransform(
+    dragX,
+    [-180, 0, 180],
+    dragVisuals.shadow
+  );
   const swipeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const swipeHintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const collectFeedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSwipeAnimatingRef = useRef(false);
+  const dragAnimationRef = useRef<{ stop: () => void } | null>(null);
   const activeIdRef = useRef<string | null>(null);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const suppressNextOpenClickRef = useRef(false);
@@ -82,6 +126,7 @@ export default function CatCardDeck({
       if (swipeTimerRef.current) clearTimeout(swipeTimerRef.current);
       if (swipeHintTimerRef.current) clearTimeout(swipeHintTimerRef.current);
       if (collectFeedbackTimerRef.current) clearTimeout(collectFeedbackTimerRef.current);
+      dragAnimationRef.current?.stop();
     };
   }, []);
 
@@ -111,13 +156,16 @@ export default function CatCardDeck({
 
     const previousActiveId = activeIdRef.current;
     isSwipeAnimatingRef.current = false;
+    dragAnimationRef.current?.stop();
+    dragAnimationRef.current = null;
+    dragX.set(0);
     setSwipeDirection(null);
     setActiveIndex(() => {
       if (!previousActiveId) return 0;
       const nextActiveIndex = cards.findIndex((card) => card.id === previousActiveId);
       return nextActiveIndex >= 0 ? nextActiveIndex : 0;
     });
-  }, [cardSourceSignature, cards]);
+  }, [cardSourceSignature, cards, dragX]);
 
   useEffect(() => {
     activeIdRef.current = active?.id ?? null;
@@ -131,6 +179,9 @@ export default function CatCardDeck({
   }, [cards.length]);
 
   const completeMove = () => {
+    dragAnimationRef.current?.stop();
+    dragAnimationRef.current = null;
+    dragX.set(0);
     setActiveIndex((current) => (cards.length > 0 ? (current + 1) % cards.length : 0));
     setSwipeDirection(null);
     swipeTimerRef.current = null;
@@ -156,9 +207,21 @@ export default function CatCardDeck({
       }, COLLECT_FEEDBACK_MS);
     }
     setSwipeDirection(direction);
+    dragAnimationRef.current?.stop();
+    if (prefersReducedMotion) {
+      dragX.set(0);
+    } else {
+      dragAnimationRef.current = animate(dragX, direction * 460, {
+        duration: SWIPE_ANIMATION_MS / 1000,
+        ease: paperMotion.easeOut,
+      });
+    }
 
     if (swipeTimerRef.current) clearTimeout(swipeTimerRef.current);
-    swipeTimerRef.current = setTimeout(completeMove, SWIPE_ANIMATION_MS);
+    swipeTimerRef.current = setTimeout(
+      completeMove,
+      prefersReducedMotion ? 0 : SWIPE_ANIMATION_MS
+    );
   };
 
   const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
@@ -262,22 +325,39 @@ export default function CatCardDeck({
         ) : null}
 
         {collectFeedback ? (
-          <div
+          <motion.div
             role="status"
-            className="absolute left-1/2 top-[46%] z-40 -translate-x-1/2 -rotate-2 rounded-[12px] border-2 border-[#1d1714] bg-[#fff2cf]/96 px-4 py-2 text-[12px] font-black text-[#1d1714] shadow-[4px_4px_0_rgba(47,95,179,0.22)] backdrop-blur-sm"
+            data-motion-surface="collection-stamp"
+            data-motion-reduced={prefersReducedMotion ? 'true' : 'false'}
+            className="absolute left-1/2 top-[46%] z-40 -translate-x-1/2 rounded-[12px] border-2 border-[#1d1714] bg-[#fff2cf]/96 px-4 py-2 text-[12px] font-black text-[#1d1714] shadow-[4px_4px_0_rgba(47,95,179,0.22)] backdrop-blur-sm"
+            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.92, rotate: -4, y: 5 }}
+            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, scale: 1, rotate: -2, y: 0 }}
+            transition={prefersReducedMotion
+              ? { duration: paperMotion.duration.instant }
+              : paperMotion.spring}
           >
             {collectFeedback}
-          </div>
+          </motion.div>
         ) : null}
 
         {hasMultipleCards && next ? (
-          <div
+          <motion.div
+            key={`next-${next.id}`}
+            data-testid="card-stack-next"
+            data-motion-role="stack-next"
             aria-hidden="true"
             className="absolute inset-x-[10px] bottom-0 top-[18px] rotate-[6deg] rounded-[24px] border-2 border-[#1d1714] bg-[#ffe0e7] shadow-[4px_5px_0_rgba(29,23,20,0.25)]"
+            initial={prefersReducedMotion ? false : { y: 6, rotate: 4, opacity: 0.78 }}
+            animate={prefersReducedMotion ? { opacity: 1 } : { y: 0, rotate: 6, opacity: 1 }}
+            transition={prefersReducedMotion
+              ? { duration: paperMotion.duration.instant }
+              : paperMotion.spring}
           />
         ) : null}
         {hasMultipleCards && previous ? (
           <div
+            data-testid="card-stack-previous"
+            data-motion-role="stack-previous"
             aria-hidden="true"
             className="absolute bottom-0 left-[-2px] right-[22px] top-[10px] rotate-[-5deg] rounded-[24px] border-2 border-[#1d1714] bg-[#d9ecff] shadow-[4px_5px_0_rgba(29,23,20,0.25)]"
           />
@@ -286,6 +366,8 @@ export default function CatCardDeck({
         <motion.article
           key={active.id}
           data-testid="active-cat-card"
+          data-motion-surface="paper-card"
+          data-motion-reduced={prefersReducedMotion ? 'true' : 'false'}
           data-motion-state={motionState}
           data-swipe-ready={hasMultipleCards ? 'true' : 'false'}
           data-swipe-exit={
@@ -300,6 +382,7 @@ export default function CatCardDeck({
           drag={hasMultipleCards && !swipeDirection ? 'x' : false}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.26}
+          dragMomentum={false}
           onDragEnd={handleDragEnd}
           onKeyDown={handleKeyDown}
           onPointerDown={handlePointerDown}
@@ -307,21 +390,23 @@ export default function CatCardDeck({
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
           aria-label={language === 'zh' ? '貓咪卡片，可左右滑動或使用左右方向鍵' : 'Cat card, swipe or use left and right arrow keys'}
-          initial={{ x: swipeDirection ? 46 * -swipeDirection : 0, y: 8, rotate: -1.2, scale: 0.985, opacity: 0.78 }}
+          style={{
+            x: dragX,
+            rotate: cardRotate,
+            scale: cardScale,
+            boxShadow: cardShadow,
+            transformOrigin: 'center bottom',
+          }}
+          initial={prefersReducedMotion ? false : { y: 8, opacity: 0.78 }}
           animate={{
-            x: swipeDirection === 1 ? 460 : swipeDirection === -1 ? -460 : 0,
-            y: swipeDirection ? -10 : 0,
-            rotate: swipeDirection === 1 ? 14 : swipeDirection === -1 ? -14 : -1.2,
-            scale: swipeDirection ? 0.955 : 1,
+            y: prefersReducedMotion ? 0 : swipeDirection ? -10 : 0,
             opacity: swipeDirection ? 0 : 1,
           }}
-          transition={{
-            type: swipeDirection ? 'tween' : 'spring',
-            duration: swipeDirection ? SWIPE_ANIMATION_MS / 1000 : undefined,
-            stiffness: 420,
-            damping: 31,
-          }}
-          whileDrag={{ scale: 1.015, rotate: 0 }}
+          transition={prefersReducedMotion
+            ? { duration: paperMotion.duration.instant }
+            : swipeDirection
+              ? { duration: SWIPE_ANIMATION_MS / 1000, ease: paperMotion.easeOut }
+              : paperMotion.spring}
           onClick={handleOpenClick}
         >
           <div className="h-[52%] min-h-[150px] overflow-hidden rounded-[18px] border-2 border-[#1d1714] bg-[#f9bd4d]">

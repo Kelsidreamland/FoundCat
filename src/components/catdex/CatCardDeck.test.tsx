@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ScrapbookItem } from '../../store/useScrapbookStore';
-import CatCardDeck from './CatCardDeck';
+import CatCardDeck, { getPaperCardDragVisuals } from './CatCardDeck';
 
 const makeItem = (overrides: Partial<ScrapbookItem>): ScrapbookItem => ({
   id: overrides.id ?? 'cat-1',
@@ -555,6 +555,7 @@ describe('CatCardDeck', () => {
 
     expect(onCollectCard).toHaveBeenCalledWith(expect.objectContaining({ id: 'cat-1' }));
     expect(screen.getByRole('status')).toHaveTextContent('已收藏到我的貓卡');
+    expect(screen.getByRole('status')).toHaveAttribute('data-motion-surface', 'collection-stamp');
     expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-swipe-exit', 'left');
 
     act(() => {
@@ -758,5 +759,41 @@ describe('CatCardDeck', () => {
 
     expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-swipe-ready', 'true');
     expect(screen.getByTestId('active-cat-card')).toHaveClass('cursor-grab');
+  });
+
+  it('marks the deck with the paper drag motion contract', () => {
+    render(
+      <CatCardDeck
+        items={[
+          makeItem({ id: 'cat-1', catdexNumber: 1 }),
+          makeItem({ id: 'cat-2', catdexNumber: 2 }),
+        ]}
+        language="zh"
+        labels={{
+          empty: '還沒有貓卡',
+          previous: '上一張',
+          next: '下一張',
+          shareCard: '分享這張卡與地址',
+        }}
+        onShareCard={vi.fn()}
+      />
+    );
+
+    expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-motion-surface', 'paper-card');
+    expect(screen.getByTestId('active-cat-card')).toHaveAttribute('data-motion-reduced', 'false');
+    expect(screen.getByTestId('card-stack-next')).toHaveAttribute('data-motion-role', 'stack-next');
+    expect(screen.getByTestId('card-stack-previous')).toHaveAttribute('data-motion-role', 'stack-previous');
+  });
+
+  it('removes decorative drag transforms for reduced motion', () => {
+    expect(getPaperCardDragVisuals(true)).toEqual({
+      rotate: [0, 0, 0],
+      scale: [1, 1, 1],
+      shadow: [
+        '7px 8px 0 #1d1714',
+        '7px 8px 0 #1d1714',
+        '7px 8px 0 #1d1714',
+      ],
+    });
   });
 });
