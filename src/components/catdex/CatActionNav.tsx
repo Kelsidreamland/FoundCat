@@ -1,4 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
+import { motion, useReducedMotion } from 'framer-motion';
+import { getPaperNavPress } from '../../lib/uiMotion';
 
 const iconClass = 'h-8 w-8 overflow-visible';
 const iconProps = {
@@ -86,18 +88,19 @@ const defaultLabels = {
 
 export default function CatActionNav({ labels }: CatActionNavProps) {
   const location = useLocation();
+  const prefersReducedMotion = useReducedMotion();
   const navLabels = { ...defaultLabels, ...labels };
   const isCatCardsActive = location.pathname === '/catdex';
   const isMyMapActive = location.pathname === '/map';
   const isCaptureActive = location.pathname === '/create';
   const sideLinkClass = (isActive: boolean) => [
-    'relative flex h-[52px] w-[52px] items-center justify-center rounded-[18px] border text-[#221915] transition-transform active:translate-y-[2px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]',
+    'relative flex h-[52px] w-[52px] items-center justify-center rounded-[18px] border text-[#221915] transition-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]',
     isActive
       ? 'border-[#221915]/40 bg-[#fff2cf] shadow-[0_9px_0_rgba(34,25,21,0.16),0_12px_26px_rgba(47,95,179,0.18)] -translate-y-0.5'
       : 'border-[#221915]/20 bg-[#fffdf2] shadow-[0_8px_24px_rgba(34,25,21,0.12)]',
   ].join(' ');
   const captureLinkClass = (isActive: boolean) => [
-    'flex h-[66px] w-[66px] -translate-y-3 items-center justify-center rounded-[23px] border text-[#fffdf2] transition-transform active:-translate-y-[10px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]',
+    'flex h-[66px] w-[66px] -translate-y-3 items-center justify-center rounded-[23px] border text-[#fffdf2] transition-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]',
     isActive
       ? 'border-[#221915]/45 bg-[#1f4fa4] shadow-[0_16px_0_rgba(34,25,21,0.16),0_18px_34px_rgba(47,95,179,0.44)]'
       : 'border-[#221915]/25 bg-[#2f5fb3] shadow-[0_14px_28px_rgba(47,95,179,0.38)]',
@@ -113,27 +116,51 @@ export default function CatActionNav({ labels }: CatActionNavProps) {
           to="/catdex"
           aria-label={navLabels.myCatCards}
           aria-current={isCatCardsActive ? 'page' : undefined}
+          data-motion-role="side-action"
+          data-motion-reduced={prefersReducedMotion ? 'true' : 'false'}
           className={sideLinkClass(isCatCardsActive)}
         >
-          <CatCardsIcon />
+          <motion.span
+            className="flex h-full w-full items-center justify-center"
+            whileTap={getPaperNavPress(prefersReducedMotion, 'side')}
+            transition={{ duration: 0.12 }}
+          >
+            <CatCardsIcon />
+          </motion.span>
         </Link>
 
         <Link
           to="/create"
           aria-label={navLabels.capture}
           aria-current={isCaptureActive ? 'page' : undefined}
+          data-motion-role="capture-action"
+          data-motion-reduced={prefersReducedMotion ? 'true' : 'false'}
           className={captureLinkClass(isCaptureActive)}
         >
-          <CatCaptureIcon />
+          <motion.span
+            className="flex h-full w-full items-center justify-center"
+            whileTap={getPaperNavPress(prefersReducedMotion, 'capture')}
+            transition={{ duration: 0.12 }}
+          >
+            <CatCaptureIcon />
+          </motion.span>
         </Link>
 
         <Link
           to="/map?mode=public"
           aria-label={navLabels.map}
           aria-current={isMyMapActive ? 'page' : undefined}
+          data-motion-role="side-action"
+          data-motion-reduced={prefersReducedMotion ? 'true' : 'false'}
           className={sideLinkClass(isMyMapActive)}
         >
-          <CatMapIcon />
+          <motion.span
+            className="flex h-full w-full items-center justify-center"
+            whileTap={getPaperNavPress(prefersReducedMotion, 'side')}
+            transition={{ duration: 0.12 }}
+          >
+            <CatMapIcon />
+          </motion.span>
         </Link>
       </div>
     </nav>
