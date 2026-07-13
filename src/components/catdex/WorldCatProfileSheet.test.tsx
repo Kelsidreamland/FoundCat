@@ -58,6 +58,13 @@ describe('WorldCatProfileSheet', () => {
     );
 
     const dialog = screen.getByRole('dialog', { name: '窗邊小虎 世界貓咪檔案' });
+    expect(screen.getByTestId('world-cat-profile-backdrop')).toHaveAttribute(
+      'data-motion-surface',
+      'paper-sheet-backdrop'
+    );
+    expect(dialog).toHaveAttribute('data-motion-surface', 'paper-sheet');
+    expect(dialog).toHaveAttribute('data-motion-context', 'world-cat');
+    expect(dialog).toHaveAttribute('data-motion-reduced', 'false');
     expect(dialog).toHaveTextContent('窗邊小虎');
     expect(dialog).toHaveTextContent('泰國 清邁');
     expect(dialog).toHaveTextContent('W-012');

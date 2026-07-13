@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Heart, MapPin, Navigation, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
@@ -7,6 +7,7 @@ import {
 } from '../../lib/catInfoDisplay';
 import { formatCatCardNumberForItem } from '../../lib/catdexDeck';
 import { getReadableLocationName } from '../../lib/locationDisplay';
+import { getPaperSheetMotion } from '../../lib/uiMotion';
 import type { ScrapbookItem } from '../../store/useScrapbookStore';
 
 export interface WorldCatProfileSheetProps {
@@ -101,6 +102,8 @@ export default function WorldCatProfileSheet({
   onFind,
 }: WorldCatProfileSheetProps) {
   const [isSaving, setIsSaving] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
+  const sheetMotion = getPaperSheetMotion(prefersReducedMotion);
   const copy = copyFor(language);
   const title = item?.catName?.trim() || copy.defaultName;
   const image = item?.heroImageData || item?.imageData;
@@ -124,19 +127,22 @@ export default function WorldCatProfileSheet({
   return (
     <AnimatePresence>
       {item ? (
-        <div
+        <motion.div
           role="presentation"
+          data-testid="world-cat-profile-backdrop"
+          data-motion-surface="paper-sheet-backdrop"
           className="fixed inset-0 z-[270] flex items-end justify-center bg-[#221915]/38 px-3 pb-[calc(0.85rem+env(safe-area-inset-bottom))] pt-6 backdrop-blur-[2px] sm:items-center"
+          {...sheetMotion.backdrop}
         >
           <motion.section
             role="dialog"
             aria-modal="true"
             aria-label={`${title} ${copy.title}`}
+            data-motion-surface="paper-sheet"
+            data-motion-context="world-cat"
+            data-motion-reduced={prefersReducedMotion ? 'true' : 'false'}
             className="relative max-h-[min(88dvh,680px)] w-full max-w-sm overflow-y-auto rounded-[28px] border-2 border-[#221915] bg-[#fffdf2] p-4 text-[#1d1714] shadow-[8px_9px_0_rgba(29,23,20,0.84)]"
-            initial={{ opacity: 0, y: 28, rotate: -0.8, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, rotate: -0.35, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.98 }}
-            transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+            {...sheetMotion.sheet}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -263,7 +269,7 @@ export default function WorldCatProfileSheet({
               </button>
             </div>
           </motion.section>
-        </div>
+        </motion.div>
       ) : null}
     </AnimatePresence>
   );
