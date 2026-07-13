@@ -10,7 +10,7 @@ import {
 } from '../store/useScrapbookStore';
 import { translations } from '../translations';
 import { ArrowLeft, ArrowRight, Check, ExternalLink, MapPin, Maximize2, Navigation, PencilLine, Plus, Share2, X } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { formatCatCardNumberForItem, formatPublicCatCardNumber } from '../lib/catdexDeck';
 import { getFindCatCta, getReadableLocationName } from '../lib/locationDisplay';
 import { MapTreasureBrandMark } from '../components/brand/BrandMarks';
@@ -21,6 +21,7 @@ import { buildGoogleMapsSearchUrl } from '../lib/singleCatShare';
 import { setCloudCatCardVisibility } from '../lib/cloudVisibility';
 import { useAuthStore } from '../store/useAuthStore';
 import { loadPublicCatCards } from '../lib/cloudPublicCats';
+import { getPaperSheetMotion } from '../lib/uiMotion';
 
 const OPEN_FREE_MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 const DEFAULT_CENTER: [number, number] = [114.1694, 22.3193];
@@ -129,6 +130,8 @@ export default function Map() {
   const user = useAuthStore((state) => state.user);
   const isCloudConfigured = useAuthStore((state) => state.isConfigured);
   const t = translations[language];
+  const prefersReducedMotion = useReducedMotion();
+  const paperSheetMotion = getPaperSheetMotion(prefersReducedMotion);
   const mapWrapperRef = useRef<HTMLDivElement>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -893,14 +896,13 @@ export default function Map() {
       <AnimatePresence>
         {selectedItem && selectedItem.location ? (
           <motion.div
-            initial={{ opacity: 0, y: 22, scale: 0.985 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 16, scale: 0.985 }}
-            transition={{ type: 'spring', stiffness: 360, damping: 34, mass: 0.72 }}
             data-testid="map-cat-detail-sheet"
-            data-motion-surface="map-cat-sheet"
+            data-motion-surface="paper-sheet"
+            data-motion-context="map-cat"
+            data-motion-reduced={prefersReducedMotion ? 'true' : 'false'}
             style={{ maxHeight: 'min(calc(100dvh - 6.75rem - env(safe-area-inset-bottom)), 620px)', transformOrigin: 'bottom center' }}
             className="absolute bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-0 right-0 z-20 mx-auto flex w-[calc(100%_-_1.5rem)] max-w-sm flex-col overflow-hidden rounded-[22px] border-2 border-[#221915] bg-[#fffdf2]/95 shadow-[8px_8px_0_rgba(47,95,179,0.28)] backdrop-blur-sm"
+            {...paperSheetMotion.sheet}
           >
             <button
               type="button"

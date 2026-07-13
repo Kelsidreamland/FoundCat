@@ -468,7 +468,9 @@ describe('Map page', () => {
       maxHeight: 'min(calc(100dvh - 6.75rem - env(safe-area-inset-bottom)), 620px)',
       transformOrigin: 'bottom center',
     });
-    expect(screen.getByTestId('map-cat-detail-sheet')).toHaveAttribute('data-motion-surface', 'map-cat-sheet');
+    expect(screen.getByTestId('map-cat-detail-sheet')).toHaveAttribute('data-motion-surface', 'paper-sheet');
+    expect(screen.getByTestId('map-cat-detail-sheet')).toHaveAttribute('data-motion-context', 'map-cat');
+    expect(screen.getByTestId('map-cat-detail-sheet')).toHaveAttribute('data-motion-reduced', 'false');
     expect(screen.getByTestId('map-cat-detail-sheet')).toHaveClass(
       'left-0',
       'right-0',
