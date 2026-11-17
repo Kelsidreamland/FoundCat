@@ -10,6 +10,7 @@ import {
 } from '../store/useScrapbookStore';
 import { translations } from '../translations';
 import { ArrowLeft, ArrowRight, Check, ExternalLink, MapPin, Maximize2, Navigation, PencilLine, Plus, Share2, X } from 'lucide-react';
+import { getCatDisplayName } from '../lib/catNameGenerator';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { formatCatCardNumberForItem, formatPublicCatCardNumber } from '../lib/catdexDeck';
 import { getFindCatCta, getReadableLocationName } from '../lib/locationDisplay';
@@ -617,15 +618,10 @@ export default function Map() {
   const selectedNumberLabel = isPublicMapMode
     ? (language === 'zh' ? '世界地圖編號' : 'World map number')
     : (language === 'zh' ? '我的圖鑑編號' : 'My card number');
-  const selectedNumberHint = isPublicMapMode
-    ? (language === 'zh' ? '來自全世界地圖，保留 W 編號。' : 'From the World Map, keeping its W-number.')
-    : (language === 'zh' ? '只整理你親自拍到的貓。' : 'Only cats you photographed yourself.');
   const selectedImage = selectedItem?.heroImageData || selectedItem?.imageData;
   const selectedLocationDisplayName = selectedItem ? getReadableLocationName(selectedItem, language) : '';
   const selectedFindCatCta = getFindCatCta(language);
-  const selectedDisplayName = selectedItem
-    ? selectedItem.catName?.trim() || selectedLocationDisplayName
-    : '';
+  const selectedDisplayName = selectedItem ? getCatDisplayName(selectedItem, language) : '';
   const selectedGoogleMapsUrl = selectedItem?.location
     ? buildGoogleMapsSearchUrl({
         lat: selectedItem.location.lat,
@@ -954,8 +950,11 @@ export default function Map() {
                     </div>
                   ) : null}
                   <h2 className="font-cat-display mt-1 truncate text-lg font-bold text-[#221915]">{selectedDisplayName}</h2>
-                  {selectedCardNumber ? (
-                    <p className="mt-0.5 truncate text-[11px] font-bold text-[#6d5f52]">{selectedNumberHint}</p>
+                  {selectedItem?.location ? (
+                    <p className="mt-0.5 flex min-w-0 items-center gap-1 text-xs font-bold text-[#6d5f52]">
+                      <MapPin size={12} strokeWidth={2.6} aria-hidden="true" className="shrink-0 text-[#2f5fb3]" />
+                      <span className="truncate">{selectedLocationDisplayName}</span>
+                    </p>
                   ) : null}
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
@@ -1015,7 +1014,7 @@ export default function Map() {
                   language={language}
                   variant="compact"
                   showNumber={false}
-                  showPlace={Boolean(selectedItem.catName)}
+                  showPlace={false}
                 />
               </div>
 

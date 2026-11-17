@@ -10,6 +10,7 @@ import { shareCatMapPoster } from '../lib/sharePoster';
 import type { ScrapbookItem } from '../store/useScrapbookStore';
 import { useScrapbookStore } from '../store/useScrapbookStore';
 import { translations } from '../translations';
+import { getCatDisplayName } from '../lib/catNameGenerator';
 
 const paperTexture = {
   backgroundImage: [
@@ -21,9 +22,7 @@ const paperTexture = {
   backgroundSize: '28px 28px, 100% 18px, 100% 100%, 100% 100%',
 };
 
-const getShareCardTitle = (item: ScrapbookItem, language: 'zh' | 'en') => {
-  return item.catName?.trim() || item.location?.name || (language === 'zh' ? '未命名貓咪' : 'Unnamed cat');
-};
+const getShareCardTitle = (item: ScrapbookItem, language: 'zh' | 'en') => getCatDisplayName(item, language);
 
 const normalizeMapDisplayName = (value: string | undefined, fallback: string, language: 'zh' | 'en') => {
   const trimmed = value?.trim();

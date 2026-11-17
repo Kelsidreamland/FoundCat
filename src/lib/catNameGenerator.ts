@@ -45,3 +45,11 @@ export const suggestCatName = (item: ScrapbookItem, language: Language) => {
   if (aloofHint) return '高冷店長';
   return `轉角小貓 ${padCardNumber(item.catdexNumber ?? item.publicNumber)}`;
 };
+
+/**
+ * The name shown as a cat card's title. The cat is the subject, so an unnamed cat gets a
+ * generated nickname rather than falling back to the place it was seen.
+ */
+export const getCatDisplayName = (item: ScrapbookItem, language: Language) => (
+  item.catName?.trim() || suggestCatName(item, language)
+);

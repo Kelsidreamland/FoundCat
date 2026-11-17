@@ -10,7 +10,7 @@ import type { PanInfo } from 'framer-motion';
 import { getPersonalityLabels } from '../../lib/catInfoDisplay';
 import { getPaperCardDragVisuals } from '../../lib/catCardMotion';
 import { formatCatCardNumberForItem, getDeckNeighbors, sortCatCards } from '../../lib/catdexDeck';
-import { suggestCatName } from '../../lib/catNameGenerator';
+import { getCatDisplayName } from '../../lib/catNameGenerator';
 import { getReadableLocationName } from '../../lib/locationDisplay';
 import { paperMotion } from '../../lib/uiMotion';
 import type { ScrapbookItem } from '../../store/useScrapbookStore';
@@ -282,7 +282,7 @@ export default function CatCardDeck({
 
   const activeImage = active.heroImageData || active.imageData;
   const activeLocation = getReadableLocationName(active, language);
-  const activeCatName = active.catName?.trim() || suggestCatName(active, language);
+  const activeCatName = getCatDisplayName(active, language);
   const activePersonalityLabels = getPersonalityLabels(active.personalityTags, language).slice(0, 2);
   const motionState = swipeDirection === 1
     ? 'leaving-right'

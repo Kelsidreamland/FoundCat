@@ -132,8 +132,8 @@ describe('ShareCatdex page', () => {
     await user.click(screen.getByRole('button', { name: /調整公開貓咪與匯出/ }));
 
     const selection = screen.getByTestId('shared-cat-selection');
-    expect(screen.getByLabelText('選取 巷口咖啡店')).toBeChecked();
-    expect(screen.getByLabelText('選取 小公園')).toBeChecked();
+    expect(screen.getByLabelText('選取 轉角小貓 001')).toBeChecked();
+    expect(screen.getByLabelText('選取 轉角小貓 029')).toBeChecked();
     expect(screen.getByRole('button', { name: /匯出 Google My Maps CSV/ })).toBeInTheDocument();
 
     expect(Boolean(actions.compareDocumentPosition(selection) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
@@ -196,7 +196,7 @@ describe('ShareCatdex page', () => {
     );
 
     await user.click(screen.getByRole('button', { name: /調整公開貓咪與匯出/ }));
-    await user.click(screen.getByLabelText('選取 小公園'));
+    await user.click(screen.getByLabelText('選取 轉角小貓 029'));
     await user.click(screen.getByRole('button', { name: /產生貓咪地圖海報/ }));
 
     await waitFor(() => {
@@ -218,7 +218,7 @@ describe('ShareCatdex page', () => {
     );
 
     await user.click(screen.getByRole('button', { name: /調整公開貓咪與匯出/ }));
-    await user.click(screen.getByLabelText('選取 小公園'));
+    await user.click(screen.getByLabelText('選取 轉角小貓 029'));
     await user.click(screen.getByRole('button', { name: /匯出 Google My Maps CSV/ }));
 
     expect(downloadCatMapCsv).toHaveBeenCalledWith({
@@ -244,7 +244,7 @@ describe('ShareCatdex page', () => {
     );
 
     await user.click(screen.getByRole('button', { name: /調整公開貓咪與匯出/ }));
-    await user.click(screen.getByLabelText('選取 小公園'));
+    await user.click(screen.getByLabelText('選取 轉角小貓 029'));
     await user.click(screen.getByRole('button', { name: /複製貓咪地圖連結/ }));
 
     await waitFor(() => {
@@ -285,7 +285,7 @@ describe('ShareCatdex page', () => {
 
     await user.click(screen.getByRole('button', { name: /調整公開貓咪與匯出/ }));
 
-    expect(screen.getByLabelText('選取 載入後的咖啡店')).toBeChecked();
+    expect(screen.getByLabelText('選取 轉角小貓 008')).toBeChecked();
   });
 
   it('can switch the share map page into English', async () => {

@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
-import { Link2, Loader2, LocateFixed, MapPin, Search, X } from 'lucide-react';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { Loader2, LocateFixed, MapPin, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { translations } from '../translations';
 import { reverseGeocodePlace, searchPlaces, type PlaceSuggestion } from '../lib/placeSearch';
 import { parseGoogleMapsLink, parseGoogleMapsSearchText } from '../lib/googleMapsLink';
 
 const OPEN_FREE_MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
-const DEFAULT_CENTER: [number, number] = [114.1694, 22.3193];
+// Fallback only, used until the visitor's own location is known (Taipei).
+const DEFAULT_CENTER: [number, number] = [121.5654, 25.033];
 
 interface LocationResult {
   lat: number;
@@ -36,8 +38,6 @@ type LocationPickerDraft = {
   selectedPlaceId?: string;
   selectedMapUrl?: string;
 };
-
-type LocationInputMethod = 'maps-link' | 'search' | 'pin';
 
 const LOCATION_PICKER_DRAFT_STORAGE_PREFIX = 'found-cat-location-picker-draft:';
 
@@ -146,7 +146,6 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
   const [searchStatus, setSearchStatus] = useState<'idle' | 'no-results' | 'error'>('idle');
   const [linkInputError, setLinkInputError] = useState(false);
-  const [activeInputMethod, setActiveInputMethod] = useState<LocationInputMethod>('maps-link');
 
   const defaultLocationName = language === 'zh' ? '貓咪出沒點' : 'Cat Spot';
   const parsedGoogleMapsLocation = useMemo(() => parseGoogleMapsLink(locationName), [locationName]);
@@ -169,33 +168,8 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
             ? '可以搜尋店名或地址；找不到時，保留這段文字再點地圖選位置。'
             : 'Search the place or address; if it is missing, keep this text and tap the map.')
         : (language === 'zh'
-            ? '貼完整 Google Maps 連結最準，也可以搜尋店名地址，或直接點地圖放 pin。'
-            : 'A full Google Maps link is best. You can also search a place or tap the map.');
-  const methodHintCopy = activeInputMethod === 'pin'
-    ? (language === 'zh'
-        ? '找不到店名時，直接點地圖放 pin，這樣才不會存到錯誤位置。'
-        : 'If the place cannot be found, tap the map to place a pin so the spot is not saved incorrectly.')
-    : activeInputMethod === 'search'
-      ? (language === 'zh'
-          ? '輸入店名、地址或當地語言名稱，選到建議後會自動定位。'
-          : 'Type a shop, address, or local-language name. Choosing a suggestion places the pin.')
-      : (language === 'zh'
-          ? '貼完整 Google Maps 連結最準；短連結需要先在 Google Maps 打開再複製完整網址。'
-          : 'A full Google Maps link is most accurate. Short links need to be opened in Google Maps first.');
-
-  const focusLocationInput = useCallback(() => {
-    window.setTimeout(() => {
-      locationInputRef.current?.focus();
-    }, 0);
-  }, []);
-
-  const handleInputMethodSelect = useCallback((method: LocationInputMethod) => {
-    setActiveInputMethod(method);
-    if (method !== 'pin') {
-      focusLocationInput();
-    }
-  }, [focusLocationInput]);
-
+            ? '搜尋店名、地址，或貼上 Google Maps 完整連結；找不到就直接點地圖。'
+            : 'Search a place or address, or paste a full Google Maps link. If nothing matches, tap the map.');
   useEffect(() => {
     defaultLocationNameRef.current = defaultLocationName;
   }, [defaultLocationName]);
@@ -377,6 +351,8 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
       style: OPEN_FREE_MAP_STYLE_URL,
       center: DEFAULT_CENTER,
       zoom: 12,
+      // The picker map is short on phones; keep credits behind the (i) button.
+      attributionControl: { compact: true },
     });
 
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
@@ -433,9 +409,9 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
     };
   }, [defaultLocationName, initialLocation, pickCoordinate, restoredDraft, setMarkerAt]);
 
-  const useCurrentLocation = useCallback(() => {
+  const locateCurrentPosition = useCallback(({ silent = false }: { silent?: boolean } = {}) => {
     if (!navigator.geolocation) {
-      window.alert(t.currentLocationFailed);
+      if (!silent) window.alert(t.currentLocationFailed);
       return;
     }
 
@@ -453,16 +429,25 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
       },
       () => {
         setIsLocating(false);
-        window.alert(t.currentLocationFailed);
+        if (!silent) window.alert(t.currentLocationFailed);
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }, [pickCoordinate, t.currentLocationFailed]);
 
+  // Most cats are logged on the spot, so start from where the person is standing.
+  // Skipped when editing an existing spot or restoring a draft; failures stay quiet.
+  const hasAutoLocatedRef = useRef(false);
+  useEffect(() => {
+    if (hasAutoLocatedRef.current || initialSelectedLocation) return;
+    hasAutoLocatedRef.current = true;
+    locateCurrentPosition({ silent: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleLocationNameChange = useCallback((value: string) => {
     selectedSuggestionNameRef.current = null;
     setLinkInputError(false);
-    setActiveInputMethod(/(?:google\.[a-z.]+\/maps|maps\.app\.goo\.gl|goo\.gl\/maps)/i.test(value) ? 'maps-link' : 'search');
     if (!/(?:google\.[a-z.]+\/maps|maps\.app\.goo\.gl|goo\.gl\/maps)/i.test(value)) {
       setSelectedMapUrl(undefined);
     }
@@ -718,64 +703,21 @@ export default function LocationPicker({ initialLocation, draftKey, onPicked, on
           data-testid="location-picker-form"
           className="max-h-[42dvh] shrink-0 overflow-y-auto border-b border-cat-border-light bg-cat-bg/50 p-4"
         >
-          <p className="text-cat-text-tertiary text-xs mb-3">{t.tapMapHint}</p>
-
-          <div className="mb-2 grid grid-cols-3 gap-2" aria-label={language === 'zh' ? '地點輸入方式' : 'Location input methods'}>
-            {[
-              {
-                id: 'maps-link' as const,
-                icon: Link2,
-                label: language === 'zh' ? '貼完整地圖連結' : 'Full Maps link',
-              },
-              {
-                id: 'search' as const,
-                icon: Search,
-                label: language === 'zh' ? '搜尋店名地址' : 'Search place',
-              },
-              {
-                id: 'pin' as const,
-                icon: MapPin,
-                label: language === 'zh' ? '點地圖放 pin' : 'Tap map pin',
-              },
-            ].map((method) => {
-              const Icon = method.icon;
-              const isActive = activeInputMethod === method.id;
-
-              return (
-                <button
-                  key={method.label}
-                  type="button"
-                  onClick={() => handleInputMethodSelect(method.id)}
-                  aria-pressed={isActive}
-                  className={`flex min-h-11 items-center justify-center gap-1.5 rounded-2xl border px-2 text-center text-[11px] font-black leading-4 shadow-[1px_2px_0_rgba(47,95,179,0.06)] transition-colors ${
-                    isActive
-                      ? 'border-[#2f5fb3]/25 bg-[#d9ecff]/72 text-[#2f5fb3]'
-                      : 'border-[#2f5fb3]/10 bg-white/62 text-cat-text-secondary hover:border-[#2f5fb3]/20 hover:bg-white/80'
-                  }`}
-                >
-                  <Icon size={13} className={`shrink-0 ${isActive ? 'text-[#2f5fb3]' : 'text-[#2f5fb3]/65'}`} />
-                  <span className="min-w-0">{method.label}</span>
-                </button>
-              );
-            })}
-          </div>
-          <p className="mb-3 rounded-2xl border border-[#221915]/10 bg-white/55 px-3 py-2 text-xs font-bold leading-5 text-cat-text-secondary">
-            {methodHintCopy}
-          </p>
-
-          <div className="mb-3 flex flex-wrap gap-2">
+          <div className="mb-3 flex items-center gap-2">
             <button
-              onClick={useCurrentLocation}
-              className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-cat-card px-3 py-2 text-center text-sm font-semibold text-cat-text-main transition-colors hover:bg-cat-bg sm:flex-none sm:px-4"
+              type="button"
+              onClick={() => locateCurrentPosition()}
+              className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border-2 border-[#221915] bg-[#2f5fb3] px-4 py-2 text-center text-sm font-black text-white shadow-[3px_3px_0_rgba(34,25,21,0.16)] transition-transform active:translate-x-[1px] active:translate-y-[1px] disabled:opacity-60"
               disabled={isLocating}
             >
               {isLocating ? <Loader2 size={16} className="animate-spin" /> : <LocateFixed size={16} />}
-              <span>{t.useCurrentLocation}</span>
+              <span>{isLocating ? (language === 'zh' ? '正在定位…' : 'Locating…') : t.useCurrentLocation}</span>
             </button>
 
             <button
+              type="button"
               onClick={handleClose}
-              className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-cat-card px-3 py-2 text-center text-sm font-semibold text-cat-text-secondary transition-colors hover:bg-cat-bg sm:flex-none sm:px-4"
+              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full px-3 py-2 text-sm font-bold text-cat-text-secondary underline-offset-4 transition-colors hover:underline"
             >
               <span>{t.skipForNow}</span>
             </button>

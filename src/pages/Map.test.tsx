@@ -10,6 +10,7 @@ import type { ScrapbookItem } from '../store/useScrapbookStore';
 import { useScrapbookStore } from '../store/useScrapbookStore';
 import { buildGoogleMapsSearchUrl } from '../lib/singleCatShare';
 import Map from './Map';
+import { getCatDisplayName } from '../lib/catNameGenerator';
 
 const mapEaseTo = vi.fn();
 const mapFitBounds = vi.fn();
@@ -340,7 +341,7 @@ describe('Map page', () => {
 
     await user.click(fallbackSpotButton);
 
-    expect(await screen.findByRole('heading', { name: '巷口咖啡店' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: getCatDisplayName(useScrapbookStore.getState().items[0], 'zh') })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '去找這隻喵' })).toBeInTheDocument();
 
     consoleErrorSpy.mockRestore();
@@ -456,8 +457,8 @@ describe('Map page', () => {
 
     expect(await screen.findByText('No.029')).toBeInTheDocument();
     expect(screen.getByText('我的圖鑑編號')).toBeInTheDocument();
-    expect(screen.getByText('只整理你親自拍到的貓。')).toBeInTheDocument();
-    expect(screen.getByText('巷口咖啡店')).toBeInTheDocument();
+    expect(screen.queryByText('只整理你親自拍到的貓。')).not.toBeInTheDocument();
+    expect(screen.getAllByText('巷口咖啡店').length).toBeGreaterThan(0);
     expect(screen.queryByText('台北市信義區')).not.toBeInTheDocument();
     expect(screen.getByText('外型')).toBeInTheDocument();
     expect(screen.getByText('虎斑貓')).toBeInTheDocument();
@@ -720,7 +721,8 @@ describe('Map page', () => {
     expect(screen.getByText('下午常在咖啡廳門口的木椅旁睡覺。')).toBeInTheDocument();
     expect(screen.getByText('照護')).toBeInTheDocument();
     expect(screen.getByText('已剪耳 / TNR')).toBeInTheDocument();
-    expect(screen.getByText('城市')).toBeInTheDocument();
+    // The place now sits once under the cat's name instead of in a separate section.
+    expect(screen.queryByText('城市')).not.toBeInTheDocument();
     expect(screen.getByText('巷口咖啡店')).toBeInTheDocument();
     expect(screen.queryByText('台北市信義區貓咪路 1 號')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: '去找這隻喵' })).toBeInTheDocument();
@@ -754,7 +756,7 @@ describe('Map page', () => {
 
     await user.click(await screen.findByRole('button', { name: '去找這隻喵' }));
 
-    expect(await screen.findByRole('heading', { name: '去找這隻喵' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: '轉角小貓 031' })).toBeInTheDocument();
     expect(screen.queryByText('https://maps.app.goo.gl/abc123')).not.toBeInTheDocument();
   });
 
@@ -1198,9 +1200,9 @@ describe('Map page', () => {
 
     expect(await screen.findByText('W-001')).toBeInTheDocument();
     expect(screen.getByText('世界地圖編號')).toBeInTheDocument();
-    expect(screen.getByText('來自全世界地圖，保留 W 編號。')).toBeInTheDocument();
+    expect(screen.queryByText('來自全世界地圖，保留 W 編號。')).not.toBeInTheDocument();
     expect(screen.queryByText('No.088')).not.toBeInTheDocument();
-    expect(screen.getByText('曼谷街角咖啡')).toBeInTheDocument();
+    expect(screen.getAllByText('曼谷街角咖啡').length).toBeGreaterThan(0);
     expect(screen.queryByRole('button', { name: '編輯地點' })).not.toBeInTheDocument();
     expect(screen.queryByText('登入後才能把這隻貓公開到世界地圖，也能備份你的貓卡。')).not.toBeInTheDocument();
   });

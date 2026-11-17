@@ -129,7 +129,30 @@ describe('LocationPicker', () => {
     });
   });
 
-  it('does not request GPS automatically when the picker opens', () => {
+  it('starts from the current position when adding a new spot, without alerting on failure', () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => undefined);
+    const getCurrentPosition = vi.fn((_success: PositionCallback, error?: PositionErrorCallback | null) => {
+      error?.({ code: 1, message: 'denied' } as GeolocationPositionError);
+    });
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: { getCurrentPosition },
+    });
+
+    render(
+      <LocationPicker
+        language="zh"
+        onPicked={vi.fn()}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(getCurrentPosition).toHaveBeenCalledTimes(1);
+    expect(alertSpy).not.toHaveBeenCalled();
+    alertSpy.mockRestore();
+  });
+
+  it('does not request GPS when editing an existing spot', () => {
     const getCurrentPosition = vi.fn();
     Object.defineProperty(navigator, 'geolocation', {
       configurable: true,
@@ -139,6 +162,7 @@ describe('LocationPicker', () => {
     render(
       <LocationPicker
         language="zh"
+        initialLocation={{ lat: 25.03, lng: 121.56, name: '巷口咖啡店' }}
         onPicked={vi.fn()}
         onClose={vi.fn()}
       />
@@ -156,12 +180,11 @@ describe('LocationPicker', () => {
       />
     );
 
-    expect(screen.getAllByText(/貼上 Google Maps 連結/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/貼上 Google Maps/).length).toBeGreaterThan(0);
     expect(screen.getByPlaceholderText('貼上 Google Maps 連結、搜尋店名或地址')).toBeInTheDocument();
-    expect(screen.getByText('貼完整地圖連結')).toBeInTheDocument();
-    expect(screen.getByText('搜尋店名地址')).toBeInTheDocument();
-    expect(screen.getByText('點地圖放 pin')).toBeInTheDocument();
-    expect(screen.getByText('貼完整 Google Maps 連結最準，也可以搜尋店名地址，或直接點地圖放 pin。')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '貼完整地圖連結' })).not.toBeInTheDocument();
+    expect(screen.getByText('搜尋店名、地址，或貼上 Google Maps 完整連結；找不到就直接點地圖。')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '使用目前位置' })).toBeInTheDocument();
   });
 
   it('keeps the location picker usable on short mobile screens', () => {
@@ -179,27 +202,6 @@ describe('LocationPicker', () => {
     );
     expect(screen.getByTestId('location-picker-form')).toHaveClass('max-h-[42dvh]', 'overflow-y-auto');
     expect(screen.getByTestId('location-picker-map')).toHaveClass('min-h-[min(260px,32dvh)]');
-  });
-
-  it('lets users choose a location input method and keeps the relevant control focused', async () => {
-    render(
-      <LocationPicker
-        language="zh"
-        onPicked={vi.fn()}
-        onClose={vi.fn()}
-      />
-    );
-
-    const locationInput = screen.getByLabelText('地點名稱');
-    expect(screen.getByRole('button', { name: '貼完整地圖連結' })).toHaveAttribute('aria-pressed', 'true');
-
-    fireEvent.click(screen.getByRole('button', { name: '搜尋店名地址' }));
-    expect(screen.getByRole('button', { name: '搜尋店名地址' })).toHaveAttribute('aria-pressed', 'true');
-    await waitFor(() => expect(locationInput).toHaveFocus());
-
-    fireEvent.click(screen.getByRole('button', { name: '點地圖放 pin' }));
-    expect(screen.getByRole('button', { name: '點地圖放 pin' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByText('找不到店名時，直接點地圖放 pin，這樣才不會存到錯誤位置。')).toBeInTheDocument();
   });
 
   it('tells users a full Google Maps coordinate link can be confirmed immediately', async () => {
