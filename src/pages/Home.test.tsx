@@ -99,7 +99,20 @@ describe('Home page', () => {
     expect(screen.queryByText('Corner Cat Stickerbook')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Switch to English' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '我的貓卡' })).toHaveAttribute('href', '/catdex');
-    expect(screen.getByRole('link', { name: '捐贈' })).toHaveAttribute(
+  });
+
+  it('opens the donation sheet with the card link and crypto address', async () => {
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '捐贈' }));
+
+    const dialog = await screen.findByRole('dialog', { name: '請貓咪喝罐罐' });
+    expect(dialog).toHaveTextContent('0x9899b7FB95129E3451446F5998B8eded0A5069a3');
+    expect(screen.getByRole('link', { name: '信用卡／台灣支付' })).toHaveAttribute(
       'href',
       'https://api.payuni.com.tw/api/uop/receive_info/2/3/NPPA226028039/mgYrU0DqoPbb6vatwL86Z'
     );

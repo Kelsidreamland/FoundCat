@@ -18,17 +18,24 @@ export const donationConfig: DonationConfig = {
     },
   ],
   crypto: [
-    // Fill in `address` to show the option. Examples of the shape:
+    // EVM address (Binance Web3 Wallet): the same 0x address receives on every EVM chain.
+    // Only list chains you have confirmed the wallet shows — tokens sent on an unsupported
+    // chain may be unrecoverable.
+    {
+      id: 'evm',
+      label: 'USDT・USDC・ETH・BNB',
+      network: 'Ethereum (ERC20) / BNB Smart Chain (BEP20)',
+      address: '0x9899b7FB95129E3451446F5998B8eded0A5069a3',
+    },
+    // Non-EVM chains use a different address format. Fill in to show them.
     { id: 'usdt-trc20', label: 'USDT', network: 'TRON (TRC20)', address: '' },
-    { id: 'usdt-erc20', label: 'USDT', network: 'Ethereum (ERC20)', address: '' },
-    { id: 'eth', label: 'ETH', network: 'Ethereum', address: '' },
     { id: 'btc', label: 'BTC', network: 'Bitcoin', address: '' },
     { id: 'sol', label: 'SOL', network: 'Solana', address: '' },
   ],
   /**
-   * Crypto transactions are banned in mainland China, and crypto content can get a
-   * domain flagged there. When true, crypto options are hidden for visitors whose
-   * device looks mainland-based (time zone or language). Card links still show.
+   * When true, crypto options are hidden for visitors whose device looks mainland-China
+   * based (time zone or language); card links still show. Off for now: the launch assumes
+   * friends in China use a VPN. Turn on if the site is ever served inside mainland China.
    */
-  hideCryptoForMainlandChina: true,
+  hideCryptoForMainlandChina: false,
 };
