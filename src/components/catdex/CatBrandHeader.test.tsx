@@ -58,6 +58,21 @@ describe('CatBrandHeader', () => {
     expect(donationLink).toHaveAttribute('rel', expect.stringContaining('noopener'));
   });
 
+  it('renders the donate pill as a button when a donate handler is provided', async () => {
+    const user = userEvent.setup();
+    const onDonate = vi.fn();
+
+    render(
+      <MemoryRouter>
+        <CatBrandHeader title="轉角遇到貓" subtitle="FOUND CAT" donationLabel="Donate" onDonate={onDonate} />
+      </MemoryRouter>
+    );
+
+    expect(screen.queryByRole('link', { name: 'Donate' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Donate' }));
+    expect(onDonate).toHaveBeenCalledTimes(1);
+  });
+
   it('can render a consistent close action back to the home page', () => {
     render(
       <MemoryRouter>

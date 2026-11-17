@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import CatActionNav from '../components/catdex/CatActionNav';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
@@ -7,11 +7,14 @@ import CollectedCatProfileSheet from '../components/catdex/CollectedCatProfileSh
 import WorldCatProfileSheet from '../components/catdex/WorldCatProfileSheet';
 import CloudBackupPrompt from '../components/cloud/CloudBackupPrompt';
 import { loadPublicCatCards } from '../lib/cloudPublicCats';
+import { donationConfig } from '../config/donation';
+import { getVisitorLocale, hasDonationOptions, resolveDonationOptions } from '../lib/donation';
 import type { ScrapbookItem } from '../store/useScrapbookStore';
 import { useScrapbookStore } from '../store/useScrapbookStore';
 import { translations } from '../translations';
 
-const DONATION_URL = 'https://api.payuni.com.tw/api/uop/receive_info/2/3/NPPA226028039/mgYrU0DqoPbb6vatwL86Z';
+const DonationSheet = lazy(() => import('../components/DonationSheet'));
+
 const FIRST_WORLD_SAVE_GUIDANCE_KEY = 'found-cat-first-world-save-guidance-seen';
 const WORLD_SAVE_CONTRIBUTION_PROMPT_KEY = 'found-cat-world-save-contribution-prompt-seen';
 
@@ -118,6 +121,13 @@ export default function Home() {
   const [collectedProfileItem, setCollectedProfileItem] = useState<ScrapbookItem | null>(null);
   const [profileSheetItem, setProfileSheetItem] = useState<ScrapbookItem | null>(null);
   const [savePrompt, setSavePrompt] = useState<SavePrompt | null>(null);
+  const [isDonationOpen, setIsDonationOpen] = useState(false);
+  const donationOptions = useMemo(() => resolveDonationOptions(donationConfig, getVisitorLocale()), []);
+  // A lone payment link stays a plain link; anything more opens the donation sheet.
+  const directDonationUrl = donationOptions.crypto.length === 0 && donationOptions.links.length === 1
+    ? donationOptions.links[0].url
+    : undefined;
+  const canOpenDonationSheet = hasDonationOptions(donationOptions) && !directDonationUrl;
 
   useEffect(() => {
     let cancelled = false;
@@ -256,10 +266,17 @@ export default function Home() {
         language={language}
         onToggleLanguage={() => void setLanguage(language === 'zh' ? 'en' : 'zh')}
         toggleLabel={language === 'zh' ? t.switchToEnglish : t.switchToChinese}
-        donationUrl={DONATION_URL}
+        donationUrl={directDonationUrl}
+        onDonate={canOpenDonationSheet ? () => setIsDonationOpen(true) : undefined}
         donationLabel={t.donate}
         accessory={<CloudBackupPrompt language={language} items={items} autoOpenOnSignedInEmptyDevice variant="compact" />}
       />
+
+      {isDonationOpen ? (
+        <Suspense fallback={null}>
+          <DonationSheet language={language} options={donationOptions} onClose={() => setIsDonationOpen(false)} />
+        </Suspense>
+      ) : null}
 
       <main className="relative z-10 mb-[calc(4.25rem+env(safe-area-inset-bottom))] min-h-0 flex-1 overflow-y-auto px-5 pb-4 pt-[clamp(0.75rem,4vh,2.25rem)]">
         <section className="relative mx-auto max-w-sm">

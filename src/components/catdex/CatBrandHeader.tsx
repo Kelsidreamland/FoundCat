@@ -14,9 +14,13 @@ interface CatBrandHeaderProps {
   closeLabel?: string;
   logoLabel?: string;
   donationUrl?: string;
+  /** When set, the donate pill is a button that calls this instead of a plain link. */
+  onDonate?: () => void;
   donationLabel?: string;
   accessory?: ReactNode;
 }
+
+const donationPillClassName = 'inline-flex min-h-10 items-center gap-1 rounded-full border-2 border-[#1d1714]/30 bg-[#fff2cf]/90 px-2.5 text-[0.68rem] font-black tracking-[0.04em] text-[#1d1714] shadow-[2px_2px_0_rgba(247,201,72,0.36)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]';
 
 export default function CatBrandHeader({
   title,
@@ -29,6 +33,7 @@ export default function CatBrandHeader({
   closeLabel = language === 'en' ? 'Close and return home' : '關閉回首頁',
   logoLabel = language === 'en' ? 'Return home' : '回到首頁',
   donationUrl,
+  onDonate,
   donationLabel = '捐贈',
   accessory,
 }: CatBrandHeaderProps) {
@@ -48,13 +53,18 @@ export default function CatBrandHeader({
         </div>
       </div>
       <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-1.5 pt-1">
-        {donationUrl ? (
+        {onDonate ? (
+          <button type="button" onClick={onDonate} aria-label={donationLabel} className={donationPillClassName}>
+            <Heart size={12} strokeWidth={2.8} aria-hidden="true" />
+            <span>{donationLabel}</span>
+          </button>
+        ) : donationUrl ? (
           <a
             href={donationUrl}
             target="_blank"
             rel="noreferrer noopener"
             aria-label={donationLabel}
-            className="inline-flex min-h-10 items-center gap-1 rounded-full border-2 border-[#1d1714]/30 bg-[#fff2cf]/90 px-2.5 text-[0.68rem] font-black tracking-[0.04em] text-[#1d1714] shadow-[2px_2px_0_rgba(247,201,72,0.36)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+            className={donationPillClassName}
           >
             <Heart size={12} strokeWidth={2.8} aria-hidden="true" />
             <span>{donationLabel}</span>
