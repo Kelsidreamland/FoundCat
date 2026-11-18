@@ -295,6 +295,7 @@ export default function Home() {
                   collectFeedback: language === 'zh' ? '已收藏到我的貓卡' : 'Saved to My Cat Cards',
                 }}
                 onShareCard={handleShareCard}
+                onFindCard={goFindWorldCat}
                 onCollectCard={handleCollectCard}
                 onOpenCard={handleOpenProfileCard}
               />

@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -447,11 +447,11 @@ describe('Home page', () => {
     expect(dialog).toHaveTextContent('W-088');
     expect(screen.getAllByText('已收藏到我的貓卡').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole('button', { name: '已收藏' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '去找這隻喵' })).toBeInTheDocument();
+    expect(within(screen.getAllByRole('dialog').at(-1)!).getByRole('button', { name: '去找這隻喵' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: '去找這隻喵' })).not.toBeInTheDocument();
     expect(window.localStorage.getItem('found-cat-first-world-save-guidance-seen')).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: '去找這隻喵' }));
+    fireEvent.click(within(screen.getAllByRole('dialog').at(-1)!).getByRole('button', { name: '去找這隻喵' }));
 
     expect(await screen.findByTestId('current-route')).toHaveTextContent('/map?mode=public&cat=public-cat%2F88');
   });
@@ -504,10 +504,10 @@ describe('Home page', () => {
     expect(dialog).toHaveTextContent('照護');
     expect(dialog).toHaveTextContent('固定餵養');
     expect(screen.getByRole('button', { name: '已收藏' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '去找這隻喵' })).toBeInTheDocument();
+    expect(within(screen.getAllByRole('dialog').at(-1)!).getByRole('button', { name: '去找這隻喵' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: '去找這隻喵' })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: '去找這隻喵' }));
+    fireEvent.click(within(screen.getAllByRole('dialog').at(-1)!).getByRole('button', { name: '去找這隻喵' }));
 
     expect(await screen.findByTestId('current-route')).toHaveTextContent('/map?mode=public&cat=public-cat-88');
   });
@@ -965,7 +965,7 @@ describe('Home page', () => {
     const dialog = await screen.findByRole('dialog', { name: '窗邊小虎 世界貓咪檔案' });
     expect(dialog).toHaveTextContent('泰國 清邁');
 
-    fireEvent.click(screen.getByRole('button', { name: '去找這隻喵' }));
+    fireEvent.click(within(screen.getAllByRole('dialog').at(-1)!).getByRole('button', { name: '去找這隻喵' }));
 
     expect(await screen.findByTestId('current-route')).toHaveTextContent('/map?mode=public&cat=public-cat-1');
   });

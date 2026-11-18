@@ -25,7 +25,8 @@ import { loadPublicCatCards } from '../lib/cloudPublicCats';
 import { getPaperSheetMotion } from '../lib/uiMotion';
 
 const OPEN_FREE_MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
-const DEFAULT_CENTER: [number, number] = [114.1694, 22.3193];
+// Fallback view (Taipei) for when there are no cats to frame yet.
+const DEFAULT_CENTER: [number, number] = [121.5654, 25.033];
 const LocationPicker = lazy(() => import('../components/LocationPicker'));
 const SingleCatPosterPreviewModal = lazy(() => import('../components/share/SingleCatPosterPreviewModal'));
 
@@ -571,8 +572,19 @@ export default function Map() {
         bounds.extend([group.location.lng, group.location.lat]);
       });
       map.fitBounds(bounds, { padding: 60, maxZoom: 14, duration: 700 });
+      return;
     }
-  }, [focusedCatId, itemsWithLocation, language, mapLocationGroups, mapReady, t.map]);
+
+    // Nothing to show in this mode yet (e.g. an empty world map): start near the person's own cats.
+    const ownCatWithLocation = items.find((item) => item.location);
+    if (ownCatWithLocation?.location) {
+      map.easeTo({
+        center: [ownCatWithLocation.location.lng, ownCatWithLocation.location.lat],
+        zoom: 13,
+        duration: 700,
+      });
+    }
+  }, [focusedCatId, items, itemsWithLocation, language, mapLocationGroups, mapReady, t.map]);
 
   const shareMap = useCallback(async () => {
     if (!mapWrapperRef.current) return;

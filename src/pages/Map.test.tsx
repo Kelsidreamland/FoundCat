@@ -347,6 +347,26 @@ describe('Map page', () => {
     consoleErrorSpy.mockRestore();
   });
 
+  it('starts an empty world map near the person\'s own cats instead of a fixed city', async () => {
+    vi.mocked(loadPublicCatCards).mockResolvedValue({ ok: true, items: [] });
+    mapEaseTo.mockClear();
+    useScrapbookStore.setState({
+      items: [makeItem({ location: { lat: 13.7563, lng: 100.5018, name: '曼谷巷口' } })],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/map?mode=public']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(mapEaseTo).toHaveBeenCalledWith(expect.objectContaining({ center: [100.5018, 13.7563], zoom: 13 }));
+    });
+  });
+
   it('opens a focused public cat from a find link after public cats load', async () => {
     render(
       <MemoryRouter initialEntries={['/map?mode=public&cat=public-cat-1']}>

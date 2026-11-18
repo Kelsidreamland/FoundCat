@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { MapPin, Share2 } from 'lucide-react';
 import {
   animate,
   motion,
@@ -23,9 +24,12 @@ interface CatCardDeckProps {
     previous: string;
     next: string;
     shareCard: string;
+    findCard?: string;
     collectFeedback?: string;
   };
   onShareCard: (item: ScrapbookItem) => void;
+  /** When set, "find this cat on the map" becomes the card's main action and sharing an icon. */
+  onFindCard?: (item: ScrapbookItem) => void;
   onCollectCard?: (item: ScrapbookItem) => void;
   onOpenCard?: (item: ScrapbookItem) => void;
 }
@@ -65,6 +69,7 @@ export default function CatCardDeck({
   language,
   labels,
   onShareCard,
+  onFindCard,
   onCollectCard,
   onOpenCard,
 }: CatCardDeckProps) {
@@ -294,12 +299,12 @@ export default function CatCardDeck({
     <section aria-label={language === 'zh' ? '貓咪卡片' : 'Cat cards'}>
       <div className="relative mt-2 h-[min(390px,calc(100dvh-240px))] min-h-[320px]">
         {showSwipeHint ? (
-          <div className="absolute right-4 top-4 z-30 flex items-center gap-2 rounded-full border border-[#2f5fb3]/8 bg-[#fffdf7]/55 px-3 py-1.5 text-[10px] font-semibold tracking-[0.04em] text-[#9a8d80]/62 shadow-[1px_2px_10px_rgba(47,95,179,0.06)] backdrop-blur-md">
+          <div className="absolute right-4 top-4 z-30 flex items-center gap-2 rounded-full border border-[#221915]/15 bg-[#fffdf7]/92 px-3 py-1.5 text-[11px] font-bold text-[#5c4f45] shadow-[2px_2px_0_rgba(47,95,179,0.14)] backdrop-blur-md">
             <span>{language === 'zh' ? '左滑收藏，右滑看下一隻' : 'Swipe left to collect, right for next'}</span>
             <button
               type="button"
               onClick={dismissSwipeHint}
-              className="grid h-4 w-4 place-items-center rounded-full border border-[#2f5fb3]/8 bg-white/45 text-[#9b8a7a]/65 leading-none"
+              className="-my-2 -mr-2 grid h-8 w-8 place-items-center rounded-full text-[#5c4f45] leading-none"
               aria-label={language === 'zh' ? '關閉左右滑動提示' : 'Close swipe hint'}
             >
               ×
@@ -427,18 +432,45 @@ export default function CatCardDeck({
             </div>
           ) : null}
 
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onShareCard(active);
-            }}
-            className="mt-auto flex w-full items-center justify-between gap-2 rounded-[16px] border-2 border-[#1d1714] bg-[#fff2cf] px-3 py-2.5 text-left text-xs font-black text-[#1d1714] shadow-[3px_3px_0_#1d1714] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
-            aria-label={labels.shareCard}
-          >
-            <span>{labels.shareCard}</span>
-            <span className="text-[10px] tracking-[0.08em] text-[#2f5fb3]">SEND</span>
-          </button>
+          {onFindCard ? (
+            <div className="mt-auto flex items-stretch gap-2">
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onFindCard(active);
+                }}
+                className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-[16px] border-2 border-[#1d1714] bg-[#2f5fb3] px-3 py-2.5 text-sm font-black text-white shadow-[3px_3px_0_#1d1714] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+              >
+                <MapPin size={16} strokeWidth={2.6} aria-hidden="true" />
+                <span>{labels.findCard ?? (language === 'zh' ? '去找這隻喵' : 'Find this cat')}</span>
+              </button>
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onShareCard(active);
+                }}
+                aria-label={labels.shareCard}
+                className="grid min-h-11 w-12 shrink-0 place-items-center rounded-[16px] border-2 border-[#1d1714] bg-[#fff2cf] text-[#1d1714] shadow-[3px_3px_0_#1d1714] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+              >
+                <Share2 size={17} strokeWidth={2.6} aria-hidden="true" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onShareCard(active);
+              }}
+              className="mt-auto flex w-full items-center justify-center gap-2 rounded-[16px] border-2 border-[#1d1714] bg-[#fff2cf] px-3 py-2.5 text-xs font-black text-[#1d1714] shadow-[3px_3px_0_#1d1714] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+              aria-label={labels.shareCard}
+            >
+              <Share2 size={14} strokeWidth={2.6} aria-hidden="true" />
+              <span>{labels.shareCard}</span>
+            </button>
+          )}
         </motion.article>
       </div>
     </section>

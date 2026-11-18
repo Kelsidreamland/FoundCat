@@ -112,6 +112,33 @@ describe('CatCardDeck', () => {
     expect(screen.queryByText('May 11')).not.toBeInTheDocument();
   });
 
+  it('makes finding the cat on the map the main action and keeps share as an icon', () => {
+    const onFindCard = vi.fn();
+    const onShareCard = vi.fn();
+    const onOpenCard = vi.fn();
+    const item = makeItem({ id: 'pub-1', catName: '小橘', location: { lat: 25, lng: 121, name: '大稻埕碼頭' } });
+
+    render(
+      <CatCardDeck
+        items={[item]}
+        language="zh"
+        labels={{ empty: '還沒有貓卡', previous: '上一張', next: '下一張', shareCard: '分享這張貓卡海報' }}
+        onShareCard={onShareCard}
+        onFindCard={onFindCard}
+        onOpenCard={onOpenCard}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '去找這隻喵' }));
+    expect(onFindCard).toHaveBeenCalledWith(item);
+
+    const share = screen.getByRole('button', { name: '分享這張貓卡海報' });
+    expect(share).not.toHaveTextContent('SEND');
+    fireEvent.click(share);
+    expect(onShareCard).toHaveBeenCalledWith(item);
+    expect(onOpenCard).not.toHaveBeenCalled();
+  });
+
   it('renders a fallback cat name when the active cat has no saved name', () => {
     render(
       <CatCardDeck

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import CatActionNav from '../components/catdex/CatActionNav';
+import VersionFooter from '../components/VersionFooter';
 import CatdexLabel from '../components/catdex/CatdexLabel';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import { formatPublicCatCardNumber } from '../lib/catdexDeck';
@@ -408,6 +409,7 @@ export default function Catdex() {
             {renderCollectionSection(activeCollection)}
           </motion.div>
         )}
+        <VersionFooter language={language} />
       </main>
 
       <CatActionNav
