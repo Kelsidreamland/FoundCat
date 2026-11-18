@@ -4,6 +4,10 @@ type Language = 'zh' | 'en';
 
 const padCardNumber = (number?: number) => String(number ?? 1).padStart(3, '0');
 
+// A cat keeps one generated name everywhere: the public W-number once it has one
+// (that is the number everyone else sees), otherwise the owner's own card number.
+const nameNumber = (item: ScrapbookItem) => item.publicNumber ?? item.catdexNumber;
+
 const includesAny = (value: string, keywords: string[]) => (
   keywords.some((keyword) => value.toLowerCase().includes(keyword.toLowerCase()))
 );
@@ -34,7 +38,7 @@ export const suggestCatName = (item: ScrapbookItem, language: Language) => {
     if (isCalico) return 'Patchwork Corner Cat';
     if (foodHint) return 'Snack Watch Cat';
     if (aloofHint) return 'Aloof Shop Cat';
-    return `Corner Cat ${padCardNumber(item.catdexNumber ?? item.publicNumber)}`;
+    return `Corner Cat ${padCardNumber(nameNumber(item))}`;
   }
 
   if (isOrange && lazyHint) return '懶散橘貓';
@@ -43,7 +47,7 @@ export const suggestCatName = (item: ScrapbookItem, language: Language) => {
   if (isCalico) return '花色轉角貓';
   if (foodHint) return '等飯小貓';
   if (aloofHint) return '高冷店長';
-  return `轉角小貓 ${padCardNumber(item.catdexNumber ?? item.publicNumber)}`;
+  return `轉角小貓 ${padCardNumber(nameNumber(item))}`;
 };
 
 /**

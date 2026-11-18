@@ -86,7 +86,8 @@ describe('Catdex page', () => {
 
     expect(screen.getByText('放鬆的貓咪')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '巷口咖啡店' })).toBeInTheDocument();
-    expect(screen.getAllByText('巷口咖啡店')).toHaveLength(2);
+    // The place is the group heading only; cards no longer repeat it.
+    expect(screen.getAllByText('巷口咖啡店')).toHaveLength(1);
   });
 
   it('shows a compact cat info summary in archive cards', () => {
@@ -204,8 +205,7 @@ describe('Catdex page', () => {
     expect(screen.getByTestId('catdex-collection-motion')).toHaveAttribute('data-motion-surface', 'catdex-collection');
     expect(screen.getByTestId('catdex-collection-motion')).toHaveAttribute('data-active-collection', 'self');
     expect(screen.getByRole('heading', { name: '我遇到的貓' })).toBeInTheDocument();
-    expect(screen.getByText('我的圖鑑編號')).toBeInTheDocument();
-    expect(screen.getByText('No.001 起算，只整理自己親自拍到的貓。')).toBeInTheDocument();
+    expect(screen.queryByText('No.001 起算，只整理自己親自拍到的貓。')).not.toBeInTheDocument();
     expect(screen.getByText('我拍到的小虎')).toBeInTheDocument();
     expect(screen.getByText('FOUND CAT 001')).toBeInTheDocument();
     expect(screen.queryByText('收藏的首爾店長')).not.toBeInTheDocument();
@@ -216,11 +216,10 @@ describe('Catdex page', () => {
     expect(worldTab).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByTestId('catdex-collection-motion')).toHaveAttribute('data-active-collection', 'world');
     expect(screen.getByRole('heading', { name: '我收藏的貓' })).toBeInTheDocument();
-    expect(screen.getByText('世界地圖編號')).toBeInTheDocument();
-    expect(screen.getByText('保留 W-001 編號，不併入自己的 No 編號。')).toBeInTheDocument();
+    expect(screen.queryByText('保留 W-001 編號，不併入自己的 No 編號。')).not.toBeInTheDocument();
     expect(screen.getByText('收藏的首爾店長')).toBeInTheDocument();
     expect(screen.getByText('W-088')).toBeInTheDocument();
-    expect(screen.getByText('收藏自全世界地圖')).toBeInTheDocument();
+    expect(screen.queryByText('收藏自全世界地圖')).not.toBeInTheDocument();
     expect(screen.queryByText('我拍到的小虎')).not.toBeInTheDocument();
     expect(screen.queryByText('No.088')).not.toBeInTheDocument();
     expect(screen.queryByText('FOUND CAT 088')).not.toBeInTheDocument();

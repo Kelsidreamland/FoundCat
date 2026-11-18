@@ -140,6 +140,8 @@ export default function ShareCatdex() {
             </p>
           </div>
 
+          {/* Stats and the map name only mean something once there is a cat to share. */}
+          {hasMappedCats ? (
           <div className="mt-4 rotate-[-1deg] overflow-hidden rounded-[24px] border-2 border-[#1d1714] bg-[linear-gradient(135deg,#d9ecff_0_35%,#fffdf7_36%_63%,#ffe6ad_64%_100%)] p-4 shadow-[8px_9px_0_#1d1714] sm:mt-6 sm:rounded-[28px] sm:p-5">
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -169,6 +171,7 @@ export default function ShareCatdex() {
               />
             </label>
           </div>
+          ) : null}
 
           {hasMappedCats ? (
             <>

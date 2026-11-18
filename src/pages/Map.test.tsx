@@ -728,7 +728,7 @@ describe('Map page', () => {
 
     expect(screen.getByRole('heading', { name: '窗邊小虎' })).toBeInTheDocument();
     expect(screen.getByText('貓咪個人檔案')).toBeInTheDocument();
-    expect(screen.getByText('喵，謝謝你收藏我。下次見面可以慢慢眨眼。')).toBeInTheDocument();
+    expect(screen.getByText('喵～下次見面，記得對我慢慢眨眼。')).toBeInTheDocument();
     expect(screen.getByText('感覺')).toBeInTheDocument();
     expect(screen.getByText('親人')).toBeInTheDocument();
     expect(screen.getByText('貪吃')).toBeInTheDocument();

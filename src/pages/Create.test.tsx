@@ -158,7 +158,7 @@ describe('Create page', () => {
 
     await screen.findByTestId('cropper');
     await waitFor(() => expect(screen.getByLabelText('縮放程度')).toBeInTheDocument());
-    expect(screen.getByRole('button', { name: '方形貓卡' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '確認裁切' })).toBeInTheDocument();
     expect(screen.queryByText(/AI|去背/)).not.toBeInTheDocument();
   });
 
@@ -201,7 +201,7 @@ describe('Create page', () => {
 
     await screen.findByTestId('cropper');
     expect(screen.getByTestId('crop-control-sheet')).toHaveClass('pb-[calc(1.25rem+env(safe-area-inset-bottom))]');
-    expect(screen.getByRole('button', { name: '方形貓卡' })).toHaveClass('bg-[#2F5FB3]');
+    expect(screen.getByRole('button', { name: '確認裁切' })).toHaveClass('bg-[#2F5FB3]');
   });
 
   it('keeps the cropped preview mobile-scrollable with a safe-area action sheet', async () => {
@@ -217,7 +217,7 @@ describe('Create page', () => {
     );
 
     await screen.findByTestId('cropper');
-    await userEvent.click(screen.getByRole('button', { name: '方形貓卡' }));
+    await userEvent.click(screen.getByRole('button', { name: '確認裁切' }));
     await screen.findByAltText('預覽貓卡');
 
     expect(screen.getByTestId('create-preview-screen')).toHaveClass('min-h-0', 'overflow-y-auto');
@@ -240,7 +240,7 @@ describe('Create page', () => {
     );
 
     await screen.findByTestId('cropper');
-    await userEvent.click(screen.getByRole('button', { name: '方形貓卡' }));
+    await userEvent.click(screen.getByRole('button', { name: '確認裁切' }));
     await screen.findByAltText('預覽貓卡');
 
     expect(JSON.parse(window.localStorage.getItem('found-cat-create-preview-draft') ?? '{}')).toMatchObject({
@@ -340,7 +340,7 @@ describe('Create page', () => {
     );
 
     await screen.findByTestId('cropper');
-    await userEvent.click(screen.getByRole('button', { name: '方形貓卡' }));
+    await userEvent.click(screen.getByRole('button', { name: '確認裁切' }));
     await screen.findByAltText('預覽貓卡');
     await userEvent.click(screen.getByRole('button', { name: /存入我的貓卡/ }));
     expect(screen.queryByRole('button', { name: '完成標籤' })).not.toBeInTheDocument();
@@ -467,7 +467,7 @@ describe('Create page', () => {
     );
 
     await screen.findByTestId('cropper');
-    await userEvent.click(screen.getByRole('button', { name: '方形貓卡' }));
+    await userEvent.click(screen.getByRole('button', { name: '確認裁切' }));
     await screen.findByAltText('預覽貓卡');
     await userEvent.click(screen.getByRole('button', { name: /存入我的貓卡/ }));
     await userEvent.click(await screen.findByRole('button', { name: '確認測試地點' }));
@@ -528,7 +528,7 @@ describe('Create page', () => {
     );
 
     await screen.findByTestId('cropper');
-    await userEvent.click(screen.getByRole('button', { name: '方形貓卡' }));
+    await userEvent.click(screen.getByRole('button', { name: '確認裁切' }));
     await screen.findByAltText('預覽貓卡');
     await userEvent.click(screen.getByRole('button', { name: /存入我的貓卡/ }));
     await userEvent.click(await screen.findByRole('button', { name: '確認測試地點' }));
@@ -560,7 +560,7 @@ describe('Create page', () => {
     );
 
     await screen.findByTestId('cropper');
-    await userEvent.click(screen.getByRole('button', { name: '方形貓卡' }));
+    await userEvent.click(screen.getByRole('button', { name: '確認裁切' }));
     await screen.findByAltText('預覽貓卡');
     await userEvent.click(screen.getByRole('button', { name: /存入我的貓卡/ }));
     await userEvent.click(await screen.findByRole('button', { name: '確認測試地點' }));

@@ -772,7 +772,8 @@ export default function Map() {
           subtitle={t.appSubtitle}
           language={language}
           showLanguageToggle={false}
-          showClose
+          // While a cat card is open it has its own close button; avoid two stacked ✕.
+          showClose={!selectedItem}
           closeLabel={language === 'zh' ? '關閉回首頁' : 'Close and return home'}
         />
 

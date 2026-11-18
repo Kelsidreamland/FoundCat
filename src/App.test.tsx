@@ -103,7 +103,7 @@ describe('App viewport shell', () => {
     render(<App />);
 
     expect(await screen.findByRole('heading', { name: '我的貓卡' })).toBeInTheDocument();
-    expect(screen.getByText('貓卡收藏')).toBeInTheDocument();
+    expect(screen.queryByText('貓卡收藏')).not.toBeInTheDocument();
   });
 
   it('serves the local rescue page when the service worker falls back /local-rescue.html into the app shell', async () => {

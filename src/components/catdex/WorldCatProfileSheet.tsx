@@ -9,6 +9,7 @@ import { formatCatCardNumberForItem } from '../../lib/catdexDeck';
 import { getReadableLocationName } from '../../lib/locationDisplay';
 import { getPaperSheetMotion } from '../../lib/uiMotion';
 import type { ScrapbookItem } from '../../store/useScrapbookStore';
+import { getCatDisplayName } from '../../lib/catNameGenerator';
 
 export interface WorldCatProfileSheetProps {
   item: ScrapbookItem | null;
@@ -105,7 +106,7 @@ export default function WorldCatProfileSheet({
   const prefersReducedMotion = useReducedMotion();
   const sheetMotion = getPaperSheetMotion(prefersReducedMotion);
   const copy = copyFor(language);
-  const title = item?.catName?.trim() || copy.defaultName;
+  const title = item ? getCatDisplayName(item, language) : copy.defaultName;
   const image = item?.heroImageData || item?.imageData;
   const personalityLabels = item ? getPersonalityLabels(item.personalityTags, language) : [];
   const careLabels = item ? getCareStatusLabels(item.careStatusTags, language) : [];
