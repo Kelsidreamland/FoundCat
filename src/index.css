@@ -3,6 +3,9 @@
 @tailwind utilities;
 
 :root {
+  /* Opt out of forced/auto dark mode (Chrome, Samsung Internet, LINE and other in-app browsers). */
+  color-scheme: only light;
+  background-color: #fff7e8;
   font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "PingFang HK", "Microsoft JhengHei", "Noto Sans TC", "M PLUS Rounded 1c", "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   line-height: 1.5;
   font-weight: 500; /* Use medium weight as base for a cuter look */
