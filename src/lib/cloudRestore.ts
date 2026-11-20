@@ -44,6 +44,7 @@ const rowToScrapbookItem = (row: CloudCatCardRow): ScrapbookItem => ({
   personalityTags: row.personality_tags,
   spotNote: row.spot_note ?? undefined,
   privateNote: row.private_note ?? undefined,
+  encounters: Array.isArray(row.encounters) && row.encounters.length > 0 ? row.encounters : undefined,
   careStatusTags: row.care_status_tags,
   isPublic: row.is_public,
 });

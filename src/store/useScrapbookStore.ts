@@ -8,6 +8,14 @@ export type ScrapbookItemType = 'sticker' | 'stamp';
 export type CatPersonalityTag = 'friendly' | 'shy' | 'indifferent' | 'aloof' | 'foodie' | 'clingy' | 'alert';
 export type CatCareStatusTag = 'tnr' | 'collar' | 'owned' | 'fed' | 'injured' | 'unknown';
 
+/** A later meeting with the same cat (the first meeting is the card itself). */
+export interface CatEncounter {
+  id: string;
+  date: string;
+  imageData?: string;
+  note?: string;
+}
+
 export interface ScrapbookItem {
   id: string;
   type: ScrapbookItemType;
@@ -40,6 +48,9 @@ export interface ScrapbookItem {
   isPublic?: boolean;
   collectedFromPublicId?: string;
   collectedAt?: string;
+  encounters?: CatEncounter[];
+  /** World cats only: how many people said they've seen this cat too. */
+  seenCount?: number;
 }
 
 export type ChineseScript = 'hant' | 'hans';
