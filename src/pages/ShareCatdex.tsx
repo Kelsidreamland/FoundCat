@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Check, ChevronDown, Copy, Download, MapPin, Share2 } from 'lucide-react';
+import { Check, ChevronDown, Copy, MapPin, Share2 } from 'lucide-react';
 import CatActionNav from '../components/catdex/CatActionNav';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import { formatCatCardNumber, sortCatCards } from '../lib/catdexDeck';
-import { downloadCatMapCsv } from '../lib/mapExport';
 import { buildMapSharePayload, buildMapShareUrl } from '../lib/mapShare';
 import { shareCatMapPoster } from '../lib/sharePoster';
 import type { ScrapbookItem } from '../store/useScrapbookStore';
@@ -89,15 +88,6 @@ export default function ShareCatdex() {
 
   const handleShare = async () => {
     await shareCatMapPoster({
-      title: draftName,
-      items: selectedItems,
-      language,
-      includeMemo,
-    });
-  };
-
-  const handleExportCsv = () => {
-    downloadCatMapCsv({
       title: draftName,
       items: selectedItems,
       language,
@@ -217,7 +207,7 @@ export default function ShareCatdex() {
                 className="mt-3 flex w-full items-center justify-between gap-3 rounded-[18px] border border-[#1d1714]/16 bg-[#fffdf7]/86 px-3 py-3 text-left text-sm font-black text-[#1d1714] shadow-[2px_2px_0_rgba(47,95,179,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
               >
                 <span>
-                  {language === 'zh' ? '調整公開貓咪與匯出' : 'Adjust shared cats & export'}
+                  {language === 'zh' ? '選擇要分享的貓' : 'Choose which cats to share'}
                   <span className="mt-1 block text-xs font-bold text-[#76665a]">
                     {selectedItems.length}/{mappedItems.length}
                     {language === 'zh' ? ' 隻會放進分享地圖' : ' cats included'}
@@ -291,20 +281,6 @@ export default function ShareCatdex() {
                     })}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleExportCsv}
-                    disabled={selectedItems.length === 0}
-                    className="mt-3 flex min-h-[52px] w-full items-center justify-between gap-3 rounded-[15px] border-2 border-[#1d1714]/24 bg-[#fffaf0] px-3 py-2.5 text-left text-[#1d1714] shadow-[2px_2px_0_rgba(34,25,21,0.1)] transition-transform active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
-                  >
-                    <span className="inline-flex min-w-0 items-center gap-1.5 text-[12px] font-black leading-tight">
-                      <Download size={15} className="shrink-0" />
-                      <span className="min-w-0">{t.exportCatMapCsv}</span>
-                    </span>
-                    <span className="shrink-0 text-[10px] font-black uppercase leading-tight tracking-[0.06em] text-[#76665a]">
-                      {t.exportCatMapCsvHint}
-                    </span>
-                  </button>
                 </div>
               ) : null}
             </>
