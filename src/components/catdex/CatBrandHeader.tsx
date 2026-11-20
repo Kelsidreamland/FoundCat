@@ -9,6 +9,8 @@ interface CatBrandHeaderProps {
   language?: 'zh' | 'en';
   onToggleLanguage?: () => void;
   toggleLabel?: string;
+  /** Short text on the language button, e.g. EN / 简 / 繁. */
+  toggleText?: string;
   showLanguageToggle?: boolean;
   showClose?: boolean;
   closeLabel?: string;
@@ -28,6 +30,7 @@ export default function CatBrandHeader({
   language,
   onToggleLanguage,
   toggleLabel,
+  toggleText,
   showLanguageToggle = Boolean(language && onToggleLanguage && toggleLabel),
   showClose = false,
   closeLabel = language === 'en' ? 'Close and return home' : '關閉回首頁',
@@ -76,8 +79,9 @@ export default function CatBrandHeader({
             onClick={onToggleLanguage}
             className="grid h-10 min-w-10 place-items-center rounded-full border-2 border-[#1d1714]/30 bg-[#fffdf7]/80 px-2 text-[0.68rem] font-black tracking-[0.04em] text-[#1d1714] shadow-[2px_2px_0_rgba(47,95,179,0.14)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
             aria-label={toggleLabel}
+            data-no-script-convert
           >
-            {language === 'zh' ? 'EN' : '繁'}
+            {toggleText ?? (language === 'zh' ? 'EN' : '繁')}
           </button>
         ) : null}
         {accessory}

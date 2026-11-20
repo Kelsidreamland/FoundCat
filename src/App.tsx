@@ -5,6 +5,7 @@ import { useAuthStore } from './store/useAuthStore';
 import { useScrapbookStore } from './store/useScrapbookStore';
 import PWAPrompt from './components/PWAPrompt';
 import PWAUpdatePrompt from './components/PWAUpdatePrompt';
+import ChineseScriptConverter from './components/ChineseScriptConverter';
 
 const Create = lazy(() => import('./pages/Create'));
 const Catdex = lazy(() => import('./pages/Catdex'));
@@ -96,6 +97,7 @@ function App() {
             </Suspense>
             <PWAPrompt />
             <PWAUpdatePrompt />
+            <ChineseScriptConverter />
           </div>
         </div>
       </div>

@@ -8,6 +8,7 @@ import { buildMapSharePayload, buildMapShareUrl } from '../lib/mapShare';
 import { shareCatMapPoster } from '../lib/sharePoster';
 import type { ScrapbookItem } from '../store/useScrapbookStore';
 import { useScrapbookStore } from '../store/useScrapbookStore';
+import { useLanguageToggle } from '../hooks/useLanguageToggle';
 import { translations } from '../translations';
 import { getCatDisplayName } from '../lib/catNameGenerator';
 
@@ -42,10 +43,10 @@ export default function ShareCatdex() {
   const {
     items,
     language,
-    setLanguage,
     catdexDisplayName,
     setCatdexDisplayName,
   } = useScrapbookStore();
+  const languageToggle = useLanguageToggle();
   const t = translations[language];
   const mappedItems = useMemo(() => sortCatCards(items).filter((item) => item.location), [items]);
   const [draftName, setDraftName] = useState(() => normalizeMapDisplayName(catdexDisplayName, t.catdexDisplayName, language));
@@ -112,8 +113,9 @@ export default function ShareCatdex() {
         title={t.appName}
         subtitle={t.appSubtitle}
         language={language}
-        onToggleLanguage={() => void setLanguage(language === 'zh' ? 'en' : 'zh')}
-        toggleLabel={language === 'zh' ? t.switchToEnglish : t.switchToChinese}
+        onToggleLanguage={() => void languageToggle.toggle()}
+        toggleLabel={languageToggle.label}
+        toggleText={languageToggle.face}
         showClose
         closeLabel={language === 'zh' ? '關閉回首頁' : 'Close to home'}
       />

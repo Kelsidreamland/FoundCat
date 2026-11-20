@@ -42,10 +42,14 @@ export interface ScrapbookItem {
   collectedAt?: string;
 }
 
+export type ChineseScript = 'hant' | 'hans';
+
 interface ScrapbookState {
   items: ScrapbookItem[];
   isLoading: boolean;
   language: 'zh' | 'en';
+  /** How Chinese is shown: Traditional (source copy) or Simplified (converted on the fly). */
+  chineseScript: ChineseScript;
   catdexDisplayName: string;
   targetDate: string | null;
   loadItems: () => Promise<void>;
@@ -55,6 +59,7 @@ interface ScrapbookState {
   removeItem: (id: string) => Promise<void>;
   bringToFront: (id: string) => Promise<void>;
   setLanguage: (lang: 'zh' | 'en') => Promise<void>;
+  setChineseScript: (script: ChineseScript) => Promise<void>;
   setCatdexDisplayName: (name: string) => Promise<void>;
   setTargetDate: (date: string | null) => void;
 }
@@ -62,12 +67,23 @@ interface ScrapbookState {
 export const STORAGE_KEY = 'scrapbook_items';
 export const LANG_STORAGE_KEY = 'scrapbook_language';
 export const CATDEX_NAME_STORAGE_KEY = 'scrapbook_catdex_display_name';
+export const SCRIPT_STORAGE_KEY = 'scrapbook_chinese_script';
+
+const prefersSimplifiedChinese = () => {
+  try {
+    const languages = navigator.languages?.length ? navigator.languages : [navigator.language];
+    return /^zh-(cn|sg|hans)/i.test(languages[0] ?? '');
+  } catch {
+    return false;
+  }
+};
 const DEFAULT_CATDEX_DISPLAY_NAME = '我的轉角貓地圖';
 
 export const useScrapbookStore = create<ScrapbookState>((setStore, getStore) => ({
   items: [],
   isLoading: true,
   language: 'zh',
+  chineseScript: 'hant',
   catdexDisplayName: DEFAULT_CATDEX_DISPLAY_NAME,
   targetDate: null,
 
@@ -78,6 +94,8 @@ export const useScrapbookStore = create<ScrapbookState>((setStore, getStore) => 
       const stored = await get<ScrapbookItem[]>(STORAGE_KEY);
       const storedLang = await get<'zh' | 'en'>(LANG_STORAGE_KEY);
       const storedName = await get<string>(CATDEX_NAME_STORAGE_KEY);
+      const storedScript = await get<ChineseScript>(SCRIPT_STORAGE_KEY);
+      const chineseScript: ChineseScript = storedScript ?? (prefersSimplifiedChinese() ? 'hans' : 'hant');
       const catdexDisplayName = storedName?.trim() || DEFAULT_CATDEX_DISPLAY_NAME;
       
       if (stored) {
@@ -86,9 +104,9 @@ export const useScrapbookStore = create<ScrapbookState>((setStore, getStore) => 
         if (changed) {
           await set(STORAGE_KEY, normalizedItems);
         }
-        setStore({ items: normalizedItems, isLoading: false, language: storedLang || 'zh', catdexDisplayName });
+        setStore({ items: normalizedItems, isLoading: false, language: storedLang || 'zh', chineseScript, catdexDisplayName });
       } else {
-        setStore({ items: [], isLoading: false, language: storedLang || 'zh', catdexDisplayName });
+        setStore({ items: [], isLoading: false, language: storedLang || 'zh', chineseScript, catdexDisplayName });
       }
     } catch (error) {
       console.error('Failed to load items from IndexedDB', error);
@@ -163,6 +181,11 @@ export const useScrapbookStore = create<ScrapbookState>((setStore, getStore) => 
   setLanguage: async (lang: 'zh' | 'en') => {
     setStore({ language: lang });
     await set(LANG_STORAGE_KEY, lang);
+  },
+
+  setChineseScript: async (script: ChineseScript) => {
+    setStore({ chineseScript: script });
+    await set(SCRIPT_STORAGE_KEY, script);
   },
 
   setCatdexDisplayName: async (name: string) => {

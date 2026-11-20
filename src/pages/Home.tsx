@@ -14,6 +14,7 @@ import { getVisitorLocale, hasDonationOptions, resolveDonationOptions } from '..
 import type { ScrapbookItem } from '../store/useScrapbookStore';
 import { useScrapbookStore } from '../store/useScrapbookStore';
 import { translations } from '../translations';
+import { useLanguageToggle } from '../hooks/useLanguageToggle';
 
 const DonationSheet = lazy(() => import('../components/DonationSheet'));
 
@@ -115,7 +116,8 @@ type SavePrompt =
 
 export default function Home() {
   const navigate = useNavigate();
-  const { items, isLoading, language, setLanguage, addItem } = useScrapbookStore();
+  const { items, isLoading, language, addItem } = useScrapbookStore();
+  const languageToggle = useLanguageToggle();
   const t = translations[language];
   const [publicItems, setPublicItems] = useState<ScrapbookItem[]>([]);
   const [publicDeckStatus, setPublicDeckStatus] = useState<PublicDeckStatus>('loading');
@@ -266,8 +268,9 @@ export default function Home() {
         title={t.appName}
         subtitle={t.appSubtitle}
         language={language}
-        onToggleLanguage={() => void setLanguage(language === 'zh' ? 'en' : 'zh')}
-        toggleLabel={language === 'zh' ? t.switchToEnglish : t.switchToChinese}
+        onToggleLanguage={() => void languageToggle.toggle()}
+        toggleLabel={languageToggle.label}
+        toggleText={languageToggle.face}
         donationUrl={directDonationUrl}
         onDonate={canOpenDonationSheet ? () => setIsDonationOpen(true) : undefined}
         donationLabel={t.donate}
