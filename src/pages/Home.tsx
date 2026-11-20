@@ -6,7 +6,7 @@ import CatCardDeck from '../components/catdex/CatCardDeck';
 import CollectedCatProfileSheet from '../components/catdex/CollectedCatProfileSheet';
 import WorldCatProfileSheet from '../components/catdex/WorldCatProfileSheet';
 import CloudBackupPrompt from '../components/cloud/CloudBackupPrompt';
-import BackupNudge from '../components/cloud/BackupNudge';
+import BackupNudge, { BACKUP_NUDGE_THRESHOLD } from '../components/cloud/BackupNudge';
 import WelcomeIntro from '../components/WelcomeIntro';
 import { loadPublicCatCards } from '../lib/cloudPublicCats';
 import { donationConfig } from '../config/donation';
@@ -126,6 +126,8 @@ export default function Home() {
   const [profileSheetItem, setProfileSheetItem] = useState<ScrapbookItem | null>(null);
   const [savePrompt, setSavePrompt] = useState<SavePrompt | null>(null);
   const [isDonationOpen, setIsDonationOpen] = useState(false);
+  const ownCatCount = items.filter((item) => !item.collectedFromPublicId).length;
+  const hasOwnCats = ownCatCount > 0;
   const donationOptions = useMemo(() => resolveDonationOptions(donationConfig, getVisitorLocale()), []);
   // A lone payment link stays a plain link; anything more opens the donation sheet.
   const directDonationUrl = donationOptions.crypto.length === 0 && donationOptions.links.length === 1
@@ -285,7 +287,7 @@ export default function Home() {
 
       <main className="relative z-10 mb-[calc(4.25rem+env(safe-area-inset-bottom))] min-h-0 flex-1 overflow-y-auto px-5 pb-4 pt-[clamp(0.75rem,4vh,2.25rem)]">
         <section className="relative mx-auto max-w-sm">
-          <WelcomeIntro hasOwnCats={items.some((item) => !item.collectedFromPublicId)} language={language} />
+          <WelcomeIntro hasOwnCats={hasOwnCats} language={language} />
           <BackupNudge items={items} language={language} />
           {isPublicDeckLoading ? (
             <HomeDeckLoading language={language} />
@@ -303,6 +305,7 @@ export default function Home() {
                 }}
                 onShareCard={handleShareCard}
                 onFindCard={goFindWorldCat}
+                compact={!hasOwnCats || ownCatCount >= BACKUP_NUDGE_THRESHOLD}
                 onCollectCard={handleCollectCard}
                 onOpenCard={handleOpenProfileCard}
               />

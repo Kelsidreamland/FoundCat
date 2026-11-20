@@ -57,3 +57,19 @@ export const suggestCatName = (item: ScrapbookItem, language: Language) => {
 export const getCatDisplayName = (item: ScrapbookItem, language: Language) => (
   item.catName?.trim() || suggestCatName(item, language)
 );
+
+const NAME_POOL = {
+  zh: ['小橘', '麻糬', '阿虎', '黑糖', '奶茶', '豆花', '芝麻', '布丁', '饅頭', '咪咪'],
+  en: ['Mochi', 'Tiger', 'Pudding', 'Sesame', 'Biscuit', 'Latte', 'Pepper', 'Dumpling'],
+};
+
+const hash = (value: string) => [...value].reduce((total, char) => (total * 31 + char.charCodeAt(0)) >>> 0, 7);
+
+/** One generated nickname plus two friendly names, stable for a given cat. */
+export const getNameSuggestions = (item: ScrapbookItem, language: 'zh' | 'en') => {
+  const pool = NAME_POOL[language];
+  const start = hash(item.id) % pool.length;
+  const picks = [suggestCatName(item, language), pool[start], pool[(start + 3) % pool.length]];
+  return [...new Set(picks)];
+};
+

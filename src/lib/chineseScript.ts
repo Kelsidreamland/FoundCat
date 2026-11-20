@@ -6,7 +6,11 @@ let converterPromise: Promise<Convert> | null = null;
 
 /** Traditional (Taiwan) to Simplified (Mainland) converter, loaded only when needed (~110 KB). */
 export const loadSimplifiedConverter = () => {
-  converterPromise ??= import('opencc-js/t2cn').then(({ Converter }) => Converter({ from: 'tw', to: 'cn' }));
+  converterPromise ??= import('opencc-js/t2cn').then(({ Converter }) => {
+    const convert = Converter({ from: 'tw', to: 'cn' });
+    // Taiwan uses 牠 for animals; Mainland readers expect 它.
+    return (text: string) => convert(text).replace(/牠/g, '它');
+  });
   return converterPromise;
 };
 

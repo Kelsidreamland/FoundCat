@@ -2,6 +2,7 @@ import { Camera, Eye, Loader2, Plus, Trash2, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { imageBlobToHeroDataUrl } from '../../lib/imageData';
+import { sortEncounters } from '../../lib/encounters';
 import type { CatEncounter, ScrapbookItem } from '../../store/useScrapbookStore';
 
 const ENCOUNTER_PHOTO_MAX_SIZE = 720;
@@ -46,11 +47,6 @@ const copy = {
     photoFailed: 'Could not read that photo. Try another one.',
   },
 };
-
-/** Sort newest first; encounters added later may carry earlier dates when backfilled. */
-export const sortEncounters = (encounters: CatEncounter[] = []) => (
-  [...encounters].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-);
 
 export default function EncounterTimeline({
   item,

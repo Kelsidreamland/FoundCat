@@ -1059,7 +1059,6 @@ describe('Map page', () => {
   });
 
   it('shows a branded public-map empty state when public loading fails', async () => {
-    const user = userEvent.setup();
     vi.mocked(loadPublicCatCards).mockResolvedValue({
       ok: false,
       reason: 'public_load_failed',

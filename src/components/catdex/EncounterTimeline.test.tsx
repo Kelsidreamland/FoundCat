@@ -1,7 +1,8 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ScrapbookItem } from '../../store/useScrapbookStore';
-import EncounterTimeline, { sortEncounters } from './EncounterTimeline';
+import EncounterTimeline from './EncounterTimeline';
+import { sortEncounters } from '../../lib/encounters';
 
 const cat = (extra: Partial<ScrapbookItem> = {}): ScrapbookItem => ({
   id: 'cat-1', type: 'sticker', imageData: 'data:image/png;base64,first', date: '2026-10-01T08:00:00.000Z',

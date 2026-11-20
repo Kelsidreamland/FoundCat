@@ -1,7 +1,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ScrapbookItem } from '../../store/useScrapbookStore';
-import QuickNamePrompt, { getNameSuggestions } from './QuickNamePrompt';
+import QuickNamePrompt from './QuickNamePrompt';
+import { getNameSuggestions } from '../../lib/catNameGenerator';
 
 const item: ScrapbookItem = {
   id: 'cat-abc', type: 'sticker', imageData: '', date: '2026-01-01', x: 0, y: 0, rotation: 0, scale: 1, zIndex: 1, catdexNumber: 5,

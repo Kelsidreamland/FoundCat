@@ -9,6 +9,7 @@ describe('Simplified Chinese conversion', () => {
   it('converts Taiwan Traditional UI copy to Simplified', async () => {
     const convert = await loadSimplifiedConverter();
     expect(convert('轉角遇到貓，我的貓卡')).toBe('转角遇到猫，我的猫卡');
+    expect(convert('拍下牠，牠們都在')).toBe('拍下它，它们都在');
   });
 
   it('converts text and accessible labels but leaves inputs and opted-out nodes alone', async () => {
