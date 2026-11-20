@@ -81,6 +81,22 @@ describe('CloudBackupPrompt', () => {
     expect(screen.getByText('不會影響目前手機裡的貓卡。')).toBeInTheDocument();
   });
 
+  it('signs in with the 6-digit code from the email', async () => {
+    const user = userEvent.setup();
+    const signInWithEmail = vi.fn(async () => undefined);
+    const verifyEmailOtp = vi.fn(async () => undefined);
+    useAuthStore.setState({ user: null, isConfigured: true, isLoading: false, error: null, signInWithEmail, verifyEmailOtp });
+
+    render(<CloudBackupPrompt language="zh" items={[]} />);
+    await user.click(screen.getByRole('button', { name: /備份/ }));
+    await user.type(screen.getByPlaceholderText(/email|Email|信箱/), 'cat@example.com');
+    await user.click(screen.getByRole('button', { name: /寄送登入信/ }));
+
+    await user.type(await screen.findByLabelText('6 位數驗證碼'), '12a3456');
+    await user.click(screen.getByRole('button', { name: '登入' }));
+    expect(verifyEmailOtp).toHaveBeenCalledWith('cat@example.com', '123456');
+  });
+
   it('sends a magic-link sign-in email for the fast launch backup flow', async () => {
     const user = userEvent.setup();
     const signInWithEmail = vi.fn(async () => undefined);
@@ -101,10 +117,10 @@ describe('CloudBackupPrompt', () => {
       });
     });
     expect(screen.getByText('已寄出登入信')).toBeInTheDocument();
-    expect(screen.getByText('請到信箱點登入連結，完成後回到轉角遇到貓繼續備份。')).toBeInTheDocument();
-    expect(screen.getByText('如果手機打開了另一個空白版本，請回到原本有貓卡資料的 App，再用同一個 Email 重新登入備份。')).toBeInTheDocument();
-    expect(screen.queryByLabelText('Email 驗證碼')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '驗證並登入' })).not.toBeInTheDocument();
+    expect(screen.getByText('打開信：把 6 位數驗證碼輸入下面，或直接點信裡的登入連結。')).toBeInTheDocument();
+    // Code entry keeps installed iPhone apps signed in without bouncing through Safari.
+    expect(screen.getByLabelText('6 位數驗證碼')).toHaveAttribute('autocomplete', 'one-time-code');
+    expect(screen.getByRole('button', { name: '登入' })).toBeDisabled();
   });
 
   it('lets users return to the email form to send a new sign-in link', async () => {
