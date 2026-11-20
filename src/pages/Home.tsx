@@ -6,6 +6,7 @@ import CatCardDeck from '../components/catdex/CatCardDeck';
 import CollectedCatProfileSheet from '../components/catdex/CollectedCatProfileSheet';
 import WorldCatProfileSheet from '../components/catdex/WorldCatProfileSheet';
 import CloudBackupPrompt from '../components/cloud/CloudBackupPrompt';
+import BackupNudge from '../components/cloud/BackupNudge';
 import { loadPublicCatCards } from '../lib/cloudPublicCats';
 import { donationConfig } from '../config/donation';
 import { getVisitorLocale, hasDonationOptions, resolveDonationOptions } from '../lib/donation';
@@ -280,6 +281,7 @@ export default function Home() {
 
       <main className="relative z-10 mb-[calc(4.25rem+env(safe-area-inset-bottom))] min-h-0 flex-1 overflow-y-auto px-5 pb-4 pt-[clamp(0.75rem,4vh,2.25rem)]">
         <section className="relative mx-auto max-w-sm">
+          <BackupNudge items={items} language={language} />
           {isPublicDeckLoading ? (
             <HomeDeckLoading language={language} />
           ) : (

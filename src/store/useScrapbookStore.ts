@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { get, set } from 'idb-keyval';
 import { v4 as uuidv4 } from 'uuid';
 import { getNextCatdexNumber, normalizeCatdexNumbers } from '../lib/catdex';
+import { requestPersistentStorage } from '../lib/storagePersistence';
 
 export type ScrapbookItemType = 'sticker' | 'stamp';
 export type CatPersonalityTag = 'friendly' | 'shy' | 'indifferent' | 'aloof' | 'foodie' | 'clingy' | 'alert';
@@ -111,6 +112,8 @@ export const useScrapbookStore = create<ScrapbookState>((setStore, getStore) => 
     const newItems = [...currentItems, newItem];
     setStore({ items: newItems });
     await set(STORAGE_KEY, newItems);
+    // Saving a cat is a clear signal the data matters; ask the browser not to evict it.
+    void requestPersistentStorage();
     return newItem;
   },
 

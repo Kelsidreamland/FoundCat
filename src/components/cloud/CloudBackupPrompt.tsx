@@ -6,6 +6,7 @@ import { restoreCloudCatCards } from '../../lib/cloudRestore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useCloudBackupStatusStore } from '../../store/useCloudBackupStatusStore';
 import { useScrapbookStore, type ScrapbookItem } from '../../store/useScrapbookStore';
+import { OPEN_BACKUP_PANEL_EVENT } from '../../lib/storagePersistence';
 
 type CloudBackupPromptProps = {
   language: 'zh' | 'en';
@@ -191,6 +192,12 @@ export default function CloudBackupPrompt({
     hasAutoOpenedRef.current = true;
     setIsOpen(true);
   }, [autoOpenOnSignedInEmptyDevice, catCount, isConfigured, isLoading, isSignedIn]);
+
+  useEffect(() => {
+    const open = () => setIsOpen(true);
+    window.addEventListener(OPEN_BACKUP_PANEL_EVENT, open);
+    return () => window.removeEventListener(OPEN_BACKUP_PANEL_EVENT, open);
+  }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
