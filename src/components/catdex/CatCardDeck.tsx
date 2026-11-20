@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { MapPin, Share2 } from 'lucide-react';
+import { Heart, MapPin, Share2 } from 'lucide-react';
 import {
   animate,
   motion,
@@ -25,6 +25,7 @@ interface CatCardDeckProps {
     next: string;
     shareCard: string;
     findCard?: string;
+    collectCard?: string;
     collectFeedback?: string;
   };
   onShareCard: (item: ScrapbookItem) => void;
@@ -181,11 +182,14 @@ export default function CatCardDeck({
     setIsSwipeHintDismissed(true);
   };
 
-  const move = (direction: SwipeDirection) => {
-    if (cards.length <= 1 || swipeDirection || isSwipeAnimatingRef.current) return;
+  // Swiping right collects (the familiar "keep" gesture); swiping left moves on.
+  const move = (direction: SwipeDirection, intent: 'collect' | 'next') => {
+    if (!active || swipeDirection || isSwipeAnimatingRef.current) return;
+    if (intent === 'next' && cards.length <= 1) return;
+    if (intent === 'collect' && !onCollectCard) return;
     isSwipeAnimatingRef.current = true;
     if (showSwipeHint) dismissSwipeHint();
-    if (direction === -1 && active) {
+    if (intent === 'collect') {
       onCollectCard?.(active);
       setCollectFeedback(labels.collectFeedback ?? (language === 'zh' ? '已收藏到我的貓卡' : 'Saved to My Cat Cards'));
       if (collectFeedbackTimerRef.current) clearTimeout(collectFeedbackTimerRef.current);
@@ -213,26 +217,26 @@ export default function CatCardDeck({
   };
 
   const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const shouldCollect = info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -SWIPE_VELOCITY_THRESHOLD;
-    const shouldGoNext = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > SWIPE_VELOCITY_THRESHOLD;
+    const shouldCollect = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > SWIPE_VELOCITY_THRESHOLD;
+    const shouldGoNext = info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -SWIPE_VELOCITY_THRESHOLD;
 
     if (Math.abs(info.offset.x) > OPEN_CLICK_DRAG_THRESHOLD || Math.abs(info.offset.y) > OPEN_CLICK_DRAG_THRESHOLD) {
       suppressNextOpenClickRef.current = true;
     }
-    if (shouldCollect) move(-1);
-    if (shouldGoNext) move(1);
+    if (shouldCollect) move(1, 'collect');
+    if (shouldGoNext) move(-1, 'next');
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
     if (event.key === 'ArrowRight') {
-      if (!hasMultipleCards) return;
+      if (!onCollectCard) return;
       event.preventDefault();
-      move(1);
+      move(1, 'collect');
     }
     if (event.key === 'ArrowLeft') {
       if (!hasMultipleCards) return;
       event.preventDefault();
-      move(-1);
+      move(-1, 'next');
     }
     if (onOpenCard && (event.key === 'Enter' || event.key === ' ')) {
       event.preventDefault();
@@ -300,7 +304,7 @@ export default function CatCardDeck({
       <div className="relative mt-2 h-[min(390px,calc(100dvh-240px))] min-h-[320px]">
         {showSwipeHint ? (
           <div className="absolute right-4 top-4 z-30 flex items-center gap-2 rounded-full border border-[#221915]/15 bg-[#fffdf7]/92 px-3 py-1.5 text-[11px] font-bold text-[#5c4f45] shadow-[2px_2px_0_rgba(47,95,179,0.14)] backdrop-blur-md">
-            <span>{language === 'zh' ? '左滑收藏，右滑看下一隻' : 'Swipe left to collect, right for next'}</span>
+            <span>{language === 'zh' ? '右滑收藏，左滑看下一隻' : 'Swipe right to collect, left for next'}</span>
             <button
               type="button"
               onClick={dismissSwipeHint}
@@ -445,6 +449,19 @@ export default function CatCardDeck({
                 <MapPin size={16} strokeWidth={2.6} aria-hidden="true" />
                 <span>{labels.findCard ?? (language === 'zh' ? '去找這隻喵' : 'Find this cat')}</span>
               </button>
+              {onCollectCard ? (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    move(1, 'collect');
+                  }}
+                  aria-label={labels.collectCard ?? (language === 'zh' ? '收藏這隻貓' : 'Collect this cat')}
+                  className="grid min-h-11 w-12 shrink-0 place-items-center rounded-[16px] border-2 border-[#1d1714] bg-[#fffdf2] text-[#1d1714] shadow-[3px_3px_0_#1d1714] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+                >
+                  <Heart size={17} strokeWidth={2.6} aria-hidden="true" />
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={(event) => {

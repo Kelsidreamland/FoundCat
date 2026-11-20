@@ -117,8 +117,8 @@ export default function Catdex() {
       <p className="mx-auto mt-2 max-w-[17rem] text-sm font-bold leading-6 text-[#6d5f52]">
         {isWorldSaved
           ? (language === 'zh'
-              ? '回首頁左滑收藏喜歡的世界貓卡，牠們會保留 W 編號出現在這裡。'
-              : 'Go back home and swipe left to save world cats. They will keep their W-numbers here.')
+              ? '回首頁右滑收藏喜歡的世界貓卡，牠們會保留 W 編號出現在這裡。'
+              : 'Go back home and swipe right to save world cats. They will keep their W-numbers here.')
           : (language === 'zh'
               ? '按中間的拍貓按鈕，存下你親自遇見的第一隻貓。'
               : 'Use the center capture button to save the first cat you found yourself.')}

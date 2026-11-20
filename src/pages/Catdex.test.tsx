@@ -249,7 +249,7 @@ describe('Catdex page', () => {
     await user.click(screen.getByRole('button', { name: '我收藏的貓 0' }));
 
     expect(screen.getByText('還沒有收藏世界貓卡')).toBeInTheDocument();
-    expect(screen.getByText('回首頁左滑收藏喜歡的世界貓卡，牠們會保留 W 編號出現在這裡。')).toBeInTheDocument();
+    expect(screen.getByText('回首頁右滑收藏喜歡的世界貓卡，牠們會保留 W 編號出現在這裡。')).toBeInTheDocument();
     expect(screen.queryByText('我拍到的小虎')).not.toBeInTheDocument();
   });
 

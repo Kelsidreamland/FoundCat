@@ -383,7 +383,7 @@ describe('Home page', () => {
 
     await screen.findByText('首爾店長貓');
     vi.useFakeTimers();
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
     expect(screen.getByRole('status')).toHaveTextContent('已收藏到我的貓卡');
 
@@ -441,7 +441,7 @@ describe('Home page', () => {
     );
 
     await screen.findByText('首爾店長貓');
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
     const dialog = await screen.findByRole('dialog', { name: '首爾店長貓 世界貓咪檔案' });
     expect(dialog).toHaveTextContent('W-088');
@@ -491,7 +491,7 @@ describe('Home page', () => {
     );
 
     await screen.findByText('首爾店長貓');
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
     const dialog = await screen.findByRole('dialog', { name: '首爾店長貓 世界貓咪檔案' });
     expect(dialog).toHaveTextContent('W-088');
@@ -540,7 +540,7 @@ describe('Home page', () => {
     );
 
     await screen.findByText('首爾店長貓');
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
     expect(await screen.findByRole('dialog', { name: '首爾店長貓 世界貓咪檔案' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: '去找這隻喵' })).not.toBeInTheDocument();
@@ -579,7 +579,7 @@ describe('Home page', () => {
 
     await screen.findByText('首爾店長貓');
     vi.useFakeTimers();
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
     expect(screen.getByRole('status')).toHaveTextContent('已收藏到我的貓卡');
     expect(screen.queryByRole('link', { name: '去找這隻喵' })).not.toBeInTheDocument();
@@ -634,7 +634,7 @@ describe('Home page', () => {
     );
 
     await screen.findByText('京都小白');
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
     const dialog = await screen.findByRole('dialog', { name: '京都小白 世界貓咪檔案' });
     expect(dialog).toHaveTextContent('W-090');
@@ -686,7 +686,7 @@ describe('Home page', () => {
 
     await screen.findByText('首爾店長貓');
     vi.useFakeTimers();
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
     expect(screen.getByRole('status')).toHaveTextContent('已收藏到我的貓卡');
 
