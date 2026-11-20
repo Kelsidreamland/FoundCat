@@ -197,15 +197,18 @@ describe('Home page', () => {
     });
   });
 
-  it('shows the card deck empty state when no public cats have been added', async () => {
+  it('invites a brand-new visitor to snap their first cat when there are no world cats yet', async () => {
     render(
       <MemoryRouter>
         <Home />
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('全世界地圖等第一批貓點')).toBeInTheDocument();
-    expect(screen.getByText('先拍下你遇到的貓，公開後朋友就能在地圖上找到牠。')).toBeInTheDocument();
+    const hero = await screen.findByTestId('first-cat-hero');
+    expect(within(hero).getByRole('link', { name: '拍下我的第一隻貓' })).toHaveAttribute('href', '/create');
+    // Nothing failed, so no reload link; and the slim intro bar is not duplicated above it.
+    expect(within(hero).queryByRole('button', { name: '重新載入大家遇見的貓' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('welcome-intro')).not.toBeInTheDocument();
   });
 
   it('loads public cat cards as the default home deck', async () => {
@@ -274,9 +277,10 @@ describe('Home page', () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('全世界貓卡暫時載入失敗')).toBeInTheDocument();
-    expect(screen.getByText('可以再試一次；你的本機貓卡仍在「我的貓卡」。')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '重新載入世界貓卡' })).toBeInTheDocument();
+    // Cloud not configured is not an error: a calm note, no alarming failure or retry.
+    expect(await screen.findByText('大家遇見的貓暫時看不到')).toBeInTheDocument();
+    expect(screen.queryByText('全世界貓卡暫時載入失敗')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '重新載入世界貓卡' })).not.toBeInTheDocument();
     expect(screen.queryByText('巷口咖啡店')).not.toBeInTheDocument();
     expect(loadPublicCatCards).toHaveBeenCalledTimes(1);
   });
@@ -307,10 +311,10 @@ describe('Home page', () => {
       </MemoryRouter>
     );
 
-    await user.click(await screen.findByRole('button', { name: '重新載入世界貓卡' }));
+    await user.click(await screen.findByRole('button', { name: '重新載入大家遇見的貓' }));
 
     expect(await screen.findByText('首爾店長貓')).toBeInTheDocument();
-    expect(screen.queryByText('全世界貓卡暫時載入失敗')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('first-cat-hero')).not.toBeInTheDocument();
     expect(loadPublicCatCards).toHaveBeenCalledTimes(2);
   });
 

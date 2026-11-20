@@ -94,7 +94,7 @@ export default function SharedCatMap() {
           </div>
 
           <div className="mt-5">
-            <h1 className="text-[30px] font-black leading-none text-[#221915]">{payload.title}</h1>
+            <h1 className="font-cat-display text-[30px] font-bold leading-none text-[#221915]">{payload.title}</h1>
             <p className="mt-3 text-sm font-black text-[#2f5fb3]">
               {isZh ? `${payload.cats.length} 個貓咪出沒點` : `${payload.cats.length} cat spots`}
             </p>
@@ -124,7 +124,7 @@ export default function SharedCatMap() {
         {activeCat ? (
           <section className="mt-5 rounded-[24px] border-2 border-[#221915] bg-[#fffdf2] p-4 shadow-[6px_6px_0_rgba(47,95,179,0.20)]">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-[#2f5fb3]">{activeCat.numberLabel}</p>
-            <h2 className="mt-1 text-2xl font-black leading-tight text-[#221915]">{getCatTitle(activeCat, language)}</h2>
+            <h2 className="font-cat-display mt-1 text-2xl font-bold leading-tight text-[#221915]">{getCatTitle(activeCat, language)}</h2>
             <div className="mt-3 flex items-start gap-3 rounded-[18px] border border-[#221915]/12 bg-white/80 p-3">
               <MapPin size={18} className="mt-0.5 shrink-0 text-[#2f5fb3]" />
               <div className="min-w-0">

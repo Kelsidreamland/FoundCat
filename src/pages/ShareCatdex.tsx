@@ -124,7 +124,7 @@ export default function ShareCatdex() {
         <section className="mx-auto max-w-sm">
           <div className="mt-2 sm:mt-5">
             <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[#2f5fb3]">FOUND CAT MAP</p>
-            <h1 className="mt-1 text-[1.65rem] font-black leading-none text-[#1d1714] sm:text-[1.9rem]">
+            <h1 className="font-cat-display mt-1 text-[1.65rem] font-bold leading-none text-[#1d1714] sm:text-[1.9rem]">
               {t.shareCatdex}
             </h1>
             <p className="mt-1 max-w-[280px] text-xs font-bold leading-5 text-[#76665a] sm:mt-2">

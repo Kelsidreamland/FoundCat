@@ -153,7 +153,7 @@ export default function Catdex() {
                 <div className="mb-3 flex items-end justify-between gap-3 border-b border-[#221915]/25 pb-2">
                   <h3
                     id={groupHeadingId}
-                    className="flex min-w-0 items-center gap-1.5 text-xl font-black leading-tight text-[#1d1714]"
+                    className="font-cat-display flex min-w-0 items-center gap-1.5 text-xl font-bold leading-tight text-[#1d1714]"
                   >
                     <MapPin size={18} strokeWidth={2.6} aria-hidden="true" className="shrink-0 text-[#2f5fb3]" />
                     <span className="truncate">{group.name}</span>
@@ -299,7 +299,7 @@ export default function Catdex() {
 
       <main className="mb-[calc(4.25rem+env(safe-area-inset-bottom))] min-h-0 flex-1 overflow-y-auto px-5 pb-5 scrollbar-hide">
         <section className="mx-auto mb-5 max-w-sm">
-          <h1 className="text-3xl font-black leading-none text-[#1d1714]">
+          <h1 className="font-cat-display text-3xl font-bold leading-none text-[#1d1714]">
             {t.catdex}
           </h1>
           {items.length > 0 ? (
