@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Heart, MapPin, Share2 } from 'lucide-react';
 import {
   animate,
   motion,
@@ -10,7 +11,7 @@ import type { PanInfo } from 'framer-motion';
 import { getPersonalityLabels } from '../../lib/catInfoDisplay';
 import { getPaperCardDragVisuals } from '../../lib/catCardMotion';
 import { formatCatCardNumberForItem, getDeckNeighbors, sortCatCards } from '../../lib/catdexDeck';
-import { suggestCatName } from '../../lib/catNameGenerator';
+import { getCatDisplayName } from '../../lib/catNameGenerator';
 import { getReadableLocationName } from '../../lib/locationDisplay';
 import { paperMotion } from '../../lib/uiMotion';
 import type { ScrapbookItem } from '../../store/useScrapbookStore';
@@ -23,9 +24,15 @@ interface CatCardDeckProps {
     previous: string;
     next: string;
     shareCard: string;
+    findCard?: string;
+    collectCard?: string;
     collectFeedback?: string;
   };
   onShareCard: (item: ScrapbookItem) => void;
+  /** When set, "find this cat on the map" becomes the card's main action and sharing an icon. */
+  onFindCard?: (item: ScrapbookItem) => void;
+  /** Shorter deck when something sits above it (e.g. the first-visit intro). */
+  compact?: boolean;
   onCollectCard?: (item: ScrapbookItem) => void;
   onOpenCard?: (item: ScrapbookItem) => void;
 }
@@ -65,6 +72,8 @@ export default function CatCardDeck({
   language,
   labels,
   onShareCard,
+  onFindCard,
+  compact = false,
   onCollectCard,
   onOpenCard,
 }: CatCardDeckProps) {
@@ -176,11 +185,14 @@ export default function CatCardDeck({
     setIsSwipeHintDismissed(true);
   };
 
-  const move = (direction: SwipeDirection) => {
-    if (cards.length <= 1 || swipeDirection || isSwipeAnimatingRef.current) return;
+  // Swiping right collects (the familiar "keep" gesture); swiping left moves on.
+  const move = (direction: SwipeDirection, intent: 'collect' | 'next') => {
+    if (!active || swipeDirection || isSwipeAnimatingRef.current) return;
+    if (intent === 'next' && cards.length <= 1) return;
+    if (intent === 'collect' && !onCollectCard) return;
     isSwipeAnimatingRef.current = true;
     if (showSwipeHint) dismissSwipeHint();
-    if (direction === -1 && active) {
+    if (intent === 'collect') {
       onCollectCard?.(active);
       setCollectFeedback(labels.collectFeedback ?? (language === 'zh' ? '已收藏到我的貓卡' : 'Saved to My Cat Cards'));
       if (collectFeedbackTimerRef.current) clearTimeout(collectFeedbackTimerRef.current);
@@ -208,26 +220,26 @@ export default function CatCardDeck({
   };
 
   const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const shouldCollect = info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -SWIPE_VELOCITY_THRESHOLD;
-    const shouldGoNext = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > SWIPE_VELOCITY_THRESHOLD;
+    const shouldCollect = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > SWIPE_VELOCITY_THRESHOLD;
+    const shouldGoNext = info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -SWIPE_VELOCITY_THRESHOLD;
 
     if (Math.abs(info.offset.x) > OPEN_CLICK_DRAG_THRESHOLD || Math.abs(info.offset.y) > OPEN_CLICK_DRAG_THRESHOLD) {
       suppressNextOpenClickRef.current = true;
     }
-    if (shouldCollect) move(-1);
-    if (shouldGoNext) move(1);
+    if (shouldCollect) move(1, 'collect');
+    if (shouldGoNext) move(-1, 'next');
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
     if (event.key === 'ArrowRight') {
-      if (!hasMultipleCards) return;
+      if (!onCollectCard) return;
       event.preventDefault();
-      move(1);
+      move(1, 'collect');
     }
     if (event.key === 'ArrowLeft') {
       if (!hasMultipleCards) return;
       event.preventDefault();
-      move(-1);
+      move(-1, 'next');
     }
     if (onOpenCard && (event.key === 'Enter' || event.key === ' ')) {
       event.preventDefault();
@@ -282,7 +294,7 @@ export default function CatCardDeck({
 
   const activeImage = active.heroImageData || active.imageData;
   const activeLocation = getReadableLocationName(active, language);
-  const activeCatName = active.catName?.trim() || suggestCatName(active, language);
+  const activeCatName = getCatDisplayName(active, language);
   const activePersonalityLabels = getPersonalityLabels(active.personalityTags, language).slice(0, 2);
   const motionState = swipeDirection === 1
     ? 'leaving-right'
@@ -292,14 +304,14 @@ export default function CatCardDeck({
 
   return (
     <section aria-label={language === 'zh' ? '貓咪卡片' : 'Cat cards'}>
-      <div className="relative mt-2 h-[min(390px,calc(100dvh-240px))] min-h-[320px]">
+      <div className={`relative mt-2 ${compact ? 'h-[min(370px,calc(100dvh-290px))] min-h-[300px]' : 'h-[min(390px,calc(100dvh-240px))] min-h-[320px]'}`}>
         {showSwipeHint ? (
-          <div className="absolute right-4 top-4 z-30 flex items-center gap-2 rounded-full border border-[#2f5fb3]/8 bg-[#fffdf7]/55 px-3 py-1.5 text-[10px] font-semibold tracking-[0.04em] text-[#9a8d80]/62 shadow-[1px_2px_10px_rgba(47,95,179,0.06)] backdrop-blur-md">
-            <span>{language === 'zh' ? '左滑收藏，右滑看下一隻' : 'Swipe left to collect, right for next'}</span>
+          <div className="absolute right-4 top-4 z-30 flex items-center gap-2 rounded-full border border-[#221915]/15 bg-[#fffdf7]/92 px-3 py-1.5 text-[11px] font-bold text-[#5c4f45] shadow-[2px_2px_0_rgba(47,95,179,0.14)] backdrop-blur-md">
+            <span>{language === 'zh' ? '右滑收藏，左滑看下一隻' : 'Swipe right to collect, left for next'}</span>
             <button
               type="button"
               onClick={dismissSwipeHint}
-              className="grid h-4 w-4 place-items-center rounded-full border border-[#2f5fb3]/8 bg-white/45 text-[#9b8a7a]/65 leading-none"
+              className="-my-2 -mr-2 grid h-8 w-8 place-items-center rounded-full text-[#5c4f45] leading-none"
               aria-label={language === 'zh' ? '關閉左右滑動提示' : 'Close swipe hint'}
             >
               ×
@@ -392,7 +404,7 @@ export default function CatCardDeck({
               : paperMotion.spring}
           onClick={handleOpenClick}
         >
-          <div className="h-[52%] min-h-[150px] overflow-hidden rounded-[18px] border-2 border-[#1d1714] bg-[#f9bd4d]">
+          <div className="min-h-[110px] flex-1 overflow-hidden rounded-[18px] border-2 border-[#1d1714] bg-[#f9bd4d]">
             <img
               src={activeImage}
               alt={language === 'zh' ? '貓卡照片' : 'Cat card photo'}
@@ -401,12 +413,12 @@ export default function CatCardDeck({
             />
           </div>
 
-          <p className="font-cat-display mt-[12px] truncate text-[20px] font-bold leading-tight text-[#1d1714]">
+          <p className="font-cat-display mt-[12px] shrink-0 truncate text-[20px] font-bold leading-tight text-[#1d1714]">
             {activeCatName}
           </p>
 
-          <div className="mt-2 flex items-end justify-between gap-3">
-            <strong className="font-cat-number block text-[38px] font-bold leading-[0.9]">
+          <div className="mt-2 flex shrink-0 items-end justify-between gap-3">
+            <strong className="font-cat-number block whitespace-nowrap text-[clamp(28px,9vw,38px)] font-bold leading-[0.9]">
               {formatCatCardNumberForItem(active)}
             </strong>
             <span className="block text-right text-[11px] font-black leading-[1.42] text-[#76665a]">
@@ -415,7 +427,7 @@ export default function CatCardDeck({
           </div>
 
           {activePersonalityLabels.length > 0 ? (
-            <div className="mt-3 flex flex-wrap gap-1.5">
+            <div className="mt-3 flex shrink-0 flex-wrap gap-1.5">
               {activePersonalityLabels.map((label) => (
                 <span
                   key={label}
@@ -427,18 +439,58 @@ export default function CatCardDeck({
             </div>
           ) : null}
 
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onShareCard(active);
-            }}
-            className="mt-auto flex w-full items-center justify-between gap-2 rounded-[16px] border-2 border-[#1d1714] bg-[#fff2cf] px-3 py-2.5 text-left text-xs font-black text-[#1d1714] shadow-[3px_3px_0_#1d1714] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
-            aria-label={labels.shareCard}
-          >
-            <span>{labels.shareCard}</span>
-            <span className="text-[10px] tracking-[0.08em] text-[#2f5fb3]">SEND</span>
-          </button>
+          {onFindCard ? (
+            <div className="mt-3 flex shrink-0 items-stretch gap-2">
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onFindCard(active);
+                }}
+                className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-[16px] border-2 border-[#1d1714] bg-[#2f5fb3] px-3 py-2.5 text-sm font-black text-white shadow-[3px_3px_0_#1d1714] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+              >
+                <MapPin size={16} strokeWidth={2.6} aria-hidden="true" />
+                <span>{labels.findCard ?? (language === 'zh' ? '去找這隻喵' : 'Find this cat')}</span>
+              </button>
+              {onCollectCard ? (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    move(1, 'collect');
+                  }}
+                  aria-label={labels.collectCard ?? (language === 'zh' ? '收藏這隻貓' : 'Collect this cat')}
+                  className="grid min-h-11 w-12 shrink-0 place-items-center rounded-[16px] border-2 border-[#1d1714] bg-[#fffdf2] text-[#1d1714] shadow-[3px_3px_0_#1d1714] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+                >
+                  <Heart size={17} strokeWidth={2.6} aria-hidden="true" />
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onShareCard(active);
+                }}
+                aria-label={labels.shareCard}
+                className="grid min-h-11 w-12 shrink-0 place-items-center rounded-[16px] border-2 border-[#1d1714] bg-[#fff2cf] text-[#1d1714] shadow-[3px_3px_0_#1d1714] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+              >
+                <Share2 size={17} strokeWidth={2.6} aria-hidden="true" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onShareCard(active);
+              }}
+              className="mt-3 flex w-full shrink-0 items-center justify-center gap-2 rounded-[16px] border-2 border-[#1d1714] bg-[#fff2cf] px-3 py-2.5 text-xs font-black text-[#1d1714] shadow-[3px_3px_0_#1d1714] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+              aria-label={labels.shareCard}
+            >
+              <Share2 size={14} strokeWidth={2.6} aria-hidden="true" />
+              <span>{labels.shareCard}</span>
+            </button>
+          )}
         </motion.article>
       </div>
     </section>

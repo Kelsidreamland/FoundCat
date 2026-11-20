@@ -555,10 +555,10 @@ export default function Create() {
                     clearCreatePreviewDraft();
                   }}
                   disabled={isProcessing}
-                  className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-[16px] border-2 border-[#221915]/25 bg-[#fffaf0] px-4 py-3 font-black text-[#221915] shadow-[2px_2px_0_rgba(34,25,21,0.1)] transition-all active:translate-y-[1px] disabled:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
+                  className="flex min-h-12 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-[16px] border-2 border-[#221915]/25 bg-[#fffaf0] px-3 py-3 font-black text-[#221915] shadow-[2px_2px_0_rgba(34,25,21,0.1)] transition-all active:translate-y-[1px] disabled:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
                 >
                   <Undo2 size={18} strokeWidth={2} />
-                  <span className="text-[12px] uppercase tracking-[0.06em]">{t.recrop}</span>
+                  <span className="text-[13px]">{t.recrop}</span>
                 </button>
                 <button
                   onClick={handleConfirmSave}
@@ -570,7 +570,7 @@ export default function Create() {
                   ) : (
                     <>
                       <Check size={18} strokeWidth={2} />
-                      <span className="text-[12px] uppercase tracking-[0.06em]">{t.confirmSave}</span>
+                      <span className="text-[13px]">{t.confirmSave}</span>
                     </>
                   )}
                 </button>

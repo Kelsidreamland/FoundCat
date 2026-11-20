@@ -117,8 +117,9 @@ describe('WorldCatProfileSheet', () => {
       />
     );
 
-    const dialog = screen.getByRole('dialog', { name: '神秘貓咪 世界貓咪檔案' });
-    expect(dialog).toHaveTextContent('神秘貓咪');
+    // Unnamed cats share one generated name with the home card, based on the W-number.
+    const dialog = screen.getByRole('dialog', { name: '轉角小貓 002 世界貓咪檔案' });
+    expect(dialog).toHaveTextContent('轉角小貓 002');
     expect(dialog).toHaveTextContent('台北');
     expect(dialog).toHaveTextContent('W-002');
     expect(screen.getByTestId('world-cat-photo-frame')).toHaveClass('h-[clamp(190px,36dvh,280px)]');

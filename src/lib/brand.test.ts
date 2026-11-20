@@ -40,12 +40,9 @@ describe('cat app brand copy', () => {
     const fileText = [
       'public/cat-logo-universal.svg',
       'public/cat-logo.svg',
-      'public/design-logo-options.html',
       'index.html',
       'vite.config.ts',
       'src/components/PWAPrompt.tsx',
-      'src/hooks/useShareSticker.ts',
-      'src/components/ReelModal.tsx',
       'src/lib/catdexDeck.ts',
     ]
       .map((filePath) => readFileSync(join(repoRoot, filePath), 'utf8'))

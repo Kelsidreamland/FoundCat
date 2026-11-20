@@ -3,16 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { useAuthStore } from './store/useAuthStore';
 import { useScrapbookStore } from './store/useScrapbookStore';
-import { rescueLocalCatsToPublic } from './lib/launchRescuePublicCats';
-import type { ScrapbookItem } from './store/useScrapbookStore';
 
 const visualViewportListeners = new Map<string, EventListener>();
 const mockInitAuth = vi.hoisted(() => vi.fn(async () => undefined));
-const mockRescueLocalCatsToPublic = vi.hoisted(() => vi.fn(async () => ({
-  ok: true,
-  uploadedCount: 0,
-  skippedCount: 0,
-})));
 
 vi.mock('idb-keyval', () => ({
   get: vi.fn(async () => undefined),
@@ -27,38 +20,15 @@ vi.mock('./components/PWAUpdatePrompt', () => ({
   default: () => null,
 }));
 
-vi.mock('./lib/launchRescuePublicCats', () => ({
-  rescueLocalCatsToPublic: mockRescueLocalCatsToPublic,
-}));
-
 vi.mock('./store/useAuthStore', () => ({
   useAuthStore: vi.fn((selector: (state: { initAuth: () => Promise<void> }) => unknown) => selector({
     initAuth: mockInitAuth,
   })),
 }));
 
-const makeCat = (overrides: Partial<ScrapbookItem> = {}): ScrapbookItem => ({
-  id: 'local-cat-1',
-  type: 'sticker',
-  imageData: 'data:image/jpeg;base64,cat',
-  date: '2026-06-21T08:00:00.000Z',
-  x: 0,
-  y: 0,
-  rotation: 0,
-  scale: 1,
-  zIndex: 1,
-  location: {
-    lat: 13.7563,
-    lng: 100.5018,
-    name: 'Bangkok Cafe',
-  },
-  ...overrides,
-});
-
 describe('App viewport shell', () => {
   beforeEach(() => {
     mockInitAuth.mockClear();
-    vi.mocked(rescueLocalCatsToPublic).mockClear();
     vi.mocked(useAuthStore).mockImplementation((selector) => selector({
       session: null,
       user: null,
@@ -127,29 +97,13 @@ describe('App viewport shell', () => {
     });
   });
 
-  it('does not publish local cat cards automatically on app startup', async () => {
-    const localCat = makeCat();
-    useScrapbookStore.setState({
-      items: [localCat],
-      isLoading: false,
-      language: 'zh',
-    });
-
-    render(<App />);
-
-    await waitFor(() => {
-      expect(mockInitAuth).toHaveBeenCalledTimes(1);
-    });
-    expect(rescueLocalCatsToPublic).not.toHaveBeenCalled();
-  });
-
   it('serves the my cat cards page at /catdex', async () => {
     window.history.pushState({}, '', '/catdex');
 
     render(<App />);
 
     expect(await screen.findByRole('heading', { name: '我的貓卡' })).toBeInTheDocument();
-    expect(screen.getByText('貓卡收藏')).toBeInTheDocument();
+    expect(screen.queryByText('貓卡收藏')).not.toBeInTheDocument();
   });
 
   it('serves the local rescue page when the service worker falls back /local-rescue.html into the app shell', async () => {

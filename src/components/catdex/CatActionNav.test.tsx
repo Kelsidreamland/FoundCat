@@ -77,7 +77,7 @@ describe('CatActionNav', () => {
     expect(screen.getByTestId('brand-icon-camera')).toHaveAttribute('data-icon-detail', 'simple');
   });
 
-  it('gives all three actions stable paper press roles without visible labels', () => {
+  it('gives all three actions stable paper press roles and short visible captions', () => {
     render(
       <MemoryRouter>
         <CatActionNav />
@@ -87,8 +87,9 @@ describe('CatActionNav', () => {
     expect(screen.getByRole('link', { name: '我的貓卡' })).toHaveAttribute('data-motion-role', 'side-action');
     expect(screen.getByRole('link', { name: '拍貓' })).toHaveAttribute('data-motion-role', 'capture-action');
     expect(screen.getByRole('link', { name: '貓咪地圖' })).toHaveAttribute('data-motion-role', 'side-action');
-    expect(screen.queryByText('我的貓卡')).not.toBeInTheDocument();
-    expect(screen.queryByText('拍貓')).not.toBeInTheDocument();
-    expect(screen.queryByText('貓咪地圖')).not.toBeInTheDocument();
+    // First-time visitors can't read the icons alone, so each one carries a short caption.
+    expect(screen.getByRole('link', { name: '我的貓卡' })).toHaveTextContent('貓卡');
+    expect(screen.getByRole('link', { name: '拍貓' })).toHaveTextContent('拍貓');
+    expect(screen.getByRole('link', { name: '貓咪地圖' })).toHaveTextContent('地圖');
   });
 });

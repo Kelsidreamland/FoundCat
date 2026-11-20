@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useScrapbookStore } from '../store/useScrapbookStore';
 import { translations } from '../translations';
+import { CHECK_FOR_UPDATES_EVENT } from './VersionFooter';
 
 const UPDATE_CHECK_INTERVAL_MS = 60 * 1000;
 const STATUS_MESSAGE_DURATION_MS = 3000;
@@ -117,6 +118,15 @@ export default function PWAUpdatePrompt() {
   }, [registration, t.checkingUpdates, t.latestVersion, t.updateCheckFailed]);
 
   useEffect(() => {
+    // Ignore repeat taps while a manual check is already running.
+    const handleManualCheck = () => {
+      if (!isChecking) void checkForUpdates(true);
+    };
+    window.addEventListener(CHECK_FOR_UPDATES_EVENT, handleManualCheck);
+    return () => window.removeEventListener(CHECK_FOR_UPDATES_EVENT, handleManualCheck);
+  }, [checkForUpdates, isChecking]);
+
+  useEffect(() => {
     if (!registration) return;
 
     void checkForUpdates();
@@ -166,7 +176,6 @@ export default function PWAUpdatePrompt() {
   const versionText = useMemo(() => {
     return `${t.versionLabel} v${__APP_VERSION__}${buildTimeText ? ` · ${buildTimeText}` : ''}`;
   }, [buildTimeText, t.versionLabel]);
-  const compactVersionText = `v${__APP_VERSION__}`;
   const closeUpdateLabel = language === 'zh' ? '關閉更新提示' : 'Close update prompt';
 
   return (
@@ -223,35 +232,20 @@ export default function PWAUpdatePrompt() {
         ) : null}
       </AnimatePresence>
 
-      {!hasExternalDialog ? (
-        <div
-          data-testid="version-check-chip"
-          className="version-check-chip fixed bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] left-3 z-[60] flex max-w-[calc(100vw-2rem)] flex-col items-start gap-2"
-        >
-          <button
-            type="button"
-            onClick={() => void checkForUpdates(true)}
-            disabled={isChecking || !registration}
-            aria-label={language === 'zh' ? `${versionText}，檢查更新` : `${versionText}, check for updates`}
-            className="rounded-full border border-[#221915]/15 bg-[#fffdf2]/82 px-2 py-1 text-[9px] font-black tracking-[0.04em] text-[#5c5148] shadow-[1px_1px_0_rgba(47,95,179,0.1)] backdrop-blur disabled:opacity-55"
+      <AnimatePresence>
+        {statusMessage && !needRefresh && !hasExternalDialog ? (
+          <motion.div
+            role="status"
+            data-testid="update-status-toast"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            className="fixed bottom-[calc(env(safe-area-inset-bottom)+6rem)] left-1/2 z-[60] max-w-[15rem] -translate-x-1/2 rounded-[12px] border border-[#221915]/12 bg-[#fffdf2] px-3 py-2 text-center text-[11px] font-bold leading-4 text-[#5c5148] shadow-[3px_3px_0_rgba(47,95,179,0.12)]"
           >
-            {compactVersionText}
-          </button>
-
-          <AnimatePresence>
-            {statusMessage && !needRefresh ? (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                className="max-w-[15rem] rounded-[12px] border border-[#221915]/12 bg-[#fffdf2] px-3 py-2 text-left text-[11px] font-bold leading-4 text-[#5c5148] shadow-[3px_3px_0_rgba(47,95,179,0.12)]"
-              >
-                {statusMessage}
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
-        </div>
-      ) : null}
+            {statusMessage}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
     </>
   );

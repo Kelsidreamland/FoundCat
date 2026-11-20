@@ -4,6 +4,7 @@ import {
   getPublicCloudCatCards,
   toCloudCatCardUpsert,
   toPublicCloudCatCard,
+  withoutOptionalCloudColumns,
 } from './cloudCatCards';
 
 const localCat: ScrapbookItem = {
@@ -55,6 +56,7 @@ describe('cloud cat card mapping', () => {
       care_status_tags: ['tnr'],
       spot_note: '晚餐時間常在便利店旁邊',
       private_note: '下次去清邁想找牠',
+      encounters: null,
       is_public: false,
     });
   });
@@ -129,5 +131,15 @@ describe('cloud cat card mapping', () => {
 
     expect(getPublicCloudCatCards([privateRow, publicRow, publicWithoutLocation])).toHaveLength(1);
     expect(getPublicCloudCatCards([privateRow, publicRow, publicWithoutLocation])[0].id).toBe('cat-1');
+  });
+
+  it('backs up later encounters with the card', () => {
+    const encounters = [{ id: 'e1', date: '2026-11-01T08:00:00.000Z', note: '又在巷口曬太陽' }];
+    const row = toCloudCatCardUpsert(
+      { id: 'cat-9', type: 'sticker', imageData: 'x', date: '2026-10-01', x: 0, y: 0, rotation: 0, scale: 1, zIndex: 1, encounters },
+      'owner-1'
+    );
+    expect(row.encounters).toEqual(encounters);
+    expect(withoutOptionalCloudColumns(row)).not.toHaveProperty('encounters');
   });
 });

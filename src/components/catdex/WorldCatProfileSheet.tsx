@@ -9,6 +9,8 @@ import { formatCatCardNumberForItem } from '../../lib/catdexDeck';
 import { getReadableLocationName } from '../../lib/locationDisplay';
 import { getPaperSheetMotion } from '../../lib/uiMotion';
 import type { ScrapbookItem } from '../../store/useScrapbookStore';
+import { getCatDisplayName } from '../../lib/catNameGenerator';
+import { ReportCatLink, SeenItButton } from './CatSocialActions';
 
 export interface WorldCatProfileSheetProps {
   item: ScrapbookItem | null;
@@ -105,7 +107,7 @@ export default function WorldCatProfileSheet({
   const prefersReducedMotion = useReducedMotion();
   const sheetMotion = getPaperSheetMotion(prefersReducedMotion);
   const copy = copyFor(language);
-  const title = item?.catName?.trim() || copy.defaultName;
+  const title = item ? getCatDisplayName(item, language) : copy.defaultName;
   const image = item?.heroImageData || item?.imageData;
   const personalityLabels = item ? getPersonalityLabels(item.personalityTags, language) : [];
   const careLabels = item ? getCareStatusLabels(item.careStatusTags, language) : [];
@@ -237,9 +239,14 @@ export default function WorldCatProfileSheet({
               {!hasProfileDetails ? (
                 <MysteryState copy={copy} />
               ) : null}
+
+              <ReportCatLink catId={item.collectedFromPublicId ?? item.id} language={language} />
             </div>
 
-            <div className="sticky bottom-0 -mx-4 mt-5 flex justify-end gap-2 border-t border-[#221915]/10 bg-[#fffdf2]/96 px-4 pt-3 backdrop-blur-sm">
+            <div className="sticky bottom-0 -mx-4 mt-5 flex items-center justify-end gap-2 border-t border-[#221915]/10 bg-[#fffdf2]/96 px-4 pt-3 backdrop-blur-sm">
+              <div className="mr-auto min-w-0">
+                <SeenItButton catId={item.collectedFromPublicId ?? item.id} seenCount={item.seenCount} language={language} />
+              </div>
               <button
                 type="button"
                 onClick={() => onFind(item)}

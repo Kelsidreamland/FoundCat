@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Check, ChevronDown, Copy, Download, MapPin, Share2 } from 'lucide-react';
+import { Check, ChevronDown, Copy, MapPin, Share2 } from 'lucide-react';
 import CatActionNav from '../components/catdex/CatActionNav';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import { formatCatCardNumber, sortCatCards } from '../lib/catdexDeck';
-import { downloadCatMapCsv } from '../lib/mapExport';
 import { buildMapSharePayload, buildMapShareUrl } from '../lib/mapShare';
 import { shareCatMapPoster } from '../lib/sharePoster';
 import type { ScrapbookItem } from '../store/useScrapbookStore';
 import { useScrapbookStore } from '../store/useScrapbookStore';
+import { useLanguageToggle } from '../hooks/useLanguageToggle';
 import { translations } from '../translations';
+import { getCatDisplayName } from '../lib/catNameGenerator';
 
 const paperTexture = {
   backgroundImage: [
@@ -21,9 +22,7 @@ const paperTexture = {
   backgroundSize: '28px 28px, 100% 18px, 100% 100%, 100% 100%',
 };
 
-const getShareCardTitle = (item: ScrapbookItem, language: 'zh' | 'en') => {
-  return item.catName?.trim() || item.location?.name || (language === 'zh' ? '未命名貓咪' : 'Unnamed cat');
-};
+const getShareCardTitle = (item: ScrapbookItem, language: 'zh' | 'en') => getCatDisplayName(item, language);
 
 const normalizeMapDisplayName = (value: string | undefined, fallback: string, language: 'zh' | 'en') => {
   const trimmed = value?.trim();
@@ -44,10 +43,10 @@ export default function ShareCatdex() {
   const {
     items,
     language,
-    setLanguage,
     catdexDisplayName,
     setCatdexDisplayName,
   } = useScrapbookStore();
+  const languageToggle = useLanguageToggle();
   const t = translations[language];
   const mappedItems = useMemo(() => sortCatCards(items).filter((item) => item.location), [items]);
   const [draftName, setDraftName] = useState(() => normalizeMapDisplayName(catdexDisplayName, t.catdexDisplayName, language));
@@ -97,15 +96,6 @@ export default function ShareCatdex() {
     });
   };
 
-  const handleExportCsv = () => {
-    downloadCatMapCsv({
-      title: draftName,
-      items: selectedItems,
-      language,
-      includeMemo,
-    });
-  };
-
   const handleCopyMapLink = async () => {
     const payload = buildMapSharePayload(selectedItems, {
       title: draftName,
@@ -123,8 +113,9 @@ export default function ShareCatdex() {
         title={t.appName}
         subtitle={t.appSubtitle}
         language={language}
-        onToggleLanguage={() => void setLanguage(language === 'zh' ? 'en' : 'zh')}
-        toggleLabel={language === 'zh' ? t.switchToEnglish : t.switchToChinese}
+        onToggleLanguage={() => void languageToggle.toggle()}
+        toggleLabel={languageToggle.label}
+        toggleText={languageToggle.face}
         showClose
         closeLabel={language === 'zh' ? '關閉回首頁' : 'Close to home'}
       />
@@ -133,7 +124,7 @@ export default function ShareCatdex() {
         <section className="mx-auto max-w-sm">
           <div className="mt-2 sm:mt-5">
             <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[#2f5fb3]">FOUND CAT MAP</p>
-            <h1 className="mt-1 text-[1.65rem] font-black leading-none text-[#1d1714] sm:text-[1.9rem]">
+            <h1 className="font-cat-display mt-1 text-[1.65rem] font-bold leading-none text-[#1d1714] sm:text-[1.9rem]">
               {t.shareCatdex}
             </h1>
             <p className="mt-1 max-w-[280px] text-xs font-bold leading-5 text-[#76665a] sm:mt-2">
@@ -141,6 +132,8 @@ export default function ShareCatdex() {
             </p>
           </div>
 
+          {/* Stats and the map name only mean something once there is a cat to share. */}
+          {hasMappedCats ? (
           <div className="mt-4 rotate-[-1deg] overflow-hidden rounded-[24px] border-2 border-[#1d1714] bg-[linear-gradient(135deg,#d9ecff_0_35%,#fffdf7_36%_63%,#ffe6ad_64%_100%)] p-4 shadow-[8px_9px_0_#1d1714] sm:mt-6 sm:rounded-[28px] sm:p-5">
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -170,6 +163,7 @@ export default function ShareCatdex() {
               />
             </label>
           </div>
+          ) : null}
 
           {hasMappedCats ? (
             <>
@@ -215,7 +209,7 @@ export default function ShareCatdex() {
                 className="mt-3 flex w-full items-center justify-between gap-3 rounded-[18px] border border-[#1d1714]/16 bg-[#fffdf7]/86 px-3 py-3 text-left text-sm font-black text-[#1d1714] shadow-[2px_2px_0_rgba(47,95,179,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
               >
                 <span>
-                  {language === 'zh' ? '調整公開貓咪與匯出' : 'Adjust shared cats & export'}
+                  {language === 'zh' ? '選擇要分享的貓' : 'Choose which cats to share'}
                   <span className="mt-1 block text-xs font-bold text-[#76665a]">
                     {selectedItems.length}/{mappedItems.length}
                     {language === 'zh' ? ' 隻會放進分享地圖' : ' cats included'}
@@ -289,20 +283,6 @@ export default function ShareCatdex() {
                     })}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleExportCsv}
-                    disabled={selectedItems.length === 0}
-                    className="mt-3 flex min-h-[52px] w-full items-center justify-between gap-3 rounded-[15px] border-2 border-[#1d1714]/24 bg-[#fffaf0] px-3 py-2.5 text-left text-[#1d1714] shadow-[2px_2px_0_rgba(34,25,21,0.1)] transition-transform active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]"
-                  >
-                    <span className="inline-flex min-w-0 items-center gap-1.5 text-[12px] font-black leading-tight">
-                      <Download size={15} className="shrink-0" />
-                      <span className="min-w-0">{t.exportCatMapCsv}</span>
-                    </span>
-                    <span className="shrink-0 text-[10px] font-black uppercase leading-tight tracking-[0.06em] text-[#76665a]">
-                      {t.exportCatMapCsvHint}
-                    </span>
-                  </button>
                 </div>
               ) : null}
             </>

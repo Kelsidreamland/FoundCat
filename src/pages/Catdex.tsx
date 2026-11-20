@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { MapPin } from 'lucide-react';
+import { getCatDisplayName } from '../lib/catNameGenerator';
 import CatActionNav from '../components/catdex/CatActionNav';
+import VersionFooter from '../components/VersionFooter';
 import CatdexLabel from '../components/catdex/CatdexLabel';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import { formatPublicCatCardNumber } from '../lib/catdexDeck';
-import { getFindCatCta, getReadableLocationName, hasReadableLocationName } from '../lib/locationDisplay';
+import { getFindCatCta, hasReadableLocationName } from '../lib/locationDisplay';
 import type { ScrapbookItem } from '../store/useScrapbookStore';
 import { useScrapbookStore } from '../store/useScrapbookStore';
 import { translations } from '../translations';
@@ -99,29 +102,6 @@ export default function Catdex() {
       : `${count} cat ${count === 1 ? 'card' : 'cards'}`
   );
 
-  const renderCollectionSummary = (isWorldSaved: boolean) => (
-    <div className="mt-3 grid grid-cols-[auto_1fr] items-center gap-3 rounded-[18px] border border-[#221915]/14 bg-[#fffdf2]/80 px-3 py-2 shadow-[2px_3px_0_rgba(47,95,179,0.09)]">
-      <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] ${
-        isWorldSaved
-          ? 'bg-[#d9ecff] text-[#2f5fb3]'
-          : 'bg-[#fff2cf] text-[#221915]'
-      }`}>
-        {isWorldSaved
-          ? (language === 'zh' ? '世界地圖編號' : 'World map number')
-          : (language === 'zh' ? '我的圖鑑編號' : 'My card number')}
-      </span>
-      <p className="text-xs font-bold leading-5 text-[#6d5f52]">
-        {isWorldSaved
-          ? (language === 'zh'
-              ? '保留 W-001 編號，不併入自己的 No 編號。'
-              : 'Keeps W-001 numbers and never merges into your private No. series.')
-          : (language === 'zh'
-              ? 'No.001 起算，只整理自己親自拍到的貓。'
-              : 'Starts at No.001 and only includes cats you photographed yourself.')}
-      </p>
-    </div>
-  );
-
   const renderCollectionEmptyState = (isWorldSaved: boolean) => (
     <section aria-live="polite" className="rounded-[24px] border-2 border-[#221915] bg-[#fffdf2] p-6 text-center shadow-[7px_8px_0_rgba(29,23,20,0.86)]">
       <div className={`mx-auto mb-4 grid h-16 w-16 rotate-[-4deg] place-items-center border-2 border-[#221915] text-2xl font-black shadow-[4px_4px_0_rgba(29,23,20,0.82)] ${
@@ -137,8 +117,8 @@ export default function Catdex() {
       <p className="mx-auto mt-2 max-w-[17rem] text-sm font-bold leading-6 text-[#6d5f52]">
         {isWorldSaved
           ? (language === 'zh'
-              ? '回首頁左滑收藏喜歡的世界貓卡，牠們會保留 W 編號出現在這裡。'
-              : 'Go back home and swipe left to save world cats. They will keep their W-numbers here.')
+              ? '回首頁右滑收藏喜歡的世界貓卡，牠們會保留 W 編號出現在這裡。'
+              : 'Go back home and swipe right to save world cats. They will keep their W-numbers here.')
           : (language === 'zh'
               ? '按中間的拍貓按鈕，存下你親自遇見的第一隻貓。'
               : 'Use the center capture button to save the first cat you found yourself.')}
@@ -148,14 +128,10 @@ export default function Catdex() {
 
   const renderCollectionSection = ({
     title,
-    eyebrow,
-    description,
     groups,
     isWorldSaved,
   }: {
     title: string;
-    eyebrow: string;
-    description: string;
     groups: CatdexPlaceGroup[];
     isWorldSaved: boolean;
   }) => {
@@ -163,21 +139,10 @@ export default function Catdex() {
 
     return (
       <section aria-labelledby={isWorldSaved ? 'world-saved-cats-heading' : 'self-found-cats-heading'}>
-        <div className="mb-4 border-b-2 border-[#221915] pb-3">
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#2f5fb3]">
-            {eyebrow}
-          </p>
-          <h2
-            id={isWorldSaved ? 'world-saved-cats-heading' : 'self-found-cats-heading'}
-            className="mt-1 text-2xl font-black leading-tight text-[#1d1714]"
-          >
-            {title}
-          </h2>
-          <p className="mt-1 text-sm font-bold leading-6 text-[#6d5f52]">
-            {description}
-          </p>
-          {renderCollectionSummary(isWorldSaved)}
-        </div>
+        {/* The active tab already names this list; keep the heading for screen readers only. */}
+        <h2 id={isWorldSaved ? 'world-saved-cats-heading' : 'self-found-cats-heading'} className="sr-only">
+          {title}
+        </h2>
 
         <div className="space-y-6">
           {groups.map((group, index) => {
@@ -186,19 +151,13 @@ export default function Catdex() {
             return (
               <section key={`${isWorldSaved ? 'world' : 'self'}-${group.name}`} aria-labelledby={groupHeadingId}>
                 <div className="mb-3 flex items-end justify-between gap-3 border-b border-[#221915]/25 pb-2">
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#2f5fb3]">
-                      {isWorldSaved
-                        ? (language === 'zh' ? '世界貓點' : 'SAVED WORLD PLACE')
-                        : (language === 'zh' ? '遇見地點' : 'FOUND CAT PLACE')}
-                    </p>
-                    <h3
-                      id={groupHeadingId}
-                      className="mt-1 truncate text-xl font-black leading-tight text-[#1d1714]"
-                    >
-                      {group.name}
-                    </h3>
-                  </div>
+                  <h3
+                    id={groupHeadingId}
+                    className="font-cat-display flex min-w-0 items-center gap-1.5 text-xl font-bold leading-tight text-[#1d1714]"
+                  >
+                    <MapPin size={18} strokeWidth={2.6} aria-hidden="true" className="shrink-0 text-[#2f5fb3]" />
+                    <span className="truncate">{group.name}</span>
+                  </h3>
                   <p className="shrink-0 rounded-full border border-[#221915]/20 bg-[#fffdf2] px-3 py-1 text-[11px] font-black text-[#221915] shadow-[2px_2px_0_rgba(47,95,179,0.12)]">
                     {formatGroupCount(group.items.length)}
                   </p>
@@ -243,11 +202,9 @@ export default function Catdex() {
                             <CatdexLabel catdexNumber={item.catdexNumber} label={t.catdexLabel} />
                           )}
                         </div>
-                        {item.catName?.trim() ? (
-                          <p className="font-cat-display mt-2 truncate text-center text-sm font-bold text-[#221915]">
-                            {item.catName.trim()}
-                          </p>
-                        ) : null}
+                        <p className="font-cat-display mt-2 truncate text-center text-sm font-bold text-[#221915]">
+                          {getCatDisplayName(item, language)}
+                        </p>
                         {summaryLabels.length > 0 ? (
                           <div className="mt-2 flex flex-wrap justify-center gap-1.5">
                             {summaryLabels.map((label) => (
@@ -270,16 +227,6 @@ export default function Catdex() {
                             {catInfoCopy.spotHeading}：{item.spotNote.trim()}
                           </p>
                         ) : null}
-                        {isWorldSaved ? (
-                          <p className="mt-2 text-center text-[11px] font-black text-[#2f5fb3]">
-                            {language === 'zh' ? '收藏自全世界地圖' : 'Saved from World Map'}
-                          </p>
-                        ) : null}
-                        {item.location ? (
-                          <p className="mt-1 truncate text-center text-[11px] font-bold text-[#76665a]">
-                            {getReadableLocationName(item, language)}
-                          </p>
-                        ) : null}
                       </Link>
                     );
                   })}
@@ -297,19 +244,11 @@ export default function Catdex() {
   const activeCollection = activeCollectionTab === 'world'
     ? {
         title: worldTabLabel,
-        eyebrow: language === 'zh' ? '來自世界地圖' : 'SAVED FROM WORLD MAP',
-        description: language === 'zh'
-          ? '從全世界地圖收藏回來，保留原本的 W 編號。'
-          : 'Cats saved from the World Map, keeping their original W-numbers.',
         groups: worldSavedPlaceGroups,
         isWorldSaved: true,
       }
     : {
         title: selfTabLabel,
-        eyebrow: language === 'zh' ? '我遇見的貓' : 'MY FOUND CATS',
-        description: language === 'zh'
-          ? '自己拍到、自己編號的貓咪圖鑑。'
-          : 'Cats you photographed yourself, with your own private numbers.',
         groups: selfFoundPlaceGroups,
         isWorldSaved: false,
       };
@@ -360,10 +299,7 @@ export default function Catdex() {
 
       <main className="mb-[calc(4.25rem+env(safe-area-inset-bottom))] min-h-0 flex-1 overflow-y-auto px-5 pb-5 scrollbar-hide">
         <section className="mx-auto mb-5 max-w-sm">
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#2f5fb3]">
-            {language === 'zh' ? '貓卡收藏' : 'FOUND CATS ARCHIVE'}
-          </p>
-          <h1 className="mt-1 text-3xl font-black leading-none text-[#1d1714]">
+          <h1 className="font-cat-display text-3xl font-bold leading-none text-[#1d1714]">
             {t.catdex}
           </h1>
           {items.length > 0 ? (
@@ -408,6 +344,7 @@ export default function Catdex() {
             {renderCollectionSection(activeCollection)}
           </motion.div>
         )}
+        <VersionFooter language={language} />
       </main>
 
       <CatActionNav

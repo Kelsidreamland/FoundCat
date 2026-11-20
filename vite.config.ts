@@ -50,6 +50,9 @@ export default defineConfig({
         skipWaiting: true,
         globIgnores: [
           '**/*.wasm',
+          // Only needed when a user picks a HEIC photo or exports the map; load on demand.
+          '**/assets/heic2any-*.js',
+          '**/assets/html2canvas*.js',
           '**/fonts/**/*.css',
           '**/fonts/**/*.woff2',
         ],

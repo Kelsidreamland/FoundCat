@@ -2,7 +2,6 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { downloadCatMapCsv } from '../lib/mapExport';
 import { decodeMapSharePayload } from '../lib/mapShare';
 import { shareCatMapPoster } from '../lib/sharePoster';
 import type { ScrapbookItem } from '../store/useScrapbookStore';
@@ -16,10 +15,6 @@ vi.mock('idb-keyval', () => ({
 
 vi.mock('../lib/sharePoster', () => ({
   shareCatMapPoster: vi.fn(async () => 'shared-file'),
-}));
-
-vi.mock('../lib/mapExport', () => ({
-  downloadCatMapCsv: vi.fn(),
 }));
 
 const originalSetCatdexDisplayName = useScrapbookStore.getState().setCatdexDisplayName;
@@ -43,7 +38,6 @@ const makeItem = (overrides: Partial<ScrapbookItem>): ScrapbookItem => ({
 describe('ShareCatdex page', () => {
   beforeEach(() => {
     vi.mocked(shareCatMapPoster).mockClear();
-    vi.mocked(downloadCatMapCsv).mockClear();
     useScrapbookStore.setState({
       items: [
         makeItem({
@@ -90,7 +84,7 @@ describe('ShareCatdex page', () => {
     expect(screen.getByText('有地點')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /產生貓咪地圖海報/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /複製貓咪地圖連結/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /調整公開貓咪與匯出/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /選擇要分享的貓/ })).toBeInTheDocument();
   });
 
   it('reserves mobile safe-area space so share actions are not covered by bottom navigation', () => {
@@ -129,12 +123,12 @@ describe('ShareCatdex page', () => {
     expect(screen.queryByTestId('shared-cat-selection')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /匯出 Google My Maps CSV/ })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /調整公開貓咪與匯出/ }));
+    await user.click(screen.getByRole('button', { name: /選擇要分享的貓/ }));
 
     const selection = screen.getByTestId('shared-cat-selection');
-    expect(screen.getByLabelText('選取 巷口咖啡店')).toBeChecked();
-    expect(screen.getByLabelText('選取 小公園')).toBeChecked();
-    expect(screen.getByRole('button', { name: /匯出 Google My Maps CSV/ })).toBeInTheDocument();
+    expect(screen.getByLabelText('選取 轉角小貓 001')).toBeChecked();
+    expect(screen.getByLabelText('選取 轉角小貓 029')).toBeChecked();
+    expect(screen.queryByRole('button', { name: /匯出 Google My Maps CSV/ })).not.toBeInTheDocument();
 
     expect(Boolean(actions.compareDocumentPosition(selection) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
   });
@@ -195,8 +189,8 @@ describe('ShareCatdex page', () => {
       </MemoryRouter>
     );
 
-    await user.click(screen.getByRole('button', { name: /調整公開貓咪與匯出/ }));
-    await user.click(screen.getByLabelText('選取 小公園'));
+    await user.click(screen.getByRole('button', { name: /選擇要分享的貓/ }));
+    await user.click(screen.getByLabelText('選取 轉角小貓 029'));
     await user.click(screen.getByRole('button', { name: /產生貓咪地圖海報/ }));
 
     await waitFor(() => {
@@ -206,26 +200,6 @@ describe('ShareCatdex page', () => {
         language: 'zh',
         includeMemo: false,
       });
-    });
-  });
-
-  it('exports selected mapped cats as a Google My Maps CSV', async () => {
-    const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <ShareCatdex />
-      </MemoryRouter>
-    );
-
-    await user.click(screen.getByRole('button', { name: /調整公開貓咪與匯出/ }));
-    await user.click(screen.getByLabelText('選取 小公園'));
-    await user.click(screen.getByRole('button', { name: /匯出 Google My Maps CSV/ }));
-
-    expect(downloadCatMapCsv).toHaveBeenCalledWith({
-      title: '我的轉角貓地圖',
-      items: [expect.objectContaining({ id: 'cat-1' })],
-      language: 'zh',
-      includeMemo: false,
     });
   });
 
@@ -243,8 +217,8 @@ describe('ShareCatdex page', () => {
       </MemoryRouter>
     );
 
-    await user.click(screen.getByRole('button', { name: /調整公開貓咪與匯出/ }));
-    await user.click(screen.getByLabelText('選取 小公園'));
+    await user.click(screen.getByRole('button', { name: /選擇要分享的貓/ }));
+    await user.click(screen.getByLabelText('選取 轉角小貓 029'));
     await user.click(screen.getByRole('button', { name: /複製貓咪地圖連結/ }));
 
     await waitFor(() => {
@@ -280,12 +254,12 @@ describe('ShareCatdex page', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /調整公開貓咪與匯出/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /選擇要分享的貓/ })).toBeInTheDocument();
     });
 
-    await user.click(screen.getByRole('button', { name: /調整公開貓咪與匯出/ }));
+    await user.click(screen.getByRole('button', { name: /選擇要分享的貓/ }));
 
-    expect(screen.getByLabelText('選取 載入後的咖啡店')).toBeChecked();
+    expect(screen.getByLabelText('選取 轉角小貓 008')).toBeChecked();
   });
 
   it('can switch the share map page into English', async () => {

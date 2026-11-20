@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -99,7 +99,20 @@ describe('Home page', () => {
     expect(screen.queryByText('Corner Cat Stickerbook')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Switch to English' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '我的貓卡' })).toHaveAttribute('href', '/catdex');
-    expect(screen.getByRole('link', { name: '捐贈' })).toHaveAttribute(
+  });
+
+  it('opens the donation sheet with the card link and crypto address', async () => {
+    render(
+      <MemoryRouter>
+        <Home />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '捐贈' }));
+
+    const dialog = await screen.findByRole('dialog', { name: '請貓咪喝罐罐' });
+    expect(dialog).toHaveTextContent('0x9899b7FB95129E3451446F5998B8eded0A5069a3');
+    expect(screen.getByRole('link', { name: '信用卡／台灣支付' })).toHaveAttribute(
       'href',
       'https://api.payuni.com.tw/api/uop/receive_info/2/3/NPPA226028039/mgYrU0DqoPbb6vatwL86Z'
     );
@@ -184,15 +197,18 @@ describe('Home page', () => {
     });
   });
 
-  it('shows the card deck empty state when no public cats have been added', async () => {
+  it('invites a brand-new visitor to snap their first cat when there are no world cats yet', async () => {
     render(
       <MemoryRouter>
         <Home />
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('全世界地圖等第一批貓點')).toBeInTheDocument();
-    expect(screen.getByText('先拍下你遇到的貓，公開後朋友就能在地圖上找到牠。')).toBeInTheDocument();
+    const hero = await screen.findByTestId('first-cat-hero');
+    expect(within(hero).getByRole('link', { name: '拍下我的第一隻貓' })).toHaveAttribute('href', '/create');
+    // Nothing failed, so no reload link; and the slim intro bar is not duplicated above it.
+    expect(within(hero).queryByRole('button', { name: '重新載入大家遇見的貓' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('welcome-intro')).not.toBeInTheDocument();
   });
 
   it('loads public cat cards as the default home deck', async () => {
@@ -261,9 +277,10 @@ describe('Home page', () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText('全世界貓卡暫時載入失敗')).toBeInTheDocument();
-    expect(screen.getByText('可以再試一次；你的本機貓卡仍在「我的貓卡」。')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '重新載入世界貓卡' })).toBeInTheDocument();
+    // Cloud not configured is not an error: a calm note, no alarming failure or retry.
+    expect(await screen.findByText('大家遇見的貓暫時看不到')).toBeInTheDocument();
+    expect(screen.queryByText('全世界貓卡暫時載入失敗')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '重新載入世界貓卡' })).not.toBeInTheDocument();
     expect(screen.queryByText('巷口咖啡店')).not.toBeInTheDocument();
     expect(loadPublicCatCards).toHaveBeenCalledTimes(1);
   });
@@ -294,10 +311,10 @@ describe('Home page', () => {
       </MemoryRouter>
     );
 
-    await user.click(await screen.findByRole('button', { name: '重新載入世界貓卡' }));
+    await user.click(await screen.findByRole('button', { name: '重新載入大家遇見的貓' }));
 
     expect(await screen.findByText('首爾店長貓')).toBeInTheDocument();
-    expect(screen.queryByText('全世界貓卡暫時載入失敗')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('first-cat-hero')).not.toBeInTheDocument();
     expect(loadPublicCatCards).toHaveBeenCalledTimes(2);
   });
 
@@ -370,7 +387,7 @@ describe('Home page', () => {
 
     await screen.findByText('首爾店長貓');
     vi.useFakeTimers();
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
     expect(screen.getByRole('status')).toHaveTextContent('已收藏到我的貓卡');
 
@@ -428,17 +445,17 @@ describe('Home page', () => {
     );
 
     await screen.findByText('首爾店長貓');
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
     const dialog = await screen.findByRole('dialog', { name: '首爾店長貓 世界貓咪檔案' });
     expect(dialog).toHaveTextContent('W-088');
     expect(screen.getAllByText('已收藏到我的貓卡').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole('button', { name: '已收藏' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '去找這隻喵' })).toBeInTheDocument();
+    expect(within(screen.getAllByRole('dialog').at(-1)!).getByRole('button', { name: '去找這隻喵' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: '去找這隻喵' })).not.toBeInTheDocument();
     expect(window.localStorage.getItem('found-cat-first-world-save-guidance-seen')).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: '去找這隻喵' }));
+    fireEvent.click(within(screen.getAllByRole('dialog').at(-1)!).getByRole('button', { name: '去找這隻喵' }));
 
     expect(await screen.findByTestId('current-route')).toHaveTextContent('/map?mode=public&cat=public-cat%2F88');
   });
@@ -478,7 +495,7 @@ describe('Home page', () => {
     );
 
     await screen.findByText('首爾店長貓');
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
     const dialog = await screen.findByRole('dialog', { name: '首爾店長貓 世界貓咪檔案' });
     expect(dialog).toHaveTextContent('W-088');
@@ -491,10 +508,10 @@ describe('Home page', () => {
     expect(dialog).toHaveTextContent('照護');
     expect(dialog).toHaveTextContent('固定餵養');
     expect(screen.getByRole('button', { name: '已收藏' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '去找這隻喵' })).toBeInTheDocument();
+    expect(within(screen.getAllByRole('dialog').at(-1)!).getByRole('button', { name: '去找這隻喵' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: '去找這隻喵' })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: '去找這隻喵' }));
+    fireEvent.click(within(screen.getAllByRole('dialog').at(-1)!).getByRole('button', { name: '去找這隻喵' }));
 
     expect(await screen.findByTestId('current-route')).toHaveTextContent('/map?mode=public&cat=public-cat-88');
   });
@@ -527,7 +544,7 @@ describe('Home page', () => {
     );
 
     await screen.findByText('首爾店長貓');
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
     expect(await screen.findByRole('dialog', { name: '首爾店長貓 世界貓咪檔案' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: '去找這隻喵' })).not.toBeInTheDocument();
@@ -566,7 +583,7 @@ describe('Home page', () => {
 
     await screen.findByText('首爾店長貓');
     vi.useFakeTimers();
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
     expect(screen.getByRole('status')).toHaveTextContent('已收藏到我的貓卡');
     expect(screen.queryByRole('link', { name: '去找這隻喵' })).not.toBeInTheDocument();
@@ -621,7 +638,7 @@ describe('Home page', () => {
     );
 
     await screen.findByText('京都小白');
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
     const dialog = await screen.findByRole('dialog', { name: '京都小白 世界貓咪檔案' });
     expect(dialog).toHaveTextContent('W-090');
@@ -673,7 +690,7 @@ describe('Home page', () => {
 
     await screen.findByText('首爾店長貓');
     vi.useFakeTimers();
-    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowLeft' });
+    fireEvent.keyDown(screen.getByTestId('active-cat-card'), { key: 'ArrowRight' });
 
     expect(screen.getByRole('status')).toHaveTextContent('已收藏到我的貓卡');
 
@@ -952,7 +969,7 @@ describe('Home page', () => {
     const dialog = await screen.findByRole('dialog', { name: '窗邊小虎 世界貓咪檔案' });
     expect(dialog).toHaveTextContent('泰國 清邁');
 
-    fireEvent.click(screen.getByRole('button', { name: '去找這隻喵' }));
+    fireEvent.click(within(screen.getAllByRole('dialog').at(-1)!).getByRole('button', { name: '去找這隻喵' }));
 
     expect(await screen.findByTestId('current-route')).toHaveTextContent('/map?mode=public&cat=public-cat-1');
   });

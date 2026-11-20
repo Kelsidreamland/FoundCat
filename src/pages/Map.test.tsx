@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -10,6 +10,7 @@ import type { ScrapbookItem } from '../store/useScrapbookStore';
 import { useScrapbookStore } from '../store/useScrapbookStore';
 import { buildGoogleMapsSearchUrl } from '../lib/singleCatShare';
 import Map from './Map';
+import { getCatDisplayName } from '../lib/catNameGenerator';
 
 const mapEaseTo = vi.fn();
 const mapFitBounds = vi.fn();
@@ -340,10 +341,30 @@ describe('Map page', () => {
 
     await user.click(fallbackSpotButton);
 
-    expect(await screen.findByRole('heading', { name: '巷口咖啡店' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: getCatDisplayName(useScrapbookStore.getState().items[0], 'zh') })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '去找這隻喵' })).toBeInTheDocument();
 
     consoleErrorSpy.mockRestore();
+  });
+
+  it('starts an empty world map near the person\'s own cats instead of a fixed city', async () => {
+    vi.mocked(loadPublicCatCards).mockResolvedValue({ ok: true, items: [] });
+    mapEaseTo.mockClear();
+    useScrapbookStore.setState({
+      items: [makeItem({ location: { lat: 13.7563, lng: 100.5018, name: '曼谷巷口' } })],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/map?mode=public']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(mapEaseTo).toHaveBeenCalledWith(expect.objectContaining({ center: [100.5018, 13.7563], zoom: 13 }));
+    });
   });
 
   it('opens a focused public cat from a find link after public cats load', async () => {
@@ -456,8 +477,8 @@ describe('Map page', () => {
 
     expect(await screen.findByText('No.029')).toBeInTheDocument();
     expect(screen.getByText('我的圖鑑編號')).toBeInTheDocument();
-    expect(screen.getByText('只整理你親自拍到的貓。')).toBeInTheDocument();
-    expect(screen.getByText('巷口咖啡店')).toBeInTheDocument();
+    expect(screen.queryByText('只整理你親自拍到的貓。')).not.toBeInTheDocument();
+    expect(screen.getAllByText('巷口咖啡店').length).toBeGreaterThan(0);
     expect(screen.queryByText('台北市信義區')).not.toBeInTheDocument();
     expect(screen.getByText('外型')).toBeInTheDocument();
     expect(screen.getByText('虎斑貓')).toBeInTheDocument();
@@ -707,7 +728,7 @@ describe('Map page', () => {
 
     expect(screen.getByRole('heading', { name: '窗邊小虎' })).toBeInTheDocument();
     expect(screen.getByText('貓咪個人檔案')).toBeInTheDocument();
-    expect(screen.getByText('喵，謝謝你收藏我。下次見面可以慢慢眨眼。')).toBeInTheDocument();
+    expect(screen.getByText('喵～下次見面，記得對我慢慢眨眼。')).toBeInTheDocument();
     expect(screen.getByText('感覺')).toBeInTheDocument();
     expect(screen.getByText('親人')).toBeInTheDocument();
     expect(screen.getByText('貪吃')).toBeInTheDocument();
@@ -720,7 +741,8 @@ describe('Map page', () => {
     expect(screen.getByText('下午常在咖啡廳門口的木椅旁睡覺。')).toBeInTheDocument();
     expect(screen.getByText('照護')).toBeInTheDocument();
     expect(screen.getByText('已剪耳 / TNR')).toBeInTheDocument();
-    expect(screen.getByText('城市')).toBeInTheDocument();
+    // The place now sits once under the cat's name instead of in a separate section.
+    expect(screen.queryByText('城市')).not.toBeInTheDocument();
     expect(screen.getByText('巷口咖啡店')).toBeInTheDocument();
     expect(screen.queryByText('台北市信義區貓咪路 1 號')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: '去找這隻喵' })).toBeInTheDocument();
@@ -754,7 +776,7 @@ describe('Map page', () => {
 
     await user.click(await screen.findByRole('button', { name: '去找這隻喵' }));
 
-    expect(await screen.findByRole('heading', { name: '去找這隻喵' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: '轉角小貓 031' })).toBeInTheDocument();
     expect(screen.queryByText('https://maps.app.goo.gl/abc123')).not.toBeInTheDocument();
   });
 
@@ -1037,7 +1059,6 @@ describe('Map page', () => {
   });
 
   it('shows a branded public-map empty state when public loading fails', async () => {
-    const user = userEvent.setup();
     vi.mocked(loadPublicCatCards).mockResolvedValue({
       ok: false,
       reason: 'public_load_failed',
@@ -1153,6 +1174,35 @@ describe('Map page', () => {
     expect(screen.queryByText(/Shared map/i)).not.toBeInTheDocument();
   });
 
+  it('asks for a name and puts the world map offer first for a freshly created cat', async () => {
+    useScrapbookStore.setState({
+      items: [makeItem({ id: 'fresh-cat', catdexNumber: 130, location: { lat: 25.033, lng: 121.565, name: 'Taipei 101' } })],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/map?cat=fresh-cat&publishHint=1']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    const prompt = await screen.findByTestId('quick-name-prompt');
+    const publishButton = screen.getByRole('button', { name: '公開到世界地圖' });
+    const summary = screen.getByTestId('cat-profile-summary');
+    // Name prompt and publish offer come before the profile details.
+    expect(prompt.compareDocumentPosition(publishButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(publishButton.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText('牠叫什麼名字？'), { target: { value: '豆花' } });
+    fireEvent.click(screen.getByRole('button', { name: '存下名字' }));
+
+    await waitFor(() => {
+      expect(useScrapbookStore.getState().items[0].catName).toBe('豆花');
+    });
+    expect(screen.queryByTestId('quick-name-prompt')).not.toBeInTheDocument();
+  });
+
   it('opens a newly created local cat with a publish prompt before login gating', async () => {
     const user = userEvent.setup();
     useScrapbookStore.setState({
@@ -1198,9 +1248,9 @@ describe('Map page', () => {
 
     expect(await screen.findByText('W-001')).toBeInTheDocument();
     expect(screen.getByText('世界地圖編號')).toBeInTheDocument();
-    expect(screen.getByText('來自全世界地圖，保留 W 編號。')).toBeInTheDocument();
+    expect(screen.queryByText('來自全世界地圖，保留 W 編號。')).not.toBeInTheDocument();
     expect(screen.queryByText('No.088')).not.toBeInTheDocument();
-    expect(screen.getByText('曼谷街角咖啡')).toBeInTheDocument();
+    expect(screen.getAllByText('曼谷街角咖啡').length).toBeGreaterThan(0);
     expect(screen.queryByRole('button', { name: '編輯地點' })).not.toBeInTheDocument();
     expect(screen.queryByText('登入後才能把這隻貓公開到世界地圖，也能備份你的貓卡。')).not.toBeInTheDocument();
   });

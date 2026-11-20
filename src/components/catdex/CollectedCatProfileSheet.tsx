@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import type { ScrapbookItem } from '../../store/useScrapbookStore';
 import { getPaperSheetMotion } from '../../lib/uiMotion';
 import CatProfileSummary, { getCatProfileCopy } from './CatProfileSummary';
+import { getCatDisplayName } from '../../lib/catNameGenerator';
 
 interface CollectedCatProfileSheetProps {
   item: ScrapbookItem | null;
@@ -19,7 +20,7 @@ export default function CollectedCatProfileSheet({
   const prefersReducedMotion = useReducedMotion();
   const sheetMotion = getPaperSheetMotion(prefersReducedMotion);
   const copy = getCatProfileCopy(language);
-  const title = item?.catName?.trim() || copy.defaultName;
+  const title = item ? getCatDisplayName(item, language) : copy.defaultName;
   const image = item?.heroImageData || item?.imageData;
   const dialogLabel = `${title} ${copy.title}`;
 

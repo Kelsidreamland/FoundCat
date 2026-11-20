@@ -6,6 +6,7 @@ import { restoreCloudCatCards } from '../../lib/cloudRestore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useCloudBackupStatusStore } from '../../store/useCloudBackupStatusStore';
 import { useScrapbookStore, type ScrapbookItem } from '../../store/useScrapbookStore';
+import { OPEN_BACKUP_PANEL_EVENT } from '../../lib/storagePersistence';
 
 type CloudBackupPromptProps = {
   language: 'zh' | 'en';
@@ -39,8 +40,12 @@ const copy = {
     sendMagicLink: '寄送登入信',
     sending: '寄送中',
     sentTitle: '已寄出登入信',
-    sentBody: '請到信箱點登入連結，完成後回到轉角遇到貓繼續備份。',
-    sentStorageHint: '如果手機打開了另一個空白版本，請回到原本有貓卡資料的 App，再用同一個 Email 重新登入備份。',
+    sentBody: '打開信：把 6 位數驗證碼輸入下面，或直接點信裡的登入連結。',
+    sentStorageHint: '在這裡輸入驗證碼最穩：點信裡的連結時，手機可能會開到另一個沒有貓卡的瀏覽器。',
+    codeLabel: '6 位數驗證碼',
+    verifyCode: '登入',
+    verifying: '登入中',
+    codeInvalid: '驗證碼不對或已過期，請再試一次或重新寄送。',
     resendEmail: '重新寄送登入信',
     signInFailed: '登入信寄送失敗，請稍後再試。',
     signInFailedDetail: (message: string) => `登入信寄送失敗：${message}`,
@@ -85,9 +90,13 @@ const copy = {
     emailPlaceholder: 'your@email.com',
     sendMagicLink: 'Send Sign-In Link',
     sending: 'Sending',
-    sentTitle: 'Sign-in link sent',
-    sentBody: 'Open the sign-in link in your inbox, then come back to FOUND CAT to continue backing up.',
-    sentStorageHint: 'If your phone opens a blank browser copy, return to the app that still has your cat cards and sign in again with the same email.',
+    sentTitle: 'Sign-in email sent',
+    sentBody: 'Open the email: enter the 6-digit code below, or tap the sign-in link.',
+    sentStorageHint: 'Entering the code here is the most reliable: tapping the link may open a different browser without your cat cards.',
+    codeLabel: '6-digit code',
+    verifyCode: 'Sign in',
+    verifying: 'Signing in',
+    codeInvalid: 'That code is wrong or expired. Try again or send a new email.',
     resendEmail: 'Send a New Sign-In Email',
     signInFailed: 'Could not send the sign-in link. Please try again later.',
     signInFailedDetail: (message: string) => `Could not send the sign-in email: ${message}`,
@@ -130,6 +139,7 @@ export default function CloudBackupPrompt({
   const errorMessage = useAuthStore((state) => state.errorMessage);
   const signInWithEmail = useAuthStore((state) => state.signInWithEmail);
   const signOut = useAuthStore((state) => state.signOut);
+  const verifyEmailOtp = useAuthStore((state) => state.verifyEmailOtp);
   const latestBackupStatus = useCloudBackupStatusStore((state) => state.status);
   const latestBackedUpCount = useCloudBackupStatusStore((state) => state.backedUpCount);
   const latestPendingCount = useCloudBackupStatusStore((state) => state.pendingCount);
@@ -141,6 +151,7 @@ export default function CloudBackupPrompt({
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [isSent, setIsSent] = useState(false);
+  const [code, setCode] = useState('');
   const [backupStatus, setBackupStatus] = useState<BackupStatus>('idle');
   const [backedUpCount, setBackedUpCount] = useState(0);
   const [restoreStatus, setRestoreStatus] = useState<RestoreStatus>('idle');
@@ -192,6 +203,12 @@ export default function CloudBackupPrompt({
     setIsOpen(true);
   }, [autoOpenOnSignedInEmptyDevice, catCount, isConfigured, isLoading, isSignedIn]);
 
+  useEffect(() => {
+    const open = () => setIsOpen(true);
+    window.addEventListener(OPEN_BACKUP_PANEL_EVENT, open);
+    return () => window.removeEventListener(OPEN_BACKUP_PANEL_EVENT, open);
+  }, []);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!isConfigured || isLoading) return;
@@ -209,6 +226,14 @@ export default function CloudBackupPrompt({
 
   const handleResend = () => {
     setIsSent(false);
+    setCode('');
+  };
+
+  const handleVerifyCode = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const token = code.replace(/\D/g, '');
+    if (token.length < 6 || isLoading) return;
+    await verifyEmailOtp(email.trim(), token);
   };
 
   const handleBackup = async () => {
@@ -391,11 +416,37 @@ export default function CloudBackupPrompt({
               <div>
                 <p className="text-sm font-black">{t.sentTitle}</p>
                 <p className="mt-1 text-xs font-bold leading-5 text-[#6d5f52]">{t.sentBody}</p>
-                <p className="mt-2 rounded-[14px] border border-[#2f5fb3]/22 bg-[#d9ecff]/55 px-3 py-2 text-xs font-black leading-5 text-[#2f5fb3]">
-                  {t.sentStorageHint}
-                </p>
               </div>
             </div>
+            <form onSubmit={handleVerifyCode} className="mt-3">
+              <label htmlFor="cloud-otp-code" className="mb-1 block text-[11px] font-black text-[#2f5fb3]">
+                {t.codeLabel}
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="cloud-otp-code"
+                  value={code}
+                  onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder="123456"
+                  className="h-12 min-w-0 flex-1 rounded-[16px] border-2 border-[#1d1714] bg-[#fffdf2] px-3 text-center text-lg font-black tracking-[0.3em] outline-none focus:border-[#2f5fb3]"
+                />
+                <button
+                  type="submit"
+                  disabled={isLoading || code.length < 6}
+                  className="h-12 shrink-0 rounded-[16px] border-2 border-[#1d1714] bg-[#2f5fb3] px-4 text-sm font-black text-[#fffdf2] shadow-[3px_3px_0_rgba(29,23,20,0.6)] disabled:bg-[#8fa7d6]"
+                >
+                  {isLoading ? t.verifying : t.verifyCode}
+                </button>
+              </div>
+              {error === 'otp_verify_failed' ? (
+                <p className="mt-2 text-xs font-black text-[#9f3a2f]">{t.codeInvalid}</p>
+              ) : null}
+            </form>
+            <p className="mt-3 rounded-[14px] border border-[#2f5fb3]/22 bg-[#d9ecff]/55 px-3 py-2 text-xs font-bold leading-5 text-[#2f5fb3]">
+              {t.sentStorageHint}
+            </p>
             <button
               type="button"
               onClick={handleResend}

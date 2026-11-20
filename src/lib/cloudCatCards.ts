@@ -1,5 +1,6 @@
 import type {
   CatCareStatusTag,
+  CatEncounter,
   CatPersonalityTag,
   ScrapbookItem,
 } from '../store/useScrapbookStore';
@@ -24,6 +25,7 @@ export type CloudCatCardRow = {
   care_status_tags: CatCareStatusTag[];
   spot_note: string | null;
   private_note: string | null;
+  encounters?: CatEncounter[] | null;
   is_public: boolean;
   created_at?: string;
   updated_at?: string;
@@ -82,6 +84,7 @@ export function toCloudCatCardUpsert(
     care_status_tags: item.careStatusTags ?? [],
     spot_note: emptyToNull(item.spotNote),
     private_note: emptyToNull(item.privateNote),
+    encounters: item.encounters?.length ? item.encounters : null,
     is_public: options.isPublic ?? item.isPublic ?? false,
   };
 }
@@ -105,7 +108,8 @@ export const isOptionalCloudColumnSchemaError = (error: unknown) => {
   return (
     message.includes('cat_feature_note') ||
     message.includes('location_map_url') ||
-    message.includes('private_note')
+    message.includes('private_note') ||
+    message.includes('encounters')
   ) && (
     message.includes('schema cache')
     || message.includes('could not find')
@@ -117,11 +121,13 @@ export const withoutOptionalCloudColumns = <T extends {
   cat_feature_note?: string | null;
   location_map_url?: string | null;
   private_note?: string | null;
+  encounters?: CatEncounter[] | null;
 }>(row: T) => {
   const {
     cat_feature_note: _catFeatureNote,
     location_map_url: _locationMapUrl,
     private_note: _privateNote,
+    encounters: _encounters,
     ...fallbackRow
   } = row;
   return fallbackRow;

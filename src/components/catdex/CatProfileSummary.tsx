@@ -47,16 +47,16 @@ export const getCatSpeech = (item: ScrapbookItem, language: 'zh' | 'en') => {
   const tags = item.personalityTags ?? [];
 
   if (tags.includes('friendly') || tags.includes('clingy')) {
-    return language === 'zh' ? '喵，謝謝你收藏我。下次見面可以慢慢眨眼。' : 'Meow, thanks for saving me. Slow blink when we meet.';
+    return language === 'zh' ? '喵～下次見面，記得對我慢慢眨眼。' : 'Meow. Slow blink at me next time we meet.';
   }
   if (tags.includes('foodie')) {
     return language === 'zh' ? '喵，我先聲明，我只是剛好也喜歡點心。' : 'Meow. For the record, I simply appreciate snacks.';
   }
   if (tags.includes('shy') || tags.includes('alert')) {
-    return language === 'zh' ? '喵，我會先躲一下，但我有看到你收藏我。' : 'Meow. I may hide first, but I noticed you saved me.';
+    return language === 'zh' ? '喵，我會先躲一下，但我有看到你。' : 'Meow. I may hide first, but I see you.';
   }
   if (tags.includes('aloof') || tags.includes('indifferent')) {
-    return language === 'zh' ? '喵，我同意被收藏，但不保證立刻理你。' : 'Meow. You may save me, but attention is not guaranteed.';
+    return language === 'zh' ? '喵，可以看，但不保證立刻理你。' : 'Meow. Look all you like; attention is not guaranteed.';
   }
 
   return getCatProfileCopy(language).mysterySpeech;

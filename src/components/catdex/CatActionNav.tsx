@@ -1,73 +1,31 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
+import { Camera, Map as MapIcon, PawPrint } from 'lucide-react';
 import { getPaperNavPress } from '../../lib/uiMotion';
+import { useScrapbookStore } from '../../store/useScrapbookStore';
 
-const iconClass = 'h-8 w-8 overflow-visible';
-const iconProps = {
-  fill: 'none',
-  stroke: '#221915',
-  strokeLinecap: 'round' as const,
-  strokeLinejoin: 'round' as const,
-  strokeWidth: 3.2,
-};
+// Simple single-colour line icons; the captions under them carry the meaning.
+const sideIconProps = { size: 24, strokeWidth: 2.2, 'aria-hidden': true as const, 'data-icon-detail': 'simple' };
 
 function CatCardsIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      data-brand-icon="cat-cards"
-      data-icon-detail="simple"
-      data-testid="brand-icon-cat-cards"
-      viewBox="0 0 64 64"
-      className={iconClass}
-      {...iconProps}
-    >
-      <path d="M18 13h27c5 0 8 3 8 8v30H25c-4 0-7-3-7-7V13Z" fill="#FFFDF2" />
-      <path d="M11 20h28c5 0 8 3 8 8v27H18c-4 0-7-3-7-7V20Z" fill="#D9ECFF" />
-      <path d="M18 29h22v16H18z" fill="#FFFDF2" strokeWidth="2.4" />
-      <path d="M23 35c3-3 9-3 12 0 1.6 1.7 1.6 4.1 0 5.8-3 3-9 3-12 0-1.6-1.7-1.6-4.1 0-5.8Z" fill="#2F5FB3" />
-      <path d="M39 55h8l-8-8v8Z" fill="#F7C948" />
-    </svg>
-  );
+  return <PawPrint {...sideIconProps} data-brand-icon="cat-cards" data-testid="brand-icon-cat-cards" />;
 }
 
 function CatCaptureIcon() {
   return (
-    <svg
-      aria-hidden="true"
-      data-brand-icon="camera"
+    <Camera
+      size={28}
+      strokeWidth={2.2}
+      aria-hidden
       data-icon-detail="simple"
+      data-brand-icon="camera"
       data-testid="brand-icon-camera"
-      viewBox="0 0 64 64"
-      className="h-10 w-10 overflow-visible"
-      {...iconProps}
-    >
-      <path d="M13 25h11l4-6h10l4 6h9c4 0 7 3 7 7v17c0 4-3 7-7 7H13c-4 0-7-3-7-7V32c0-4 3-7 7-7Z" fill="#FFFDF2" />
-      <path d="M18 33h28v15H18z" fill="#2F5FB3" />
-      <circle cx="38" cy="40.5" r="7.5" fill="#F7C948" />
-      <circle cx="38" cy="40.5" r="3.2" fill="#FFFDF2" />
-      <path d="M16 25h7" />
-    </svg>
+    />
   );
 }
 
 function CatMapIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      data-brand-icon="map"
-      data-testid="brand-icon-map"
-      viewBox="0 0 64 64"
-      className={iconClass}
-      {...iconProps}
-    >
-      <path d="M13 15h38v34H13z" fill="#FFFDF2" />
-      <path d="M19 44 34 33l17 9M13 29l16-9 22 14" stroke="#8FA7D6" strokeWidth="2.2" />
-      <path d="M42 49l9-9v9h-9Z" fill="#F7C948" />
-      <path d="M39 18c0 8-9 18-9 18s-9-10-9-18a9 9 0 1 1 18 0Z" fill="#2F5FB3" />
-      <path d="M30 15.5c2.8 0 4.7 1.9 5.7 3.7-1 1.8-2.9 3.7-5.7 3.7s-4.7-1.9-5.7-3.7c1-1.8 2.9-3.7 5.7-3.7Z" fill="#FFFDF2" strokeWidth="2.2" />
-    </svg>
-  );
+  return <MapIcon {...sideIconProps} data-brand-icon="map" data-testid="brand-icon-map" />;
 }
 
 interface CatActionNavProps {
@@ -78,6 +36,12 @@ interface CatActionNavProps {
     map?: string;
   };
 }
+
+// Short visible captions; the longer `labels` stay as accessible names.
+const captions = {
+  zh: { myCatCards: '貓卡', capture: '拍貓', map: '地圖' },
+  en: { myCatCards: 'Cards', capture: 'Snap', map: 'Map' },
+};
 
 const defaultLabels = {
   nav: '主要操作',
@@ -90,17 +54,19 @@ export default function CatActionNav({ labels }: CatActionNavProps) {
   const location = useLocation();
   const prefersReducedMotion = useReducedMotion();
   const navLabels = { ...defaultLabels, ...labels };
+  const language = useScrapbookStore((state) => state.language);
+  const caption = captions[language] ?? captions.zh;
   const isCatCardsActive = location.pathname === '/catdex';
   const isMyMapActive = location.pathname === '/map';
   const isCaptureActive = location.pathname === '/create';
   const sideLinkClass = (isActive: boolean) => [
-    'relative flex h-[52px] w-[52px] items-center justify-center rounded-[18px] border text-[#221915] transition-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]',
+    'relative flex h-[56px] w-[56px] items-center justify-center rounded-[18px] border transition-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]',
     isActive
-      ? 'border-[#221915]/40 bg-[#fff2cf] shadow-[0_9px_0_rgba(34,25,21,0.16),0_12px_26px_rgba(47,95,179,0.18)] -translate-y-0.5'
-      : 'border-[#221915]/20 bg-[#fffdf2] shadow-[0_8px_24px_rgba(34,25,21,0.12)]',
+      ? 'border-[#221915]/40 bg-[#fff2cf] text-[#2f5fb3] shadow-[0_9px_0_rgba(34,25,21,0.16),0_12px_26px_rgba(47,95,179,0.18)] -translate-y-0.5'
+      : 'border-[#221915]/20 bg-[#fffdf2] text-[#221915] shadow-[0_8px_24px_rgba(34,25,21,0.12)]',
   ].join(' ');
   const captureLinkClass = (isActive: boolean) => [
-    'flex h-[66px] w-[66px] -translate-y-3 items-center justify-center rounded-[23px] border text-[#fffdf2] transition-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]',
+    'flex h-[68px] w-[68px] -translate-y-3 items-center justify-center rounded-[23px] border text-[#fffdf2] transition-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#2f5fb3]',
     isActive
       ? 'border-[#221915]/45 bg-[#1f4fa4] shadow-[0_16px_0_rgba(34,25,21,0.16),0_18px_34px_rgba(47,95,179,0.44)]'
       : 'border-[#221915]/25 bg-[#2f5fb3] shadow-[0_14px_28px_rgba(47,95,179,0.38)]',
@@ -111,7 +77,7 @@ export default function CatActionNav({ labels }: CatActionNavProps) {
       aria-label={navLabels.nav}
       className="pointer-events-none absolute inset-x-0 bottom-[calc(0.55rem+env(safe-area-inset-bottom))] z-50 flex h-[76px] items-center justify-center px-3"
     >
-      <div className="pointer-events-auto grid h-[76px] w-[246px] max-w-[calc(100%-24px)] grid-cols-[50px_66px_50px] items-center justify-center gap-4 rounded-[26px] border border-[#221915]/20 bg-[#fffaf0]/92 px-3 shadow-[0_18px_40px_rgba(34,25,21,0.18)] backdrop-blur-xl">
+      <div className="pointer-events-auto grid h-[78px] w-[264px] max-w-[calc(100%-24px)] grid-cols-[56px_68px_56px] items-center justify-center gap-4 rounded-[26px] border border-[#221915]/20 bg-[#fffaf0]/92 px-3 shadow-[0_18px_40px_rgba(34,25,21,0.18)] backdrop-blur-xl">
         <Link
           to="/catdex"
           aria-label={navLabels.myCatCards}
@@ -121,11 +87,12 @@ export default function CatActionNav({ labels }: CatActionNavProps) {
           className={sideLinkClass(isCatCardsActive)}
         >
           <motion.span
-            className="flex h-full w-full items-center justify-center"
+            className="flex h-full w-full flex-col items-center justify-center gap-0.5"
             whileTap={getPaperNavPress(prefersReducedMotion, 'side')}
             transition={{ duration: 0.12 }}
           >
             <CatCardsIcon />
+            <span aria-hidden="true" className="text-[10px] font-black leading-none">{caption.myCatCards}</span>
           </motion.span>
         </Link>
 
@@ -138,11 +105,12 @@ export default function CatActionNav({ labels }: CatActionNavProps) {
           className={captureLinkClass(isCaptureActive)}
         >
           <motion.span
-            className="flex h-full w-full items-center justify-center"
+            className="flex h-full w-full flex-col items-center justify-center gap-0.5"
             whileTap={getPaperNavPress(prefersReducedMotion, 'capture')}
             transition={{ duration: 0.12 }}
           >
             <CatCaptureIcon />
+            <span aria-hidden="true" className="text-[11px] font-black leading-none">{caption.capture}</span>
           </motion.span>
         </Link>
 
@@ -155,11 +123,12 @@ export default function CatActionNav({ labels }: CatActionNavProps) {
           className={sideLinkClass(isMyMapActive)}
         >
           <motion.span
-            className="flex h-full w-full items-center justify-center"
+            className="flex h-full w-full flex-col items-center justify-center gap-0.5"
             whileTap={getPaperNavPress(prefersReducedMotion, 'side')}
             transition={{ duration: 0.12 }}
           >
             <CatMapIcon />
+            <span aria-hidden="true" className="text-[10px] font-black leading-none">{caption.map}</span>
           </motion.span>
         </Link>
       </div>

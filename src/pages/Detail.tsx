@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import LocationPicker from '../components/LocationPicker';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
 import CatProfileSummary from '../components/catdex/CatProfileSummary';
+import EncounterTimeline from '../components/catdex/EncounterTimeline';
 import { shareCatCardPoster } from '../lib/sharePoster';
 import { suggestCatName } from '../lib/catNameGenerator';
 import {
@@ -371,6 +372,12 @@ export default function Detail() {
           <div className="rounded-[22px] border border-[#221915]/14 bg-[#fffdf2] p-4 text-left shadow-[5px_5px_0_rgba(47,95,179,0.14)]">
             <CatProfileSummary item={item} language={language} variant="compact" />
           </div>
+
+          <EncounterTimeline
+            item={item}
+            language={language}
+            onChange={(encounters) => void updateItem(item.id, { encounters })}
+          />
 
           {isSavedWorldCat ? (
             <section className="rounded-[22px] border-2 border-[#221915] bg-[#fffdf2] p-4 text-left shadow-[5px_5px_0_rgba(47,95,179,0.18)]">

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import CatActionNav from '../components/catdex/CatActionNav';
 import CatBrandHeader from '../components/catdex/CatBrandHeader';
@@ -6,12 +6,19 @@ import CatCardDeck from '../components/catdex/CatCardDeck';
 import CollectedCatProfileSheet from '../components/catdex/CollectedCatProfileSheet';
 import WorldCatProfileSheet from '../components/catdex/WorldCatProfileSheet';
 import CloudBackupPrompt from '../components/cloud/CloudBackupPrompt';
+import BackupNudge, { BACKUP_NUDGE_THRESHOLD } from '../components/cloud/BackupNudge';
+import WelcomeIntro from '../components/WelcomeIntro';
+import FirstCatHero from '../components/FirstCatHero';
 import { loadPublicCatCards } from '../lib/cloudPublicCats';
+import { donationConfig } from '../config/donation';
+import { getVisitorLocale, hasDonationOptions, resolveDonationOptions } from '../lib/donation';
 import type { ScrapbookItem } from '../store/useScrapbookStore';
 import { useScrapbookStore } from '../store/useScrapbookStore';
 import { translations } from '../translations';
+import { useLanguageToggle } from '../hooks/useLanguageToggle';
 
-const DONATION_URL = 'https://api.payuni.com.tw/api/uop/receive_info/2/3/NPPA226028039/mgYrU0DqoPbb6vatwL86Z';
+const DonationSheet = lazy(() => import('../components/DonationSheet'));
+
 const FIRST_WORLD_SAVE_GUIDANCE_KEY = 'found-cat-first-world-save-guidance-seen';
 const WORLD_SAVE_CONTRIBUTION_PROMPT_KEY = 'found-cat-world-save-contribution-prompt-seen';
 
@@ -55,7 +62,8 @@ function HomeDeckLoading({ language }: { language: 'zh' | 'en' }) {
   );
 }
 
-type PublicDeckStatus = 'loading' | 'ready' | 'failed';
+// 'unavailable' = cloud not configured: not an error, there is simply no world deck.
+type PublicDeckStatus = 'loading' | 'ready' | 'failed' | 'unavailable';
 
 function isCollectedWorldCopy(publicItem: ScrapbookItem, localItem: ScrapbookItem) {
   if (localItem.collectedFromPublicId && localItem.collectedFromPublicId === publicItem.id) return true;
@@ -110,7 +118,8 @@ type SavePrompt =
 
 export default function Home() {
   const navigate = useNavigate();
-  const { items, isLoading, language, setLanguage, addItem } = useScrapbookStore();
+  const { items, isLoading, language, addItem } = useScrapbookStore();
+  const languageToggle = useLanguageToggle();
   const t = translations[language];
   const [publicItems, setPublicItems] = useState<ScrapbookItem[]>([]);
   const [publicDeckStatus, setPublicDeckStatus] = useState<PublicDeckStatus>('loading');
@@ -118,6 +127,15 @@ export default function Home() {
   const [collectedProfileItem, setCollectedProfileItem] = useState<ScrapbookItem | null>(null);
   const [profileSheetItem, setProfileSheetItem] = useState<ScrapbookItem | null>(null);
   const [savePrompt, setSavePrompt] = useState<SavePrompt | null>(null);
+  const [isDonationOpen, setIsDonationOpen] = useState(false);
+  const ownCatCount = items.filter((item) => !item.collectedFromPublicId).length;
+  const hasOwnCats = ownCatCount > 0;
+  const donationOptions = useMemo(() => resolveDonationOptions(donationConfig, getVisitorLocale()), []);
+  // A lone payment link stays a plain link; anything more opens the donation sheet.
+  const directDonationUrl = donationOptions.crypto.length === 0 && donationOptions.links.length === 1
+    ? donationOptions.links[0].url
+    : undefined;
+  const canOpenDonationSheet = hasDonationOptions(donationOptions) && !directDonationUrl;
 
   useEffect(() => {
     let cancelled = false;
@@ -133,7 +151,7 @@ export default function Home() {
       }
 
       setPublicItems([]);
-      setPublicDeckStatus('failed');
+      setPublicDeckStatus('reason' in result && result.reason === 'cloud_not_configured' ? 'unavailable' : 'failed');
     });
 
     return () => {
@@ -147,13 +165,16 @@ export default function Home() {
     (publicItem) => !items.some((localItem) => isCollectedWorldCopy(publicItem, localItem))
   );
   const deckItems = isPublicDeck ? visiblePublicItems : items;
+  // Nothing to browse yet and no cats of their own: invite the first capture instead of an error.
+
   const hasCollectedAllVisibleWorldCats = publicDeckStatus === 'ready' &&
     publicItems.length > 0 &&
     visiblePublicItems.length === 0;
-  const emptyDeckLabel = publicDeckStatus === 'failed'
+  const showFirstCatHero = !isPublicDeckLoading && deckItems.length === 0 && !hasOwnCats && !hasCollectedAllVisibleWorldCats;
+  const emptyDeckLabel = publicDeckStatus === 'failed' || publicDeckStatus === 'unavailable'
     ? (language === 'zh'
-        ? '全世界貓卡暫時載入失敗\n可以再試一次；你的本機貓卡仍在「我的貓卡」。'
-        : 'World cat cards could not load.\nTry again; your local cards are still in My Cat Cards.')
+        ? '大家遇見的貓暫時看不到\n等一下再回來看看；你的貓卡都還在「我的貓卡」。'
+        : "Cats others have met aren't showing right now.\nCheck back soon; your own cards are safe in My Cat Cards.")
     : hasCollectedAllVisibleWorldCats
       ? (language === 'zh'
           ? '目前的世界貓卡都收藏完了\n晚點再回來，或拍下你遇到的貓，讓世界多一個貓點。'
@@ -254,17 +275,32 @@ export default function Home() {
         title={t.appName}
         subtitle={t.appSubtitle}
         language={language}
-        onToggleLanguage={() => void setLanguage(language === 'zh' ? 'en' : 'zh')}
-        toggleLabel={language === 'zh' ? t.switchToEnglish : t.switchToChinese}
-        donationUrl={DONATION_URL}
+        onToggleLanguage={() => void languageToggle.toggle()}
+        toggleLabel={languageToggle.label}
+        toggleText={languageToggle.face}
+        donationUrl={directDonationUrl}
+        onDonate={canOpenDonationSheet ? () => setIsDonationOpen(true) : undefined}
         donationLabel={t.donate}
         accessory={<CloudBackupPrompt language={language} items={items} autoOpenOnSignedInEmptyDevice variant="compact" />}
       />
 
+      {isDonationOpen ? (
+        <Suspense fallback={null}>
+          <DonationSheet language={language} options={donationOptions} onClose={() => setIsDonationOpen(false)} />
+        </Suspense>
+      ) : null}
+
       <main className="relative z-10 mb-[calc(4.25rem+env(safe-area-inset-bottom))] min-h-0 flex-1 overflow-y-auto px-5 pb-4 pt-[clamp(0.75rem,4vh,2.25rem)]">
         <section className="relative mx-auto max-w-sm">
+          {!showFirstCatHero ? <WelcomeIntro hasOwnCats={hasOwnCats} language={language} /> : null}
+          <BackupNudge items={items} language={language} />
           {isPublicDeckLoading ? (
             <HomeDeckLoading language={language} />
+          ) : showFirstCatHero ? (
+            <FirstCatHero
+              language={language}
+              onRetry={publicDeckStatus === 'failed' ? handleRetryPublicDeck : undefined}
+            />
           ) : (
             <div className="space-y-3">
               <CatCardDeck
@@ -278,6 +314,8 @@ export default function Home() {
                   collectFeedback: language === 'zh' ? '已收藏到我的貓卡' : 'Saved to My Cat Cards',
                 }}
                 onShareCard={handleShareCard}
+                onFindCard={goFindWorldCat}
+                compact={!hasOwnCats || ownCatCount >= BACKUP_NUDGE_THRESHOLD}
                 onCollectCard={handleCollectCard}
                 onOpenCard={handleOpenProfileCard}
               />

@@ -8,6 +8,7 @@ import {
   buildSingleCatSharePayload,
 } from '../../lib/singleCatShare';
 import { APP_SHARE_URL, prepareSingleCatPosterShare, sharePosterBlob } from '../../lib/sharePoster';
+import { getCatDisplayName } from '../../lib/catNameGenerator';
 
 interface Props {
   item: ScrapbookItem;
@@ -39,7 +40,7 @@ export default function SingleCatPosterPreviewModal({ item, language, onClose }:
         mapUrl: item.location.mapUrl,
       })
     : null;
-  const previewTitle = item.catName?.trim() || item.location?.name || (language === 'zh' ? '今天遇見的貓' : 'Cat spotted today');
+  const previewTitle = getCatDisplayName(item, language);
   const previewLocation = item.location?.name?.trim();
   const previewMemo = effectiveIncludeMemo ? trimmedMemoDraft : null;
   const copy = language === 'zh'
