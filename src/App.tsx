@@ -6,6 +6,8 @@ import { useScrapbookStore } from './store/useScrapbookStore';
 import PWAPrompt from './components/PWAPrompt';
 import PWAUpdatePrompt from './components/PWAUpdatePrompt';
 import ChineseScriptConverter from './components/ChineseScriptConverter';
+import { Analytics } from '@vercel/analytics/react';
+import { stripUrlDetails } from './lib/analytics';
 
 const Create = lazy(() => import('./pages/Create'));
 const Catdex = lazy(() => import('./pages/Catdex'));
@@ -98,6 +100,7 @@ function App() {
             <PWAPrompt />
             <PWAUpdatePrompt />
             <ChineseScriptConverter />
+            <Analytics beforeSend={stripUrlDetails} />
           </div>
         </div>
       </div>
