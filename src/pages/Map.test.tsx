@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -1173,6 +1173,35 @@ describe('Map page', () => {
     expect(await screen.findByTestId('public-map-status-chip')).toHaveTextContent('World Map is preparing');
     expect(screen.queryByText('The cloud map is still preparing. You can save cats in My Map now and publish them later.')).not.toBeInTheDocument();
     expect(screen.queryByText(/Shared map/i)).not.toBeInTheDocument();
+  });
+
+  it('asks for a name and puts the world map offer first for a freshly created cat', async () => {
+    useScrapbookStore.setState({
+      items: [makeItem({ id: 'fresh-cat', catdexNumber: 130, location: { lat: 25.033, lng: 121.565, name: 'Taipei 101' } })],
+      isLoading: false,
+      language: 'zh',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/map?cat=fresh-cat&publishHint=1']}>
+        <Map />
+      </MemoryRouter>
+    );
+
+    const prompt = await screen.findByTestId('quick-name-prompt');
+    const publishButton = screen.getByRole('button', { name: '公開到世界地圖' });
+    const summary = screen.getByTestId('cat-profile-summary');
+    // Name prompt and publish offer come before the profile details.
+    expect(prompt.compareDocumentPosition(publishButton) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(publishButton.compareDocumentPosition(summary) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText('牠叫什麼名字？'), { target: { value: '豆花' } });
+    fireEvent.click(screen.getByRole('button', { name: '存下名字' }));
+
+    await waitFor(() => {
+      expect(useScrapbookStore.getState().items[0].catName).toBe('豆花');
+    });
+    expect(screen.queryByTestId('quick-name-prompt')).not.toBeInTheDocument();
   });
 
   it('opens a newly created local cat with a publish prompt before login gating', async () => {

@@ -11,6 +11,7 @@ import {
 import { translations } from '../translations';
 import { ArrowLeft, ArrowRight, Check, ExternalLink, MapPin, Maximize2, Navigation, PencilLine, Plus, Share2, X } from 'lucide-react';
 import { getCatDisplayName } from '../lib/catNameGenerator';
+import QuickNamePrompt from '../components/catdex/QuickNamePrompt';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { formatCatCardNumberForItem, formatPublicCatCardNumber } from '../lib/catdexDeck';
 import { getFindCatCta, getReadableLocationName } from '../lib/locationDisplay';
@@ -674,6 +675,9 @@ export default function Map() {
     saved: language === 'zh' ? '已收藏' : 'Saved',
     saving: language === 'zh' ? '收藏中...' : 'Saving...',
   };
+  const isFreshlyCreatedCat = Boolean(
+    searchParams.get('publishHint') === '1' && selectedItem && !isPublicMapMode
+  );
   const shouldShowPublishReadyHint = Boolean(
     searchParams.get('publishHint') === '1' &&
     selectedItem?.location &&
@@ -750,6 +754,91 @@ export default function Map() {
   const openFallbackSpotLabel = (name: string) => (
     language === 'zh' ? `打開${name}貓卡` : `Open cat card at ${name}`
   );
+
+  // Publishing sits near the top right after a cat is created, otherwise at the end of the sheet.
+  const publishSection = canPublishSelectedItem && selectedItem ? (
+                <div className="rounded-[16px] border border-[#221915]/12 bg-[#2f5fb3]/8 p-2.5 shadow-[3px_3px_0_rgba(47,95,179,0.08)]">
+                  {!selectedItem.isPublic ? (
+                    <p className="mb-2 text-sm font-black leading-snug text-[#221915]">
+                      {publishCopy.title}
+                    </p>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => void handleTogglePublicVisibility()}
+                    disabled={publishStatus === 'saving'}
+                    aria-label={selectedItem.isPublic ? publishCopy.unpublish : publishCopy.publish}
+                    className="flex min-h-11 w-full items-center justify-between gap-3 rounded-[14px] border border-[#221915]/15 bg-[#fffdf2] px-3 py-2 text-left text-[#221915] transition-colors hover:border-[#2f5fb3]/50 disabled:cursor-wait disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
+                  >
+                    <span className="min-w-0">
+                      <span className="block text-sm font-black">
+                        {publishStatus === 'saving'
+                          ? publishCopy.saving
+                          : selectedItem.isPublic
+                            ? publishCopy.unpublish
+                            : publishCopy.publish}
+                      </span>
+                      <span className="mt-0.5 block text-[11px] font-bold leading-snug text-cat-text-tertiary">
+                        {publishCopy.hint}
+                      </span>
+                    </span>
+                    <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[#221915]/15 ${
+                      selectedItem.isPublic ? 'bg-[#2f5fb3] text-[#fffdf2]' : 'bg-[#fff2cf] text-[#2f5fb3]'
+                    }`}>
+                      <MapPin size={15} />
+                    </span>
+                  </button>
+                  {isPublishLoginGateOpen && !user ? (
+                    <div className="mt-2 rounded-[14px] border border-[#221915]/12 bg-white/85 p-2.5">
+                      <p className="text-xs font-bold leading-relaxed text-[#5f5148]">
+                        {publishLoginGateCopy.body}
+                      </p>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsPublishEmailPromptOpen(true)}
+                          className="inline-flex min-h-8 items-center justify-center rounded-full border border-[#221915]/15 bg-[#2f5fb3] px-3 py-1.5 text-[11px] font-black text-[#fffdf2] shadow-[2px_2px_0_rgba(47,95,179,0.14)] transition-transform active:translate-x-[1px] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
+                        >
+                          {publishLoginGateCopy.action}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsPublishLoginGateOpen(false)}
+                          className="inline-flex min-h-8 items-center justify-center rounded-full border border-[#221915]/15 bg-white px-3 py-1.5 text-[11px] font-black text-[#221915] shadow-[2px_2px_0_rgba(47,95,179,0.08)] transition-transform active:translate-x-[1px] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
+                        >
+                          {publishLoginGateCopy.secondaryAction}
+                        </button>
+                      </div>
+                      {isPublishEmailPromptOpen ? (
+                        <CloudBackupPrompt language={language} items={items} redirectTo={window.location.href} />
+                      ) : null}
+                    </div>
+                  ) : null}
+                  {publishStatus === 'published' ? (
+                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-black text-[#2f5fb3]">{publishCopy.published(selectedItem.publicNumber)}</p>
+                        <p className="mt-0.5 text-[11px] font-bold leading-snug text-[#5f5148]">
+                          {publishCopy.publishedHint}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleMapModeChange('public')}
+                        className="inline-flex min-h-8 items-center justify-center rounded-full border border-[#221915]/15 bg-[#fff2cf] px-3 py-1.5 text-[11px] font-black text-[#221915] shadow-[2px_2px_0_rgba(47,95,179,0.12)] transition-transform active:translate-x-[1px] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
+                      >
+                        {publishCopy.viewPublicMap}
+                      </button>
+                    </div>
+                  ) : null}
+                  {publishStatus === 'unpublished' ? (
+                    <p className="mt-2 text-xs font-black text-[#6d5f52]">{publishCopy.unpublished}</p>
+                  ) : null}
+                  {publishStatus === 'error' ? (
+                    <p className="mt-2 text-xs font-black text-[#9f3a2f]">{publishCopy.error}</p>
+                  ) : null}
+                </div>
+              ) : null;
 
   return (
     <div className="h-full flex flex-col relative bg-cat-bg">
@@ -1021,6 +1110,15 @@ export default function Map() {
                 </div>
               ) : null}
 
+              {isFreshlyCreatedCat && selectedItem && !selectedItem.catName?.trim() ? (
+                <QuickNamePrompt
+                  item={selectedItem}
+                  language={language}
+                  onSave={(catName) => void updateItem(selectedItem.id, { catName })}
+                />
+              ) : null}
+              {isFreshlyCreatedCat ? publishSection : null}
+
               <div className="rounded-[16px] border border-[#221915]/12 bg-white/78 px-3 py-3 shadow-[2px_2px_0_rgba(47,95,179,0.06)]">
                 <CatProfileSummary
                   item={selectedItem}
@@ -1129,89 +1227,7 @@ export default function Map() {
                 </button>
               ) : null}
 
-              {canPublishSelectedItem ? (
-                <div className="rounded-[16px] border border-[#221915]/12 bg-[#2f5fb3]/8 p-2.5 shadow-[3px_3px_0_rgba(47,95,179,0.08)]">
-                  {!selectedItem.isPublic ? (
-                    <p className="mb-2 text-sm font-black leading-snug text-[#221915]">
-                      {publishCopy.title}
-                    </p>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={() => void handleTogglePublicVisibility()}
-                    disabled={publishStatus === 'saving'}
-                    aria-label={selectedItem.isPublic ? publishCopy.unpublish : publishCopy.publish}
-                    className="flex min-h-11 w-full items-center justify-between gap-3 rounded-[14px] border border-[#221915]/15 bg-[#fffdf2] px-3 py-2 text-left text-[#221915] transition-colors hover:border-[#2f5fb3]/50 disabled:cursor-wait disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
-                  >
-                    <span className="min-w-0">
-                      <span className="block text-sm font-black">
-                        {publishStatus === 'saving'
-                          ? publishCopy.saving
-                          : selectedItem.isPublic
-                            ? publishCopy.unpublish
-                            : publishCopy.publish}
-                      </span>
-                      <span className="mt-0.5 block text-[11px] font-bold leading-snug text-cat-text-tertiary">
-                        {publishCopy.hint}
-                      </span>
-                    </span>
-                    <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border border-[#221915]/15 ${
-                      selectedItem.isPublic ? 'bg-[#2f5fb3] text-[#fffdf2]' : 'bg-[#fff2cf] text-[#2f5fb3]'
-                    }`}>
-                      <MapPin size={15} />
-                    </span>
-                  </button>
-                  {isPublishLoginGateOpen && !user ? (
-                    <div className="mt-2 rounded-[14px] border border-[#221915]/12 bg-white/85 p-2.5">
-                      <p className="text-xs font-bold leading-relaxed text-[#5f5148]">
-                        {publishLoginGateCopy.body}
-                      </p>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setIsPublishEmailPromptOpen(true)}
-                          className="inline-flex min-h-8 items-center justify-center rounded-full border border-[#221915]/15 bg-[#2f5fb3] px-3 py-1.5 text-[11px] font-black text-[#fffdf2] shadow-[2px_2px_0_rgba(47,95,179,0.14)] transition-transform active:translate-x-[1px] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
-                        >
-                          {publishLoginGateCopy.action}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setIsPublishLoginGateOpen(false)}
-                          className="inline-flex min-h-8 items-center justify-center rounded-full border border-[#221915]/15 bg-white px-3 py-1.5 text-[11px] font-black text-[#221915] shadow-[2px_2px_0_rgba(47,95,179,0.08)] transition-transform active:translate-x-[1px] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
-                        >
-                          {publishLoginGateCopy.secondaryAction}
-                        </button>
-                      </div>
-                      {isPublishEmailPromptOpen ? (
-                        <CloudBackupPrompt language={language} items={items} redirectTo={window.location.href} />
-                      ) : null}
-                    </div>
-                  ) : null}
-                  {publishStatus === 'published' ? (
-                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-xs font-black text-[#2f5fb3]">{publishCopy.published(selectedItem.publicNumber)}</p>
-                        <p className="mt-0.5 text-[11px] font-bold leading-snug text-[#5f5148]">
-                          {publishCopy.publishedHint}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleMapModeChange('public')}
-                        className="inline-flex min-h-8 items-center justify-center rounded-full border border-[#221915]/15 bg-[#fff2cf] px-3 py-1.5 text-[11px] font-black text-[#221915] shadow-[2px_2px_0_rgba(47,95,179,0.12)] transition-transform active:translate-x-[1px] active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/50"
-                      >
-                        {publishCopy.viewPublicMap}
-                      </button>
-                    </div>
-                  ) : null}
-                  {publishStatus === 'unpublished' ? (
-                    <p className="mt-2 text-xs font-black text-[#6d5f52]">{publishCopy.unpublished}</p>
-                  ) : null}
-                  {publishStatus === 'error' ? (
-                    <p className="mt-2 text-xs font-black text-[#9f3a2f]">{publishCopy.error}</p>
-                  ) : null}
-                </div>
-              ) : null}
+              {!isFreshlyCreatedCat ? publishSection : null}
 
             </motion.div>
           </motion.div>
