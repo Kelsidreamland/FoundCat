@@ -12,6 +12,7 @@ import { translations } from '../translations';
 import { ArrowLeft, ArrowRight, Check, ExternalLink, MapPin, Maximize2, Navigation, PencilLine, Plus, Share2, X } from 'lucide-react';
 import { getCatDisplayName } from '../lib/catNameGenerator';
 import QuickNamePrompt from '../components/catdex/QuickNamePrompt';
+import { ReportCatLink, SeenItButton } from '../components/catdex/CatSocialActions';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { formatCatCardNumberForItem, formatPublicCatCardNumber } from '../lib/catdexDeck';
 import { getFindCatCta, getReadableLocationName } from '../lib/locationDisplay';
@@ -1228,6 +1229,13 @@ export default function Map() {
               ) : null}
 
               {!isFreshlyCreatedCat ? publishSection : null}
+
+              {isPublicMapMode && selectedItem ? (
+                <div className="space-y-2" data-testid="world-cat-social-actions">
+                  <SeenItButton key={selectedItem.id} catId={selectedItem.id} seenCount={selectedItem.seenCount} language={language} />
+                  <ReportCatLink key={`report-${selectedItem.id}`} catId={selectedItem.id} language={language} />
+                </div>
+              ) : null}
 
             </motion.div>
           </motion.div>
