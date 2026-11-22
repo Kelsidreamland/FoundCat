@@ -59,7 +59,8 @@ const publicRowToScrapbookItem = (row: PublicCatCardViewRow): ScrapbookItem => (
   personalityTags: row.personality_tags ?? [],
   careStatusTags: row.care_status_tags ?? [],
   spotNote: row.spot_note ?? undefined,
-  seenCount: row.seen_count ?? 0,
+  // Absent until the 2026-11-20 migration runs; callers hide sighting/report actions then.
+  seenCount: typeof row.seen_count === 'number' ? row.seen_count : undefined,
   isPublic: true,
 });
 

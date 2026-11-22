@@ -1230,7 +1230,7 @@ export default function Map() {
 
               {!isFreshlyCreatedCat ? publishSection : null}
 
-              {isPublicMapMode && selectedItem ? (
+              {isPublicMapMode && selectedItem && selectedItem.seenCount !== undefined ? (
                 <div className="space-y-2" data-testid="world-cat-social-actions">
                   <SeenItButton key={selectedItem.id} catId={selectedItem.id} seenCount={selectedItem.seenCount} language={language} />
                   <ReportCatLink key={`report-${selectedItem.id}`} catId={selectedItem.id} language={language} />
