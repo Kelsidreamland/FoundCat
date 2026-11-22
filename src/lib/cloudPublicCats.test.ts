@@ -100,4 +100,28 @@ describe('loadPublicCatCards', () => {
       message: 'network failed',
     });
   });
+
+  it('prefers the cached site API and maps photo URLs into the card', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify([{
+      id: 'pub-1', catdex_number: 1, public_number: 7, cat_name: '小橘', cat_feature_note: null,
+      encountered_at: '2026-11-01T00:00:00Z', location_name: '巷口', location_map_url: null,
+      lat: 25.042, lng: 121.565, personality_tags: [], care_status_tags: [], spot_note: null,
+      seen_count: 3, image_url: '/api/cat-image?id=pub-1&kind=card&v=1', hero_image_url: '/api/cat-image?id=pub-1&kind=hero&v=1',
+    }]), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+
+    const result = await loadPublicCatCards();
+
+    expect(fetchSpy).toHaveBeenCalledWith('/api/world-cats', expect.anything());
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.items[0]).toMatchObject({
+        id: 'pub-1',
+        imageData: '/api/cat-image?id=pub-1&kind=card&v=1',
+        heroImageData: '/api/cat-image?id=pub-1&kind=hero&v=1',
+        publicNumber: 7,
+        seenCount: 3,
+      });
+    }
+    fetchSpy.mockRestore();
+  });
 });

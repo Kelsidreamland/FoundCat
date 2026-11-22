@@ -24,6 +24,7 @@ const makeItem = (overrides: Partial<ScrapbookItem> = {}): ScrapbookItem => ({
   careStatusTags: overrides.careStatusTags,
   isPublic: overrides.isPublic,
   collectedFromPublicId: overrides.collectedFromPublicId,
+  seenCount: overrides.seenCount,
 });
 
 describe('WorldCatProfileSheet', () => {
@@ -225,5 +226,33 @@ describe('WorldCatProfileSheet', () => {
     fireEvent.click(saveButton);
 
     expect(onSave).toHaveBeenCalledTimes(2);
+  });
+
+  it('only offers "seen it too" and reporting once the backend supports them', () => {
+    const { rerender } = render(
+      <WorldCatProfileSheet
+        item={makeItem({ id: 'public-cat-7', publicNumber: 7, isPublic: true })}
+        language="zh"
+        isSaved={false}
+        onClose={vi.fn()}
+        onSave={vi.fn()}
+        onFind={vi.fn()}
+      />
+    );
+    expect(screen.queryByRole('button', { name: /我也見過/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '檢舉這張貓卡' })).not.toBeInTheDocument();
+
+    rerender(
+      <WorldCatProfileSheet
+        item={makeItem({ id: 'public-cat-7', publicNumber: 7, isPublic: true, seenCount: 2 })}
+        language="zh"
+        isSaved={false}
+        onClose={vi.fn()}
+        onSave={vi.fn()}
+        onFind={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('button', { name: /我也見過/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '檢舉這張貓卡' })).toBeInTheDocument();
   });
 });

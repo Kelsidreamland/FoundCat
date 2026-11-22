@@ -59,11 +59,46 @@ const publicRowToScrapbookItem = (row: PublicCatCardViewRow): ScrapbookItem => (
   personalityTags: row.personality_tags ?? [],
   careStatusTags: row.care_status_tags ?? [],
   spotNote: row.spot_note ?? undefined,
-  seenCount: row.seen_count ?? 0,
+  // Absent until the 2026-11-20 migration runs; callers hide sighting/report actions then.
+  seenCount: typeof row.seen_count === 'number' ? row.seen_count : undefined,
   isPublic: true,
 });
 
+type ApiWorldCatRow = Omit<PublicCatCardViewRow, 'image_data' | 'hero_image_data'> & {
+  image_url: string;
+  hero_image_url: string;
+};
+
+/**
+ * Preferred source: the site's own /api/world-cats, which returns metadata with photo URLs
+ * and is cached at the edge. Returns null where that API does not exist (local dev, other
+ * hosts) so callers fall back to reading Supabase directly.
+ */
+async function loadFromWorldCatApi(): Promise<LoadPublicCatCardsResult | null> {
+  try {
+    const response = await fetch('/api/world-cats', { headers: { Accept: 'application/json' } });
+    const isJson = response.headers.get('content-type')?.includes('application/json');
+    if (!isJson) return null;
+    if (response.status === 503) return { ok: false, reason: 'cloud_not_configured' };
+    if (!response.ok) return null;
+    const rows = (await response.json()) as ApiWorldCatRow[];
+    return {
+      ok: true,
+      items: rows.map((row) => publicRowToScrapbookItem({
+        ...row,
+        image_data: row.image_url,
+        hero_image_data: row.hero_image_url,
+      })),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function loadPublicCatCards(): Promise<LoadPublicCatCardsResult> {
+  const fromApi = await loadFromWorldCatApi();
+  if (fromApi) return fromApi;
+
   const client = await getSupabaseClient();
 
   if (!client) {
