@@ -56,7 +56,19 @@ export default defineConfig({
           '**/fonts/**/*.css',
           '**/fonts/**/*.woff2',
         ],
+        // /api/* are server functions, never the SPA shell.
+        navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
+          {
+            // World cat photos: URLs are versioned, so a cached copy never goes stale.
+            urlPattern: /\/api\/cat-image\?/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'found-cat-world-photos-v1',
+              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
           {
             urlPattern: /\/fonts\/.*\.(?:css|woff2)(?:\?.*)?$/i,
             handler: 'CacheFirst',

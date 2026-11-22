@@ -25,6 +25,7 @@ import { setCloudCatCardVisibility } from '../lib/cloudVisibility';
 import { useAuthStore } from '../store/useAuthStore';
 import { loadPublicCatCards } from '../lib/cloudPublicCats';
 import { getPaperSheetMotion } from '../lib/uiMotion';
+import { inlineImageUrl } from '../lib/imageData';
 
 const OPEN_FREE_MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 // Fallback view (Taipei) for when there are no cats to frame yet.
@@ -344,8 +345,8 @@ export default function Map() {
     try {
       await addItem({
         type: item.type,
-        imageData: item.imageData,
-        heroImageData: item.heroImageData,
+        imageData: (await inlineImageUrl(item.imageData)) ?? item.imageData,
+        heroImageData: await inlineImageUrl(item.heroImageData),
         date: item.date,
         x: item.x,
         y: item.y,

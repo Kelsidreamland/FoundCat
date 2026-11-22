@@ -43,3 +43,19 @@ export const imageBlobToHeroDataUrl = async (blob: Blob, maxSize = 900): Promise
     URL.revokeObjectURL(sourceUrl);
   }
 };
+
+/**
+ * World cats arrive with photo URLs. When one is collected into My Cat Cards, store the
+ * photo itself so the card keeps working offline, like every other local card.
+ * Leaves data URLs alone and keeps the URL if the download fails.
+ */
+export const inlineImageUrl = async (value: string | undefined): Promise<string | undefined> => {
+  if (!value || value.startsWith('data:')) return value;
+  try {
+    const response = await fetch(value);
+    if (!response.ok) return value;
+    return await blobToDataUrl(await response.blob());
+  } catch {
+    return value;
+  }
+};

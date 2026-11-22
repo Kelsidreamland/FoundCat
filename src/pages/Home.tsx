@@ -16,6 +16,7 @@ import type { ScrapbookItem } from '../store/useScrapbookStore';
 import { useScrapbookStore } from '../store/useScrapbookStore';
 import { translations } from '../translations';
 import { useLanguageToggle } from '../hooks/useLanguageToggle';
+import { inlineImageUrl } from '../lib/imageData';
 
 const DonationSheet = lazy(() => import('../components/DonationSheet'));
 
@@ -200,8 +201,8 @@ export default function Home() {
 
     const savedItem = await addItem({
       type: item.type,
-      imageData: item.imageData,
-      heroImageData: item.heroImageData,
+      imageData: (await inlineImageUrl(item.imageData)) ?? item.imageData,
+      heroImageData: await inlineImageUrl(item.heroImageData),
       date: item.date,
       x: item.x,
       y: item.y,
